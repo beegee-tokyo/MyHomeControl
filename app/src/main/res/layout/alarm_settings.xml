@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:orientation="vertical"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content">
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/ll_secAlarm">
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textAppearance="?android:attr/textAppearanceLarge"
+			android:text="@string/tv_sec_alarm_on"
+			android:id="@+id/tv_Alarm_on"
+			android:gravity="center"
+			android:layout_weight="1"
+			android:layout_gravity="center_horizontal"/>
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:textAppearance="?android:attr/textAppearanceLarge"
+			android:text="@string/tv_sec_alarm_off"
+			android:id="@+id/tv_Alarm_off"
+			android:gravity="center"
+			android:layout_weight="1"
+			android:layout_gravity="center_horizontal"/>
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/ll_secAlarm"
+		android:id="@+id/ll_pickers">
+
+		<NumberPicker
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/np_Alarm_on"
+			android:orientation="vertical"
+			android:layout_weight="1"
+			android:layout_margin="5dp"/>
+
+		<NumberPicker
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/np_Alarm_off"
+			android:orientation="vertical"
+			android:layout_weight="1"
+			android:layout_margin="5dp"/>
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/ll_pickers">
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@android:string/cancel"
+			android:id="@+id/bt_sec_cancel"
+			android:layout_gravity="center_vertical"
+			tools:ignore="ButtonStyle"
+			android:layout_weight="1"/>
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@android:string/ok"
+			android:id="@+id/bt_sec_ok"
+			tools:ignore="ButtonStyle"
+			android:layout_weight="1"/>
+
+	</LinearLayout>
+
+</RelativeLayout>

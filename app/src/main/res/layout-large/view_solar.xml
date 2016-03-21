@@ -1,0 +1,265 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
+    tools:showIn="@layout/activity_my_home_control"
+    android:id="@+id/view_solar"
+    android:visibility="invisible"
+    android:background="@android:color/black"
+    tools:ignore="ButtonStyle,Overdraw">
+
+    <ProgressBar
+        android:id="@+id/pb_refresh_rot"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:visibility="invisible"
+        android:layout_centerInParent="true"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/transparent"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/bt_prev_txt"
+        android:id="@+id/bt_prevLog"
+        android:onClick="onClick"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/holo_blue_dark"
+        android:layout_below="@+id/tv_cons_max"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        style="@android:style/Widget.DeviceDefault.Button"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/bt_next_txt"
+        android:id="@+id/bt_nextLog"
+        android:onClick="onClick"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@android:color/holo_red_light"
+        android:layout_below="@+id/tv_cons_max"
+        android:layout_toRightOf="@+id/bt_prevLog"
+        android:layout_toEndOf="@+id/bt_prevLog"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        style="@android:style/Widget.DeviceDefault.Button"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/stop"
+        android:id="@+id/bt_stop"
+        android:onClick="onClick"
+        android:textColor="@android:color/holo_red_light"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_below="@+id/tv_cons_max"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        style="@android:style/Widget.DeviceDefault.Button"
+        android:layout_toRightOf="@+id/bt_nextLog"
+        android:layout_toEndOf="@+id/bt_nextLog"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/sv_result"
+        android:layout_alignParentBottom="false"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentRight="false"
+        android:layout_above="@+id/cb_solar">
+
+        <TextView
+            android:id="@+id/solar_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"/>
+
+    </ScrollView>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/bt_prevLog"
+        android:layout_above="@+id/sv_result" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_result"
+        android:id="@+id/tv_plotTitle"
+        android:layout_alignTop="@+id/graph"
+        android:layout_marginTop="5dp"
+        android:textColor="@android:color/white"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/tv_sens1_curr_txt"
+        android:id="@+id/tv_solar_txt"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_sens_value_txt"
+        android:id="@+id/tv_solar_val"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:textColor="@android:color/holo_orange_light"
+        android:layout_below="@+id/tv_solar_txt"
+        android:textSize="70sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_sens2_curr_txt"
+        android:id="@+id/tv_cons_txt"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_sens_value_txt"
+        android:id="@+id/tv_cons_val"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="30dp"
+        android:layout_below="@+id/tv_cons_txt"
+        android:textColor="@android:color/holo_blue_light"
+        android:textSize="70sp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="@string/tv_result_txt_ex"
+        android:id="@+id/tv_result_txt"
+        android:textColor="@android:color/white"
+        android:layout_toRightOf="@+id/tv_cons_txt"
+        android:layout_toLeftOf="@+id/tv_solar_txt"
+        android:layout_toEndOf="@+id/tv_cons_txt"
+        android:layout_toStartOf="@+id/tv_solar_txt"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:textSize="30sp"
+        android:background="@android:color/transparent"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_sens_value_txt"
+        android:id="@+id/tv_result_val"
+        android:textColor="@android:color/holo_green_light"
+        android:gravity="center_horizontal"
+        android:layout_toRightOf="@+id/tv_cons_txt"
+        android:layout_toLeftOf="@+id/tv_solar_txt"
+        android:layout_toEndOf="@+id/tv_cons_txt"
+        android:layout_toStartOf="@+id/tv_solar_txt"
+        android:layout_below="@+id/tv_result_txt"
+        android:textSize="70sp"
+        android:background="@android:color/transparent"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cb_cons_txt"
+        android:id="@+id/cb_cons"
+        android:checked="true"
+        android:textColor="@android:color/white"
+        android:layout_toRightOf="@+id/cb_solar"
+        android:layout_toEndOf="@+id/cb_solar"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_alignParentBottom="true"
+        android:onClick="onClick"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/cb_solar_txt"
+        android:id="@+id/cb_solar"
+        android:checked="true"
+        android:textColor="@android:color/white"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:layout_alignParentBottom="true"
+        android:onClick="onClick"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_result"
+        android:id="@+id/tv_solar_energy"
+        android:textColor="@android:color/holo_orange_light"
+        android:background="@android:color/transparent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_below="@+id/tv_cons_energy"
+        android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_result"
+        android:id="@+id/tv_cons_energy"
+        android:textColor="@android:color/holo_blue_light"
+        android:background="@android:color/transparent"
+        android:layout_alignTop="@+id/graph"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_result"
+        android:id="@+id/tv_solar_max"
+        android:textColor="@android:color/holo_orange_light"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/tv_solar_val"
+        android:layout_alignLeft="@+id/tv_solar_val"
+        android:layout_alignRight="@+id/tv_solar_val"
+        android:layout_alignStart="@+id/tv_solar_val"
+        android:layout_alignEnd="@+id/tv_solar_val"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/tv_result"
+        android:id="@+id/tv_cons_max"
+        android:textColor="@android:color/holo_blue_light"
+        android:background="@android:color/transparent"
+        android:layout_below="@+id/tv_cons_val"
+        android:layout_alignLeft="@+id/tv_cons_val"
+        android:layout_alignRight="@+id/tv_cons_val"
+        android:layout_alignStart="@+id/tv_cons_val"
+        android:layout_alignEnd="@+id/tv_cons_val"
+        android:gravity="center_horizontal"/>
+
+</RelativeLayout>

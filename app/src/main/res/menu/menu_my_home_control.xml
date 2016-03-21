@@ -1,0 +1,79 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
+      tools:ignore="AlwaysShowAction">
+
+	<item
+		android:id="@+id/action_security"
+		android:orderInCategory="100"
+		android:title="@string/action_security"
+		android:icon="@drawable/ic_security"
+		app:showAsAction="always"/>
+
+	<item
+		android:id="@+id/action_solar"
+		android:orderInCategory="100"
+		android:title="@string/action_solar"
+		android:icon="@drawable/ic_solar"
+		app:showAsAction="always"/>
+
+	<item
+		android:id="@+id/action_aircon"
+		android:orderInCategory="100"
+		android:title="@string/action_aircon"
+		android:icon="@drawable/ic_aircon"
+		app:showAsAction="always"/>
+
+	<item
+		android:id="@+id/action_close"
+		android:orderInCategory="100"
+		android:title="@string/action_close"
+		app:showAsAction="always"/>
+
+	<item
+		android:id="@+id/action_selAlarm"
+		android:icon="@drawable/ic_settings"
+		android:orderInCategory="100"
+		android:visible="true"
+		android:title="@string/action_selAlarm"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_selWarning"
+		android:icon="@drawable/ic_settings"
+		android:orderInCategory="100"
+		android:visible="false"
+		android:title="@string/action_selWarning"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_locations"
+		android:icon="@drawable/ic_location"
+		android:orderInCategory="100"
+		android:title="@string/action_location"
+		android:visible="false"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_refresh"
+		android:icon="@drawable/ic_search"
+		android:orderInCategory="100"
+		android:title="@string/action_refresh"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_debug"
+		android:icon="@drawable/ic_debug"
+		android:orderInCategory="100"
+		android:title="@string/action_debug"
+		app:showAsAction="never"/>
+
+	<item
+		android:id="@+id/action_register"
+		android:icon="@drawable/ic_register"
+		android:orderInCategory="100"
+		android:title="@string/action_register"
+		app:showAsAction="never"/>
+
+</menu>

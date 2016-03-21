@@ -1,0 +1,20 @@
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:padding="@dimen/widget_margin"
+	android:id="@+id/sec_widget"
+	android:clickable="true"
+	android:background="#80ffffff">
+
+	<ImageView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:id="@+id/iv_sec_widget"
+		android:layout_gravity="center"
+		android:contentDescription="@string/action_security"
+		android:src="@mipmap/ic_sec_widget_on"
+		android:scaleType="fitXY"/>
+
+</LinearLayout>

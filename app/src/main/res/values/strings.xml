@@ -1,0 +1,101 @@
+<resources>
+	<string name="app_name">My Home Control</string>
+	<string name="action_close">Close</string>
+	<string name="action_security">Security</string>
+	<string name="action_solar">Solar Panel</string>
+	<string name="action_aircon">Aircon</string>
+	<string name="action_selAlarm">Select Alarm sound</string>
+	<string name="action_selWarning">Select Solar sound</string>
+	<string name="action_refresh">Refresh</string>
+	<string name="action_register">GCM registration</string>
+	<string name="action_location">Locations</string>
+	<string name="action_debug">Show debug messages</string>
+	<string name="action_debug_off">Hide debug messages</string>
+
+	<string name="udp_listener">MyHomeControl is listening to ESP8266 device</string>
+	<string name="err_no_esp">No ESP not found. Make sure it is switched on and is connected to the same WiFi network.</string>
+	<string name="err_esp">Communication with ESP failed. Make sure it is switched on and is connected to the same WiFi network.</string>
+	<string name="err_unknown">Unknown error</string>
+	<string name="err_security">Security device is offline</string>
+	<string name="err_spMonitor">spMonitor device is offline</string>
+	<string name="err_aircon">All aircon devices are offline</string>
+	<string name="snd_alarm">Alarm</string>
+	<string name="snd_alert">Alert</string>
+	<string name="snd_dog">Dog</string>
+	<string name="no_alarm_sel">No Alarm</string>
+	<string name="txt_empty"> </string>
+	<string name="not_home">Not on home WiFi - No status available</string>
+	<string name="at_home">On home WiFi - Wait for status</string>
+
+	<string name="dot_txt_alarm_status">Alarm status</string>
+	<string name="dot_txt_light">Light status</string>
+	<string name="dot_txt_alarm">Alarm</string>
+	<string name="sec_front">Status front sensor</string>
+	<string name="sec_rear">Status rear sensor</string>
+	<string name="sec_front_device_1">Frontyard</string>
+	<string name="sec_back_device_1">Backyard</string>
+	<string name="sec_auto_alarm_on">Alarm on from %1$s to %2$s</string>
+	<string name="sec_auto_alarm_off">Manual alarm activation</string>
+	<string name="tv_sec_alarm_on">Activation time</string>
+	<string name="tv_sec_alarm_off">Deactivation time</string>
+	<string name="tv_set_alarm_txt">Set activation hours</string>
+
+	<string name="bt_prev_txt" translatable="false">&lt;&lt;</string>
+	<string name="bt_next_txt" translatable="false">&gt;&gt;</string>
+	<string name="bt_status_txt">Status</string>
+	<string name="bt_stop_txt">Close</string>
+	<string name="tv_result">Info</string>
+	<string name="tv_sens1_curr_txt">SOLAR PV</string>
+	<string name="tv_sens2_curr_txt">POWER NOW</string>
+	<string name="tv_sens_value_txt" translatable="false">0000W</string>
+	<string name="tv_result_txt_ex">EXPORTING</string>
+	<string name="tv_result_txt_im">IMPORTING</string>
+	<string name="cb_solar_txt">Solar</string>
+	<string name="cb_cons_txt">Cons.</string>
+	<string name="start">Start</string>
+	<string name="stop">Stop</string>
+	<string name="filesSynced">Sync successful</string>
+	<string name="filesSyncFail">Sync failed - JSON error</string>
+	<string name="filesSyncFail1">Sync failed - DB locked</string>
+	<string name="filesSyncFinished">DB refresh finished</string>
+	<string name="err_no_device">spMonitor device not found. Make sure it is switched on and is connected to the same WiFi network.</string>
+	<string name="err_arduino">Communication with spMonitor (Arduino) failed. Make sure it is switched on and is connected to the same WiFi network.</string>
+	<string name="notif_export">Exporting %1$sW at %2$s</string>
+	<string name="tv_widget_conf_txt">Select widget size</string>
+	<string name="rb_large_txt">Large text</string>
+	<string name="rb_small_txt">Small text</string>
+	<string name="bt_place_txt">Add</string>
+	<string name="tv_alarm_txt">Set alarm</string>
+	<string name="dev_alarm_sel">Submarine</string>
+
+	<string name="bt_txt_device_location">Office</string>
+	<string name="bt_txt_power" translatable="false">POWER</string>
+	<string name="bt_txt_fan_bar" translatable="false">FAN</string>
+	<string name="bt_txt_fan_high" translatable="false">HIGH</string>
+	<string name="bt_txt_fan_med" translatable="false">MED</string>
+	<string name="bt_txt_fan_low" translatable="false">LOW</string>
+	<string name="bt_txt_mode_bar" translatable="false">MODE</string>
+	<string name="bt_txt_cool" translatable="false">COOL</string>
+	<string name="bt_txt_dry" translatable="false">DRY</string>
+	<string name="bt_txt_fan" translatable="false">FAN</string>
+	<string name="bt_txt_turbo" translatable="false">TURBO</string>
+	<string name="bt_txt_ion" translatable="false">ION</string>
+	<string name="bt_txt_auto" translatable="false">AUTO</string>
+	<string name="bt_txt_temp_bar" translatable="false">TEMP / TIMER</string>
+	<string name="bt_txt_plus" translatable="false">+</string>
+	<string name="bt_txt_minus" translatable="false">-</string>
+	<string name="bt_txt_sweep" translatable="false">SWEEP</string>
+	<string name="bt_txt_func_bar" translatable="false">FUNCTION</string>
+	<string name="bt_txt_fanspeed" translatable="false">FANSPEED</string>
+	<string name="txt_consumption">Consumption</string>
+	<string name="txt_cool_temp">Temperature</string>
+	<string name="txt_auto_status">Status</string>
+
+	<string name="dialog_change_title">Enter location name and choose icon </string>
+	<string name="dialog_change_icon">Select icon</string>
+	<string name="dialog_selector_title">Select device to change</string>
+	<string name="appwidget_text">EXAMPLE</string>
+	<string name="configure">Configure</string>
+	<string name="add_widget">Add widget</string>
+
+</resources>
