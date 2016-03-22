@@ -78,7 +78,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Access to activities shared preferences */
 	static SharedPreferences mPrefs;
 	/* Name of shared preferences */
-	public static String sharedPrefName = "MyHomeControl";
+	public static final String sharedPrefName = "MyHomeControl";
 	/** Context of this application */
 	static Context appContext;
 	/** Id of menu, needed to set user selected icons and device names */
@@ -86,9 +86,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Visible view 0 = security, 1 = solar panel, 2 = aircon */
 	private int visibleView = 0;
 	/** Flag for debug output */
-	boolean showDebug = false;
+	private boolean showDebug = false;
 	/** The view of the main UI */
-	public static View appView;
+	static View appView;
 	/** Timer for updating content of main UI */
 	private Timer autoUpdate;
 
@@ -100,7 +100,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Shared preferences value security alarm sound */
 	public static final String prefsSecurityAlarm = "secAlarm";
 	/** Shared preferences value security alarm sound */
-	public static String prefsSecurityAlarmOn = "secAlarmOn";
+	public static final String prefsSecurityAlarmOn = "secAlarmOn";
 
 	/** Shared preferences value for solar alarm sound */
 	public static final String prefsSolarWarning = "solarAlarm";
@@ -134,9 +134,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static boolean initAir3IsOn = false;
 
 	/** View for selecting device to change icon and device name */
-	View locationSettingsView;
+	private View locationSettingsView;
 	/** View of aircon device name and icon change dialog */
-	View airconDialogView;
+	private View airconDialogView;
 	/** Button ids from location selection dialog */
 	private final int[] buttonIds = {
 			R.id.dia_sel_device0,
@@ -166,30 +166,30 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private int dlgIconIndex;
 
 	/** Flag for sound selector (true = security alarm, false = solar panel warning) */
-	boolean isSelAlarm = true;
+	private boolean isSelAlarm = true;
 
 	/** List of potential control device availability */
 	// SPmonitor, Security front, Aircon 1, Aircon 2, Aircon 3, Security back
 	static final boolean[] deviceIsOn = {false, false, false, false, false, false};
 	/** deviceIsOn index for SPmonitor */
-	static int spMonitorIndex = 0;
+	static final int spMonitorIndex = 0;
 	/** deviceIsOn index for Security front */
-	static int secFrontIndex = 1;
+	static final int secFrontIndex = 1;
 	/** deviceIsOn index for Aircon 1 */
-	static int aircon1Index = 2;
+	static final int aircon1Index = 2;
 	/** deviceIsOn index for Aircon 2 */
-	static int aircon2Index = 3;
+	static final int aircon2Index = 3;
 	/** deviceIsOn index for Aircon 3 */
-	static int aircon3Index = 4;
+	static final int aircon3Index = 4;
 	/** deviceIsOn index for Security back */
-	static int secRearIndex = 5;
+	static final int secRearIndex = 5;
 
 	/** URL to spMonitor ESP8266*/
 	static String SOLAR_URL;
 	/** URL to Front Security ESP8266*/
 	public static String SECURITY_URL_FRONT_1;
 	/** URL to Back Security ESP8266*/
-	public static String SECURITY_URL_BACK_1;
+	static String SECURITY_URL_BACK_1;
 	/** URL to FujiDenzo aircon ESP8266*/
 	static String AIRCON_URL_1;
 	/** URL to Carrier aircon ESP8266*/
@@ -262,12 +262,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Flag for showing last month */
 	private static boolean showingLast = false;
 	/** Flag for showing a log */
-	public static boolean showingLog = false;
+	static boolean showingLog = false;
 
 	/** Instance of DataBaseHelper for this month*/
-	DataBaseHelper dbHelperNow;
+	private DataBaseHelper dbHelperNow;
 	/** Instance of DataBaseHelper for last month*/
-	DataBaseHelper dbHelperLast;
+	private DataBaseHelper dbHelperLast;
 
 	/** Today's year-month database name */
 	private static String[] dbNamesList = new String[2];
@@ -1274,6 +1274,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					id = "sec";
 				}
 				break;
+			case R.id.dot_alarm_status_back:
+				if (hasAlarmOnBack) {
+					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
+					url = SECURITY_URL_BACK_1;
+					cmd = "/?a=0";
+					id = "sec";
+				} else {
+					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
+					url = SECURITY_URL_BACK_1;
+					cmd = "/?a=1";
+					id = "sec";
+				}
+				break;
 			case R.id.dot_light:
 				ivLightStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_light_on));
 				url = SECURITY_URL_FRONT_1;
@@ -1628,7 +1641,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/**
 	 * Broadcast receiver for notifications received over UDP or GCM
 	 */
-	public BroadcastReceiver activityReceiver = new BroadcastReceiver() {
+	private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -2408,7 +2421,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							displayTxt = String.format("%.0f", Math.abs(ChartHelper.consPowerMin)) + "W";
 							valueFields.setText(displayTxt);
 
-							if (ChartHelper.autoRefreshOn && !ChartHelper.isSimpleUI) {
+							if (ChartHelper.autoRefreshOn) {
 								/** Integer list with today's date info */
 								int[] requestedDate = Utilities.getCurrentDate();
 								/** Instance of data base */

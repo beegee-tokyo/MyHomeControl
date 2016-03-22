@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class SolarUpdateService extends IntentService {
 
 	/** Debug tag */
-	static final String DEBUG_LOG_TAG = "MHC-UPD";
+	private static final String DEBUG_LOG_TAG = "MHC-UPD";
 
 	public SolarUpdateService() {
 		super("SolarUpdateService");

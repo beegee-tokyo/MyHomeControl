@@ -28,10 +28,11 @@ import okhttp3.Response;
  * TODO: Customize class - update intent actions, extra parameters and static
  * helper methods.
  */
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class SolarSyncDBService extends IntentService {
 
 	/** Debug tag */
-	static final String DEBUG_LOG_TAG = "MHC-SYN";
+	private static final String DEBUG_LOG_TAG = "MHC-SYN";
 
 	public SolarSyncDBService() {
 		super("SolarSyncDBService");

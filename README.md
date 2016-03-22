@@ -1,5 +1,5 @@
 # MyHomeControl
-Application to get information from and send commands to my home applicance control system devices
+Application to get information from and send commands to my home appliance control system devices
 
 Accesses at the moment 3 devices in my home appliance control system
  * Solar panel monitor (Arduino Yun)
@@ -17,8 +17,8 @@ Solar Panel Monitor with Arduino Yun, current sensors and WiFi module to transfe
 Security system based on ESP8266 module with Android devices as monitoring system<br />
  * Uses PIR sensor to detect measurement.<br />
  * Relay to switch on external light.<br />
- * Light on time 2 minutes, extended if PIR sensor is retriggered<br />
- * Light on depending on enviroment light measured with LDR resistor<br />
+ * Light on time 2 minutes, extended if PIR sensor is re-triggered<br />
+ * Light on depending on environment light measured with LDR resistor<br />
  * Sends intruder alarm messages over local WiFi per UDP and over Internet per Google Cloud Messaging<br />
 
 ## MyAirCon

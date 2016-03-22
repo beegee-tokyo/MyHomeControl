@@ -1,12 +1,14 @@
 <LinearLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
 	android:orientation="vertical"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:padding="@dimen/widget_margin"
 	android:id="@+id/sec_widget"
 	android:clickable="true"
-	android:background="#80ffffff">
+	android:background="#80ffffff"
+	tools:ignore="Overdraw">
 
 	<ImageView
 		android:layout_width="match_parent"

@@ -32,8 +32,8 @@
 	<string name="dot_txt_alarm">Alarm</string>
 	<string name="sec_front">Status front sensor</string>
 	<string name="sec_rear">Status rear sensor</string>
-	<string name="sec_front_device_1">Frontyard</string>
-	<string name="sec_back_device_1">Backyard</string>
+	<string name="sec_front_device_1">Front yard</string>
+	<string name="sec_back_device_1">Back yard</string>
 	<string name="sec_auto_alarm_on">Alarm on from %1$s to %2$s</string>
 	<string name="sec_auto_alarm_off">Manual alarm activation</string>
 	<string name="tv_sec_alarm_on">Activation time</string>
@@ -43,7 +43,6 @@
 	<string name="bt_prev_txt" translatable="false">&lt;&lt;</string>
 	<string name="bt_next_txt" translatable="false">&gt;&gt;</string>
 	<string name="bt_status_txt">Status</string>
-	<string name="bt_stop_txt">Close</string>
 	<string name="tv_result">Info</string>
 	<string name="tv_sens1_curr_txt">SOLAR PV</string>
 	<string name="tv_sens2_curr_txt">POWER NOW</string>
@@ -57,7 +56,6 @@
 	<string name="filesSynced">Sync successful</string>
 	<string name="filesSyncFail">Sync failed - JSON error</string>
 	<string name="filesSyncFail1">Sync failed - DB locked</string>
-	<string name="filesSyncFinished">DB refresh finished</string>
 	<string name="err_no_device">spMonitor device not found. Make sure it is switched on and is connected to the same WiFi network.</string>
 	<string name="err_arduino">Communication with spMonitor (Arduino) failed. Make sure it is switched on and is connected to the same WiFi network.</string>
 	<string name="notif_export">Exporting %1$sW at %2$s</string>
@@ -95,7 +93,5 @@
 	<string name="dialog_change_icon">Select icon</string>
 	<string name="dialog_selector_title">Select device to change</string>
 	<string name="appwidget_text">EXAMPLE</string>
-	<string name="configure">Configure</string>
-	<string name="add_widget">Add widget</string>
 
 </resources>

@@ -305,7 +305,7 @@ public class UDPlistener extends Service {
 	}
 
 	@SuppressLint("CommitPrefEdits")
-	static void updateWidgets(Context updateContext, boolean hasAlarm) {
+	private static void updateWidgets(Context updateContext, boolean hasAlarm) {
 		/** Pointer to shared preferences */
 		SharedPreferences mPrefs = updateContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 		if (hasAlarm) {

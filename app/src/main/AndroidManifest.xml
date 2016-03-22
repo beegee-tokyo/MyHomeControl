@@ -48,6 +48,13 @@
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
 
+		<activity
+			android:name=".ChartHelper"
+			android:label="@string/app_name"
+			android:launchMode="singleTask"
+			android:theme="@style/AppTheme.NoActionBar">
+		</activity>
+
 		<receiver
 			android:name=".AutoStart"
 			android:enabled="true"

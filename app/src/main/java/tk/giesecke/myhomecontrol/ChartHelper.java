@@ -39,13 +39,13 @@ public class ChartHelper extends MyHomeControl {
 	/** List to hold the measurement of the consumption for the chart from a log file */
 	public static final ArrayList<Entry> consMSeries = new ArrayList<>();
 	/** List to hold the timestamps for a continuously updated chart */
-	public static final ArrayList<String> timeStamps = new ArrayList<>();
+	private static final ArrayList<String> timeStamps = new ArrayList<>();
 	/** List to hold the measurements of the solar panel for a continuously updated chart */
-	public static final ArrayList<Float> solarPower = new ArrayList<>();
+	private static final ArrayList<Float> solarPower = new ArrayList<>();
 	/** List to hold the measurement of the consumption for a continuously updated chart */
-	public static final ArrayList<Float> consumPPower = new ArrayList<>();
+	private static final ArrayList<Float> consumPPower = new ArrayList<>();
 	/** List to hold the measurement of the consumption for a continuously updated chart */
-	public static final ArrayList<Float> consumMPower = new ArrayList<>();
+	private static final ArrayList<Float> consumMPower = new ArrayList<>();
 	/** List to hold the timestamps for a chart from logged data */
 	public static final ArrayList<String> timeStampsCont = new ArrayList<>();
 	/** List to hold the measurements of the solar panel for a chart from logged data */
@@ -54,19 +54,11 @@ public class ChartHelper extends MyHomeControl {
 	public static final ArrayList<Float> consumPPowerCont = new ArrayList<>();
 	/** List to hold the measurement of the consumption for a chart from logged data */
 	public static final ArrayList<Float> consumMPowerCont = new ArrayList<>();
-	/** Line data set for solar data */
-	public static LineDataSet solar;
-	/** Line data set for consumption data */
-	public static LineDataSet consP;
-	/** Line data set for consumption data */
-	public static LineDataSet consM;
 
 	/** Solar power received from spMonitor device as minute average */
 	public static Float solarPowerMin = 0.0f;
 	/** Solar power received from spMonitor device as minute average */
 	public static Float lastSolarPowerMin = 0.0f;
-	/** Solar energy generated up to now on the displayed day */
-	public static float solarEnergy = 0.0f;
 	/** Consumption received from spMonitor device as minute average */
 	public static Float consPowerMin = 0.0f;
 	/** Consumption received from spMonitor device as minute average */
@@ -76,19 +68,15 @@ public class ChartHelper extends MyHomeControl {
 	/** Consumption received from spMonitor device as 5 seconds average */
 	public static Float consPowerSec = 0.0f;
 	/** Light received from spMonitor device as 5 seconds average */
-	/** Consumed energy generated up to now on the displayed day */
-	public static float consEnergy = 0.0f;
 	/** Flag for showing solar power data */
-	public static boolean showSolar = true;
+	private static final boolean showSolar = true;
 	/** Flag for showing consumption data */
-	public static boolean showCons = true;
+	private static final boolean showCons = true;
 	/** Flag if UI auto refresh is on or off */
 	public static boolean autoRefreshOn = true;
-	/** Flag for simple UI layout */
-	public static boolean isSimpleUI = false;
 
 	/** Day stamp of data */
-	public static String dayToShow;
+	private static String dayToShow;
 
 
 	/**
@@ -137,11 +125,14 @@ public class ChartHelper extends MyHomeControl {
 			}
 		}
 		/** Line data set for solar data */
-		solar = new LineDataSet(solarSeries, "Solar");
+		/* Line data set for solar data */
+		LineDataSet solar = new LineDataSet(solarSeries, "Solar");
 		/** Line data set for consumption data */
-		consP = new LineDataSet(consPSeries, "Export");
+		/* Line data set for consumption data */
+		LineDataSet consP = new LineDataSet(consPSeries, "Export");
 		/** Line data set for consumption data */
-		consM = new LineDataSet(consMSeries, "Import");
+		/* Line data set for consumption data */
+		LineDataSet consM = new LineDataSet(consMSeries, "Import");
 
 		solar.setLineWidth(1.75f);
 		solar.setCircleSize(0f);
@@ -285,8 +276,10 @@ public class ChartHelper extends MyHomeControl {
 	public static void fillSeries(Cursor data) {
 
 		data.moveToFirst();
-		solarEnergy = 0f;
-		consEnergy = 0f;
+		/* Solar energy generated up to now on the displayed day */
+		float solarEnergy = 0f;
+		/* Consumed energy generated up to now on the displayed day */
+		float consEnergy = 0f;
 
 		/** Array list to hold time stamps */
 		ArrayList<String> tempTimeStamps;

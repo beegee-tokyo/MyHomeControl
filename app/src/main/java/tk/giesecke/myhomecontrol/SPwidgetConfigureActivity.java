@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class SPwidgetConfigureActivity extends Activity implements AdapterView.OnItemClickListener {
 
 	/** Debug tag */
-	static final String DEBUG_LOG_TAG = "MHC-WID";
+	private static final String DEBUG_LOG_TAG = "MHC-WID";
 
 	/** Default app widget id */
 	private int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
