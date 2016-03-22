@@ -616,10 +616,19 @@ void replyClient(WiFiClient httpClient) {
 		return;
 		// Request short status
 	} else if (req.substring(0, 3) == "/?s") {
-	
 		// Create status
 		createStatus(root, true);
 
+		root.printTo(jsonString);
+		s += jsonString;
+		httpClient.print(s);
+		httpClient.flush();
+		httpClient.stop();
+		delay(1000);
+		return;
+		// Request short status
+	} else if (req.substring(0, 3) == "/?t") {
+		root["time"] = now();
 		root.printTo(jsonString);
 		s += jsonString;
 		httpClient.print(s);
