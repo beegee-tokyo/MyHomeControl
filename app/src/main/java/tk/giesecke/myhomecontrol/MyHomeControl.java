@@ -531,6 +531,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/**
 	 * Called when activity is getting visible
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -1262,16 +1263,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.dot_alarm_status:
 				if (hasAlarmOnFront) {
-					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_dot));
+					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
 					url = SECURITY_URL_FRONT_1;
 					cmd = "/?a=0";
 					id = "sec";
 				} else {
-					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_dot_orange));
+					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
 					url = SECURITY_URL_FRONT_1;
 					cmd = "/?a=1";
 					id = "sec";
 				}
+				break;
+			case R.id.dot_light:
+				ivLightStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_light_on));
+				url = SECURITY_URL_FRONT_1;
+				cmd = "/?b";
+				id = "sec";
 				break;
 			case R.id.bt_auto_fd:
 			case R.id.bt_auto_ca:

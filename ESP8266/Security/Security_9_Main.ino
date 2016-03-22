@@ -47,6 +47,11 @@ void loop() {
 			}
 		}
 	}
+	
+	if (lightOffTriggered) {
+		lightOffTriggered = false;
+		sendAlarm(true);
+	}
 
 	// wdt_reset();
 	// // Check if button was pressed
@@ -100,10 +105,12 @@ void loop() {
 		if ((hour()==autoActivOn) && !alarmOn) {
 			// Set alarm_on to active
 			alarmOn = true;
+			sendAlarm(true);
 		}
 		if ((hour()==autoActivOff) && alarmOn) {
 			// Set alarm_on to inactive
 			alarmOn = false;
+			sendAlarm(true);
 		}
 	}
 	

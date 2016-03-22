@@ -116,6 +116,7 @@ void relayOff() {
 		relayOffTimer.detach();
 		alarmTimer.detach();
 		analogWrite(speakerPin, 0);
+		lightOffTriggered = true;
 	}
 }
 
@@ -650,6 +651,23 @@ void replyClient(WiFiClient httpClient) {
 		root["sketch"] = String(ESP.getSketchSize());
 		root["freemem"] = String(ESP.getFreeSketchSpace());
 
+		root.printTo(jsonString);
+		s += jsonString;
+		httpClient.print(s);
+		httpClient.flush();
+		httpClient.stop();
+		delay(1000);
+		return;
+	// Switch lights on for 2 minutes
+	} else if (req.substring(0, 3) == "/?b"){
+		root["result"] = "success";
+		createStatus(root, true);
+
+		// Switch on lights for 2 minutes
+		offDelay = 0;
+		relayOffTimer.attach(1, relayOff);
+		digitalWrite(relayPort, HIGH);
+		
 		root.printTo(jsonString);
 		s += jsonString;
 		httpClient.print(s);

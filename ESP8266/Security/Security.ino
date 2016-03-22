@@ -164,6 +164,8 @@ boolean lightUpdateTriggered = false;
 boolean lightLDRTriggered = false;
 /** Flag for detection status */
 boolean hasDetection = false;
+/** Flag for light switched off */
+boolean lightOffTriggered = false;
 
 /** Flag for boot status */
 boolean inSetup = true;

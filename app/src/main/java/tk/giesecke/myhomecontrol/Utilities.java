@@ -209,7 +209,7 @@ public class Utilities extends MyHomeControl {
 		try {
 			if (jsonResult.getInt("alarm_on") == 1) {
 				message += "Alarm active\n";
-				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_dot_orange));
+				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_sec_widget_on));
 				if (isFrontSensor) {
 					hasAlarmOnFront = true;
 				} else {
@@ -218,7 +218,7 @@ public class Utilities extends MyHomeControl {
 				mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
 			} else {
 				message += "Alarm not active\n";
-				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_dot));
+				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_sec_widget_off));
 				if (isFrontSensor) {
 					hasAlarmOnFront = false;
 				} else {
@@ -292,10 +292,10 @@ public class Utilities extends MyHomeControl {
 		try {
 			if (jsonResult.getInt("light_on") == 1) {
 				message += "Light active\n";
-				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_dot_green));
+				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_on));
 			} else {
 				message += "Light not active\n";
-				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_dot));
+				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_off));
 			}
 		} catch (JSONException e) {
 			if (BuildConfig.DEBUG)
