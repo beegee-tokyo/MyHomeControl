@@ -65,6 +65,13 @@ void setup() {
 		writeStatus();
 	}
 	
+	// Set initial time
+	setTime(getNtpTime());
+
+	// Initialize NTP client
+	setSyncProvider(getNtpTime);
+	setSyncInterval(3600); // Sync every hour
+
 	// Get first values from spMonitor
 	getPowerVal(false);
 

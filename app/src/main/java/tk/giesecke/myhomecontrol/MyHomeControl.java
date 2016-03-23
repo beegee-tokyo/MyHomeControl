@@ -673,7 +673,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						}
 					});
 				}
-			}, 60 * 1000); // updates every 1 minute
+			}, 1000, 60 * 1000); // updates every 1 minute
 		} else {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 			new Initialize().execute();
@@ -691,7 +691,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						}
 					});
 				}
-			}, 10 * 60 * 1000); // updates every 10 minute
+			}, 1000, 10 * 60 * 1000); // updates every 10 minute
 		}
 		if (!isMyServiceRunning(UDPlistener.class)) {
 			// Start background services
