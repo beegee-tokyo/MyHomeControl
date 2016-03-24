@@ -505,7 +505,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			solStatus.setText(getResources().getString(R.string.not_home));
 		}
 
-		// TODO call onCreate function for spMonitor view related
 		/** Pointer to text views showing the consumed / produced energy */
 		TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
 		energyText.setVisibility(View.INVISIBLE);
@@ -2701,6 +2700,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		colorGrey = getResources().getColor(android.R.color.darker_gray);
 	}
 
+	/**
+	 * Find all available devices
+	 * Check if Google Cloud Messaging is registered
+	 * Send status request to all available devices
+	 */
 	private class Initialize extends AsyncTask<String, String, Void> {
 
 		@SuppressLint("CommitPrefEdits")

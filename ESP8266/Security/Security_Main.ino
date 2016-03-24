@@ -38,6 +38,7 @@ void loop() {
 			}
 		} else { // No detection
 			ledFlasher.detach(); // Stop fast flashing if we have no detection
+			digitalWrite(alarmLED, HIGH); // Turn off LED
 			alarmTimer.detach();
 			analogWrite(speakerPin, LOW); // Switch off speaker
 			digitalWrite(alarmLED, HIGH);
@@ -105,11 +106,14 @@ void loop() {
 		if ((hour()==autoActivOn) && !alarmOn) {
 			// Set alarm_on to active
 			alarmOn = true;
+			ledFlasher.attach(0.4, redLedFlash);
 			sendAlarm(true);
 		}
 		if ((hour()==autoActivOff) && alarmOn) {
 			// Set alarm_on to inactive
 			alarmOn = false;
+			ledFlasher.detach();
+			digitalWrite(alarmLED, HIGH); // Turn off LED
 			sendAlarm(true);
 		}
 	}

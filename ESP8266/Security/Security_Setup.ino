@@ -84,7 +84,6 @@ void setup() {
 	attachInterrupt(pirPort, pirTrigger, CHANGE);
 
 	// Initialize interrupt for push button signal
-	// TODO check hardware for connections between PIR and button input
 	// PIR alert triggers a button push as well (but only once)
 	// maybe it is EMV problem ???
 	// For now the button interrupt is disabled

@@ -15,7 +15,6 @@ public class StartBackgroundServices extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		// TODO: Return the communication channel to the service.
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
 
@@ -45,7 +44,6 @@ public class StartBackgroundServices extends Service {
 				new Intent(intentContext, SolarSyncDBService.class),PendingIntent.FLAG_UPDATE_CURRENT);
 		/** Alarm manager for sync every 2 hours */
 		AlarmManager am = (AlarmManager) intentContext.getSystemService(Context.ALARM_SERVICE);
-		// TODO testing 2 hour update of the database
 		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 360000,
 				7200000, pi);
 	}

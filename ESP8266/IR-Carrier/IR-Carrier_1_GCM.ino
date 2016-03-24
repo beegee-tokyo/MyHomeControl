@@ -10,7 +10,6 @@
 //	/** Google API key */
 //	const String API_key = "===YOUR_GOOGLE_API_KEY_HERE===";
 /* ===FILE CONTENT ABOVE=========================================== */
-#include "gcmInfo.h"
 
 /* Flag for Serial output */
 //#define DEBUG_OUT
@@ -226,16 +225,16 @@ boolean addRegisteredDevice(String newDeviceID) {
 	// Add new ID to regAndroidIds[]
 	regDevNum += 1;
 	regAndroidIds[regDevNum-1] = newDeviceID;
-	
+
 	if (writeRegIds()) {
-		#ifdef DEBUG_OUT 
+		#ifdef DEBUG_OUT
 		Serial.println("Successful added id: " + newDeviceID);
 		#endif
 		// Refresh list with registered devices
 		getRegisteredDevices();
 		return true;
 	} else {
-		#ifdef DEBUG_OUT 
+		#ifdef DEBUG_OUT
 		Serial.println("Failed to added id: " + newDeviceID);
 		#endif
 		// Refresh list with registered devices
@@ -252,7 +251,8 @@ boolean addRegisteredDevice(String newDeviceID) {
  *              False if file error occured
  */
 boolean delRegisteredDevice() {
-	#ifdef DEBUG_OUT Serial.println("===========================================");
+	#ifdef DEBUG_OUT
+	Serial.println("===========================================");
 	Serial.println("delRegisteredDevice");
 	Serial.println("===========================================");
 	#endif
@@ -281,7 +281,6 @@ boolean delRegisteredDevice() {
 		failReason = "Error while deleting registration file";
 		return false;
 	}
-	return false;
 }
 
 /**
@@ -295,7 +294,8 @@ boolean delRegisteredDevice() {
  */
 boolean delRegisteredDevice(String delRegId) {
 	int delRegIndex;
-	#ifdef DEBUG_OUT Serial.println("===========================================");
+	#ifdef DEBUG_OUT
+	Serial.println("===========================================");
 	Serial.println("delRegisteredDevice");
 	Serial.println("===========================================");
 	#endif
@@ -347,7 +347,6 @@ boolean delRegisteredDevice(String delRegId) {
 		failReason = "Could not find registration id " + delRegId;
 		return false;
 	}
-	return false;
 }
 
 /**
@@ -360,7 +359,8 @@ boolean delRegisteredDevice(String delRegId) {
  *              False if a file error occured or index is invalid
  */
 boolean delRegisteredDevice(int delRegIndex) {
-	#ifdef DEBUG_OUT Serial.println("===========================================");
+	#ifdef DEBUG_OUT
+	Serial.println("===========================================");
 	Serial.println("delRegisteredDevice");
 	Serial.println("===========================================");
 	#endif
@@ -396,7 +396,6 @@ boolean delRegisteredDevice(int delRegIndex) {
 		#endif
 		return true;
 	}
-	return false;
 }
 
 /**

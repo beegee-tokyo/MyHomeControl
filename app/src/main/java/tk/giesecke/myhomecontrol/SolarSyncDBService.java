@@ -1,8 +1,8 @@
 package tk.giesecke.myhomecontrol;
 
 import android.app.IntentService;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -24,9 +24,6 @@ import okhttp3.Response;
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p/>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
  */
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class SolarSyncDBService extends IntentService {

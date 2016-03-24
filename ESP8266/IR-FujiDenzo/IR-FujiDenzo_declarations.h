@@ -241,9 +241,15 @@ IRsend My_Sender(IR_LED_OUT);
 /* Status of aircon related to power consumption value of the house
  * If consumption is negative => production higher than consumption => switch on aircon
  * If consumption is positive => production lower than consumption => switch off aircon
- * Tresholds: TODO adapt values
+ * Tresholds:
+ *                      1 aircon values
+ *						producing 75W => Switch on aircon in fan mode  = status 1
+ *						producing 375W => Switch aircon to cool mode 25 deg C = status 2
+ *						using 200W  => Switch aircon off = status 0
+ *						using 400W when aircon is in cooling mode => Switch aircon back to fan mode
+ *						 TODO adapt values for 2 aircons
  *						positive => Switch aircon off = status 0
- *						-100W => Switch on aircon in fan mode low = status 1
+ *						-75W => Switch on aircon in fan mode low = status 1
  *						additional -50W => Switch aircon to fan mode medium = status 2
  *						additional -50W => Switch aircon to fan mode high = status 3
  *						additional -200W => Switch aircon to cool mode 25 deg C = status 4

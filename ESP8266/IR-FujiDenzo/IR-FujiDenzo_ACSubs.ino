@@ -373,7 +373,6 @@ void checkPower() {
 					// sendCmd();
 					// powerStatus = 3;
 					// mustBroadcast = true;
-					// // TODO: Send alarm to user to close doors and windows
 				// }
 				// if (consPower > 300) { // consuming more than 300W
 					// Serial.print("Consumption > 300W : ");
@@ -463,7 +462,6 @@ void checkPower() {
 					powerStatus = 2;
 					mustBroadcast = true;
 					mustWriteStatus = true;
-					// TODO: Send alarm to user to close doors and windows
 				}
 				if (consPower > 200) { // consuming more than 200W
 					//Serial.print("Consumption > 200W : ");

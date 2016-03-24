@@ -260,7 +260,8 @@ void replyClient(WiFiClient httpClient) {
 	} else if (req.substring(0, 8) == "/?regid=") {
 		/** String to hold the received registration ID */
 		String regID = req.substring(8,req.length());
-		#ifdef DEBUG_OUT Serial.println("RegID: "+regID);
+		#ifdef DEBUG_OUT
+		Serial.println("RegID: "+regID);
 		Serial.println("Length: "+String(regID.length()));
 		#endif
 		// Check if length of ID is correct

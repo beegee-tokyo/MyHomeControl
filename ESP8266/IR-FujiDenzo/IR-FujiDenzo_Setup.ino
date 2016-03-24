@@ -86,7 +86,6 @@ void setup() {
 	getPowerTimer.attach(60, triggerGetPower);
 
 	// Start sending status update every 5 minutes (5x60=300 seconds)
-	// TODO testing to send only if status changed or power value changed by more than 10 Watt
 	sendUpdateTimer.attach(300, triggerSendUpdate);
 
 	// Send aircon restart message
