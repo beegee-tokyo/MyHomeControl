@@ -9,7 +9,7 @@ time_t getNtpTime()
 
 	while (udpClientServer.parsePacket() > 0) ; // discard any previously received packets
 	Serial.println("Transmit NTP Request");
-	sendNTPpacket(timeServer);
+	sendNTPpacket();
 	uint32_t beginWait = millis();
 	while (millis() - beginWait < 1500) {
 		int size = udpClientServer.parsePacket();
@@ -36,7 +36,7 @@ time_t getNtpTime()
  * @param &address
  *			Pointer to address of NTP server
  */
-void sendNTPpacket(IPAddress &address)
+void sendNTPpacket()
 {
 	// set all bytes in the buffer to 0
 	memset(packetBuffer, 0, NTP_PACKET_SIZE);
@@ -53,8 +53,6 @@ void sendNTPpacket(IPAddress &address)
 	packetBuffer[15]	= 52;
 	// all NTP fields have been given values, now
 	// you can send a packet requesting a timestamp:							
-	// Better to use time.nist.gov instead of fixed IP address !!!!!!!!!!!!
-	//udpClientServer.beginPacket(address, 123); //NTP requests are to port 123
 	udpClientServer.beginPacket(timeServerURL, 123); //NTP requests are to port 123
 	udpClientServer.write(packetBuffer, NTP_PACKET_SIZE);
 	udpClientServer.endPacket();

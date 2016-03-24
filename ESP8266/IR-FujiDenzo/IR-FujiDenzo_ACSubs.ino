@@ -232,7 +232,7 @@ boolean switchSlaveAC(IPAddress ipSlave, byte reqMode) {
 	digitalWrite(COM_LED, LOW);
 	const int httpPort = 80;
 	if (!tcpClient.connect(ipSlave, httpPort)) {
-		Serial.println("connection to slave AC " + String(ipSPM[0]) + "." + String(ipSPM[1]) + "." + String(ipSPM[2]) + "." + String(ipSPM[3]) + " failed");
+		Serial.println("connection to slave AC " + String(ipSlave[0]) + "." + String(ipSlave[1]) + "." + String(ipSlave[2]) + "." + String(ipSlave[3]) + " failed");
 		tcpClient.stop();
 		digitalWrite(COM_LED, HIGH);
 		return false;
@@ -290,6 +290,8 @@ boolean switchSlaveAC(IPAddress ipSlave, byte reqMode) {
 void checkPower() {
 	/** Flag if we need to send update of status */
 	boolean mustBroadcast = false;
+	/** Flag if we need to save a new status */
+	boolean mustWriteStatus = false;
 	/** Calculate average power consumption of the last 10 minutes */
 	consPower = 0;
 	for (int i = 0; i < 10; i++) {
@@ -429,6 +431,7 @@ void checkPower() {
 			sendCmd();
 			powerStatus = 0;
 			mustBroadcast = true;
+			mustWriteStatus = true;
 		}
 	} else {
 		/** Check current status */
@@ -446,6 +449,7 @@ void checkPower() {
 						sendCmd();
 						powerStatus = 1;
 						mustBroadcast = true;
+						mustWriteStatus = true;
 					}
 				}
 				break;
@@ -458,6 +462,7 @@ void checkPower() {
 					sendCmd();
 					powerStatus = 2;
 					mustBroadcast = true;
+					mustWriteStatus = true;
 					// TODO: Send alarm to user to close doors and windows
 				}
 				if (consPower > 200) { // consuming more than 200W
@@ -468,6 +473,7 @@ void checkPower() {
 					sendCmd();
 					powerStatus = 0;
 					mustBroadcast = true;
+					mustWriteStatus = true;
 				}
 				break;
 			case 2: // aircon is in cool mode, over production was > 375W
@@ -479,13 +485,16 @@ void checkPower() {
 					sendCmd();
 					powerStatus = 1;
 					mustBroadcast = true;
+					mustWriteStatus = true;
 				}
 				break;
 		}
 	}
-	if (mustBroadcast) {
+	if (mustWriteStatus) {
 		// Save status change
 		writeStatus();
+	}
+	if (mustBroadcast) {
 		// Broadcast status change
 		sendBroadCast();
 	}
@@ -545,7 +554,7 @@ void getPowerVal(boolean doPowerCheck) {
 			}
 			avgConsPower[9] = consPower;
 			avgSolarPower[9] = solarPower;
-			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON) {
+			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON && dayTime) {
 				checkPower();
 			}
 		}

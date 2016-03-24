@@ -50,4 +50,4 @@ void replyClient(WiFiClient httpClient);
 
 // NTP client functions
 time_t getNtpTime();
-void sendNTPpacket(IPAddress &address);
+void sendNTPpacket();

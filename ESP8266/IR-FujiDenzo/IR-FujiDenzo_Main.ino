@@ -122,6 +122,52 @@ void loop() {
 		liveCnt = 0;
 	}
 	
+	// If time is later than "endOfDay" or earlier than "startOfDay" we stop automatic function and switch off the aircon
+	if (hour() > endOfDay && hour() < startOfDay) {
+		if (dayTime) {
+			// If AC is on, switch it to FAN low speed and then switch it off
+			if ((acMode & AC_ON) == AC_ON && dayTime) { // AC is on
+				// Set mode to FAN
+				irCmd = CMD_MODE_FAN;
+				sendCmd();
+				// TODO adapt this for Carrier AC which toggles through the speeds
+				// Set fan speed to LOW
+				irCmd = CMD_FAN_LOW;
+				sendCmd();
+				// Switch AC off
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+			}
+			Serial.print("Switching off the auto mode at ");
+			Serial.print(hour());
+			Serial.println("h");
+			dayTime = false;
+			powerStatus = 0;
+		}
+	}else {
+		if (!dayTime) {
+			Serial.print("Switching on the auto mode at ");
+			Serial.print(hour());
+			Serial.println("h");
+			dayTime = true;
+		}
+	}
+	
+	// Catch a bug with power status = 0 but aircon is on when in auto mode
+	// If AC is on and Auto mode is on but powerStatus is 0, switch it to FAN low speed and then switch it off
+	if ((acMode & AC_ON) == AC_ON && (acMode & AUTO_ON) == AUTO_ON && powerStatus == 0) {
+		// Set mode to FAN
+		irCmd = CMD_MODE_FAN;
+		sendCmd();
+		// TODO adapt this for Carrier AC which toggles through the speeds
+		// Set fan speed to LOW
+		irCmd = CMD_FAN_LOW;
+		sendCmd();
+		// Switch AC off
+		irCmd = CMD_ON_OFF;
+		sendCmd();
+	}
+	
 	// Handle FTP access
 	ftpSrv.handleFTP();
 }

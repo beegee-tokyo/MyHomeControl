@@ -726,7 +726,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			autoUpdate.cancel();
 		} catch (Exception ignore) {
 		}
-
+		animator.end();
+		ivAlarmOn.setAlpha(0f);
+		animatorBack.end();
+		ivAlarmOnBack.setAlpha(0f);
 	}
 
 	/**

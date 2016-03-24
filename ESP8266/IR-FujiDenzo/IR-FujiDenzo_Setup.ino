@@ -10,7 +10,7 @@ void setup() {
 
 	Serial.setDebugOutput(false);
 	Serial.println("");
-	Serial.println("Hello from ESP8266");
+	Serial.println("Hello from ESP8266 aircon control");
 
 	// Setup WiFi event handler
 	WiFi.onEvent(WiFiEvent);
@@ -71,6 +71,13 @@ void setup() {
 	// Initialize NTP client
 	setSyncProvider(getNtpTime);
 	setSyncInterval(3600); // Sync every hour
+
+	// If time is after 5pm (17) and before 8am we stop automatic function and switch off the aircon
+	if (hour() > endOfDay && hour() < startOfDay) {
+		dayTime = false;
+	}else {
+		dayTime = true;
+	}
 
 	// Get first values from spMonitor
 	getPowerVal(false);

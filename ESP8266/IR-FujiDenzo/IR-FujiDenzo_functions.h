@@ -42,4 +42,5 @@ void checkPower();
 
 // NTP client functions
 time_t getNtpTime();
+void sendNTPpacket();
 

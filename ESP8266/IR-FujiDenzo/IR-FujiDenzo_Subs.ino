@@ -254,8 +254,12 @@ void parseCmd(JsonObject& root) {
 			} else { // AC is off
 				root["result"] = "success";
 				switch (irCmd) {
-					case CMD_ON_OFF: // Switch aircon On/Off
+					case CMD_ON_OFF: // Switch aircon on
 						root["cmd"] = CMD_ON_OFF;
+						// On manual ON request switch off auto mode
+						acMode = acMode & AUTO_CLR;
+						acMode = acMode | AUTO_OFF;
+						writeStatus();
 						break;
 					default:
 						root["result"] = "fail - AC is off";

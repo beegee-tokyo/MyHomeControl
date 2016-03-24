@@ -8,8 +8,8 @@
 #include <WiFiClient.h>
 #include <ArduinoOTA.h>
 #include <FS.h>
-#include <TimeLib.h> 
 #include <ESP8266FtpServer.h>
+#include <TimeLib.h> 
 
 /** Build time */
 const char compileDate[] = __DATE__ " " __TIME__;
@@ -17,7 +17,7 @@ const char compileDate[] = __DATE__ " " __TIME__;
 /**********************************************
 When doing breadboard test, enable this define
 ***********************************************/
-//#define BREADBOARD
+#define BREADBOARD
 
 #ifdef BREADBOARD
 	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
@@ -228,6 +228,12 @@ boolean powerUpdateTriggered = false;
 boolean sendUpdateTriggered = false;
 /** Flag for boot status */
 boolean inSetup = true;
+/** Flag for day time */
+boolean dayTime = false;
+/** Start of day time */
+int startOfDay = 8;
+/** End of day time */
+int endOfDay = 17;
 
 /** Instance of the IR sender */
 IRsend My_Sender(IR_LED_OUT);
@@ -260,4 +266,17 @@ byte avgConsIndex = 0;
 
 /** Counter for "I am alive" red LED blinking in loop() */
 long liveCnt = 0;
+
+// NTP Servers stuff
+/** URL of NTP server */
+const char* timeServerURL = "time.nist.gov";
+
+/** Definition of timezone */
+const int timeZone = 8;     // Philippine time (GMT + 8h)
+
+/** Size of NTP time server packet */
+const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+/** Buffer for data from NTP server */
+byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+
 

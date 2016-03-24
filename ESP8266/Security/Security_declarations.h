@@ -4,7 +4,6 @@
 #include <WiFiClient.h>
 #include <ArduinoOTA.h>
 #include <Ticker.h>
-#include <Timer.h>
 #include <Wire.h>
 #include <Adafruit_Sensor_ESP.h>
 #include <Adafruit_TSL2561_U_ESP.h>
@@ -75,8 +74,6 @@ FtpServer  ftpSrv;
 IPAddress ipGateWay(192, 168, 0, 1);
 /** Network mask of the local lan */
 IPAddress ipSubNet(255, 255, 255, 0);
-/** Network address of time server (Arduino Yun) */
-IPAddress ipTime(192, 168, 0, 140);
 /** Network address mask for UDP multicast messaging */
 IPAddress multiIP (192,	168, 0, 255);
 
@@ -166,11 +163,7 @@ int ldrValue = 0;
 int liveCnt = 0;
 
 // NTP Servers stuff
-/** IP address of NTP server */
-IPAddress timeServer(132, 163, 4, 101); // time-a.timefreq.bldrdoc.gov
-// IPAddress timeServer(132, 163, 4, 102); // time-b.timefreq.bldrdoc.gov
-// IPAddress timeServer(132, 163, 4, 103); // time-c.timefreq.bldrdoc.gov
-// time.nist.gov
+/** URL of NTP server */
 const char* timeServerURL = "time.nist.gov";
 
 /** Definition of timezone */
@@ -183,6 +176,7 @@ unsigned int localPort = 8888;  // local port to listen for UDP packets
 const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
 /** Buffer for data from NTP server */
 byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
+
 /** Flag for automatic activation/deactivation of alarm */
 boolean hasAutoActivation = false;
 /** Hour for automatic activation of alarm (24h format) */
