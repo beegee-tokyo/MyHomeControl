@@ -258,7 +258,7 @@ public class Utilities extends MyHomeControl {
 				secAutoOff = "8am";
 				secAutoOffStored = 8;
 			}
-		} catch (JSONException ve) {
+		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.getInt("auto") == 1) {

@@ -1829,27 +1829,27 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							try {
 								tempString = jsonResult.getString("ssid");
 								message += "SSID: " + tempString + "\n";
-							} catch (JSONException e) {
+							} catch (JSONException ignore) {
 							}
 							try {
 								tempString = jsonResult.getString("ip");
 								message += "IP: " + tempString + "\n";
-							} catch (JSONException e) {
+							} catch (JSONException ignore) {
 							}
 							try {
 								tempString = jsonResult.getString("mac");
 								message += "MAC: " + tempString + "\n";
-							} catch (JSONException e) {
+							} catch (JSONException ignore) {
 							}
 							try {
 								tempString = jsonResult.getString("sketch");
 								message += "Sketch size: " + tempString + "\n";
-							} catch (JSONException e) {
+							} catch (JSONException ignore) {
 							}
 							try {
 								tempString = jsonResult.getString("freemem");
 								message += "Free Memory: " + tempString + "\n";
-							} catch (JSONException e) {
+							} catch (JSONException ignore) {
 							}
 
 							if (showDebug) {
