@@ -40,9 +40,9 @@ public class SPwidget extends AppWidgetProvider {
 	@SuppressWarnings("deprecation")
 	@SuppressLint("InlinedApi")
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-	                            int appWidgetId,
-	                            Float solarPowerMin,
-	                            Float consPowerMin ) {
+								int appWidgetId,
+								Float solarPowerMin,
+								Float consPowerMin ) {
 
 		if (android.os.Build.VERSION.SDK_INT > 9) {
 			StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();

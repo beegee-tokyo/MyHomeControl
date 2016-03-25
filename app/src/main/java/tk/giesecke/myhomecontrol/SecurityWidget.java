@@ -32,7 +32,7 @@ public class SecurityWidget extends AppWidgetProvider {
 	}
 
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-	                            int appWidgetId, boolean isChanging) {
+								int appWidgetId, boolean isChanging) {
 
 		// Construct the RemoteViews object
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.security_widget);

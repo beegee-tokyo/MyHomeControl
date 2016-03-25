@@ -263,8 +263,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static boolean showingLast = false;
 	/** Flag for showing a log */
 	static boolean showingLog = false;
-    // Flag for database empty */
-    static boolean dataBaseIsEmpty = true;
+	// Flag for database empty */
+	static boolean dataBaseIsEmpty = true;
 
 	/** Instance of DataBaseHelper for this month*/
 	private DataBaseHelper dbHelperNow;
@@ -843,7 +843,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				// Use long click listener to play the alarm sound
 				lvAlarmList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-					                               int pos, long id) {
+												   int pos, long id) {
 						/** Instance of media player */
 						MediaPlayer mMediaPlayer = new MediaPlayer();
 						try {
@@ -1787,9 +1787,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					break;
 				case "spm": // Caller is solar monitor view
 					initSolIsOn = false;
-                    if (!dataBaseIsEmpty) {
-                        solarViewUpdate(result.comResult);
-                    }
+					if (!dataBaseIsEmpty) {
+						solarViewUpdate(result.comResult);
+					}
 					break;
 			}
 		}
@@ -2129,10 +2129,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			} else {
 				dataBase = dbHelperLast.getReadableDatabase();
 			}
-            // Is database in use?
-            while (dataBase.inTransaction()) {
-                if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "syncSolarDB Database is in use");
-            }
+			// Is database in use?
+			while (dataBase.inTransaction()) {
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "syncSolarDB Database is in use");
+			}
 
 			dataBase.beginTransaction();
 			/** Cursor with data from database */
@@ -2261,7 +2261,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					}
 				}
 			}
-            dataBaseIsEmpty = false;
+			dataBaseIsEmpty = false;
 			return result;
 		}
 
@@ -2294,68 +2294,79 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (value.length() != 0) {
 					// decode JSON
 					if (Utilities.isJSONValid(value)) {
+						/** Flag for data from external server */
+						boolean isFromLocal;
+						/** JSON object containing the values */
+						JSONObject jsonValues = null;
 						try {
-							/** JSON object containing result from server */
-							JSONObject jsonResult = new JSONObject(value);
-							/** JSON object containing the values */
-							JSONObject jsonValues = jsonResult.getJSONObject("value");
+							jsonValues = new JSONObject(value.substring(1,value.length()-1));
+							isFromLocal = false;
+						} catch (JSONException ignore) {
+							isFromLocal = true;
+						}
+						try {
+							if (isFromLocal) {
+								/** JSON object containing result from server */
+								JSONObject jsonResult = new JSONObject(value);
+								/** JSON object containing the values */
+								jsonValues = jsonResult.getJSONObject("value");
+							}
 
 							try {
-								ChartHelper.solarPowerMin = Float.parseFloat(jsonValues.getString("S"));
+								ChartHelper.solarPowerMin = isFromLocal?
+										Float.parseFloat(jsonValues.getString("S")):
+										Float.parseFloat(jsonValues.getString("s"));
 								ChartHelper.lastSolarPowerMin = ChartHelper.solarPowerMin;
 							} catch (Exception excError) {
 								ChartHelper.solarPowerMin = ChartHelper.lastSolarPowerMin;
 							}
-							/** Temporary buffer for last read power value */
-							Float oldPower = ChartHelper.solarPowerSec;
 							try {
-								ChartHelper.solarPowerSec = Float.parseFloat(jsonValues.getString("sr"));
-							} catch (Exception excError) {
-								ChartHelper.solarPowerSec = oldPower;
-							}
-							try {
-								ChartHelper.consPowerMin = Float.parseFloat(jsonValues.getString("C"));
+								ChartHelper.consPowerMin = isFromLocal?
+										Float.parseFloat(jsonValues.getString("C")):
+										Float.parseFloat(jsonValues.getString("c"));
 								ChartHelper.lastConsPowerMin = ChartHelper.consPowerMin;
 							} catch (Exception excError) {
 								ChartHelper.consPowerMin = ChartHelper.lastConsPowerMin;
-							}
-							oldPower = ChartHelper.consPowerSec;
-							try {
-								ChartHelper.consPowerSec = Float.parseFloat(jsonValues.getString("cr"));
-							} catch (Exception excError) {
-								ChartHelper.consPowerSec = oldPower;
 							}
 
 							result = "S=" + String.valueOf(ChartHelper.solarPowerMin) + "W ";
 							result += "s=";
 							try {
 								result += jsonValues.getString("s");
-							} catch (Exception excError) {
+							} catch (Exception ignore) {
 								result += "---";
 							}
-							result += "A sv=";
-							try {
-								result += jsonValues.getString("sv");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("sv")) {
+								result += "A sv=";
+								try {
+									result += jsonValues.getString("sv");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "V sr=";
-							try {
-								result += jsonValues.getString("sr");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("sr")) {
+								result += "V sr=";
+								try {
+									result += jsonValues.getString("sr");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "W sa=";
-							try {
-								result += jsonValues.getString("sa");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("sa")) {
+								result += "W sa=";
+								try {
+									result += jsonValues.getString("sa");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "W sp=";
-							try {
-								result += jsonValues.getString("sp");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("sp")) {
+								result += "W sp=";
+								try {
+									result += jsonValues.getString("sp");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
 							result += "\nC=" + String.valueOf(ChartHelper.consPowerMin) + "W c=";
 							try {
@@ -2363,29 +2374,39 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							} catch (Exception excError) {
 								result += "---";
 							}
-							result += "A cv=";
-							try {
-								result += jsonValues.getString("cv");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("cv")) {
+								result += "A cv=";
+								try {
+									result += jsonValues.getString("cv");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "V cr=";
-							try {
-								result += jsonValues.getString("cr");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("cr")) {
+								result += "V cr=";
+								try {
+									result += jsonValues.getString("cr");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "W ca=";
-							try {
-								result += jsonValues.getString("ca");
-							} catch (Exception excError) {
-								result += "---";
+							if (jsonValues.has("ca")) {
+								result += "W ca=";
+								try {
+									result += jsonValues.getString("ca");
+								} catch (Exception excError) {
+									result += "---";
+								}
 							}
-							result += "W cp=";
-							try {
-								result += jsonValues.getString("cp") + "\n";
-							} catch (Exception excError) {
-								result += "---" + "\n";
+							if (jsonValues.has("cp")) {
+								result += "W cp=";
+								try {
+									result += jsonValues.getString("cp") + "\n";
+								} catch (Exception excError) {
+									result += "---" + "\n";
+								}
+							} else {
+								result += "\n";
 							}
 
 							/** Double for the result of solar current and consumption used at 1min updates */
@@ -2450,42 +2471,42 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									ChartHelper.initChart(true);
 								}
 							}
-                            if (ChartHelper.plotData != null) {
-                                /** Current time as string */
-                                String nowTime = Utilities.getCurrentTime();
-                                ChartHelper.plotData.addXValue(nowTime);
-                                ChartHelper.timeStampsCont.add(nowTime);
-                                ChartHelper.solarSeries.add
-                                        (new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
-                                ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
-                                if (ChartHelper.consPowerMin < 0.0) {
-                                    ChartHelper.consPSeries.add
-                                            (new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
-                                    ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
-                                    ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
-                                    ChartHelper.consumMPowerCont.add(0.0f);
-                                } else {
-                                    ChartHelper.consMSeries.add
-                                            (new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
-                                    ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
-                                    ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
-                                    ChartHelper.consumPPowerCont.add(0.0f);
+							if (ChartHelper.plotData != null) {
+								/** Current time as string */
+								String nowTime = Utilities.getCurrentTime();
+								ChartHelper.plotData.addXValue(nowTime);
+								ChartHelper.timeStampsCont.add(nowTime);
+								ChartHelper.solarSeries.add
+										(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
+								ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
+								if (ChartHelper.consPowerMin < 0.0) {
+									ChartHelper.consPSeries.add
+											(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
+									ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
+									ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
+									ChartHelper.consumMPowerCont.add(0.0f);
+								} else {
+									ChartHelper.consMSeries.add
+											(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
+									ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
+									ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
+									ChartHelper.consumPPowerCont.add(0.0f);
 
-                                    /** Text view to show min and max poser values */
-                                    TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
-                                    displayTxt = "(" + String.format("%.0f",
-                                            Collections.max(ChartHelper.consumMPowerCont)) + "W)";
-                                    maxPowerText.setText(displayTxt);
-                                    maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
-                                    displayTxt = "(" + String.format("%.0f",
-                                            Collections.max(ChartHelper.solarPowerCont)) + "W)";
-                                    maxPowerText.setText(displayTxt);
+									/** Text view to show min and max poser values */
+									TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
+									displayTxt = "(" + String.format("%.0f",
+											Collections.max(ChartHelper.consumMPowerCont)) + "W)";
+									maxPowerText.setText(displayTxt);
+									maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
+									displayTxt = "(" + String.format("%.0f",
+											Collections.max(ChartHelper.solarPowerCont)) + "W)";
+									maxPowerText.setText(displayTxt);
 
-                                    // let the chart know it's data has changed
-                                    ChartHelper.lineChart.notifyDataSetChanged();
-                                    ChartHelper.lineChart.invalidate();
-                                }
-                            }
+									// let the chart know it's data has changed
+									ChartHelper.lineChart.notifyDataSetChanged();
+									ChartHelper.lineChart.invalidate();
+								}
+							}
 
 						} catch (JSONException e) {
 							e.printStackTrace();
@@ -2732,177 +2753,191 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Already registered with GCM - " + gcmRegId);
 			}
 
-			if (deviceIsOn[spMonitorIndex]) { // spMonitor
-				// Get initial status from spMonitor device
-				// Get today's day for the online database name
-				dbNamesList = Utilities.getDateStrings();
+			initAircons();
+			initSecurity();
+			initSPM();
 
-				// In case the database is not yet existing, open it once
-				/** Instance of data base */
-				SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
-				dataBase.beginTransaction();
-				dataBase.endTransaction();
-				dataBase.close();
+			return null;
+		}
+	}
+
+	private void initSPM() {
+		if (deviceIsOn[spMonitorIndex]) { // spMonitor
+			// Get initial status from spMonitor device
+			// Get today's day for the online database name
+			dbNamesList = Utilities.getDateStrings();
+
+			// In case the database is not yet existing, open it once
+			/** Instance of data base */
+			SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+			dataBase.beginTransaction();
+			dataBase.endTransaction();
+			dataBase.close();
 //				dbHelperNow.close();
+			/** Instance of data base */
+			dataBase = dbHelperLast.getReadableDatabase();
+			dataBase.beginTransaction();
+			dataBase.endTransaction();
+			dataBase.close();
+
+			// Check if database is empty. If yes, sync only the database for this month
+			dataBase = dbHelperNow.getReadableDatabase();
+			/** Cursor with data from database */
+			Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
+			if (chCursor != null) {
+				if (chCursor.getCount() != 0) { // local database is not empty, need can sync all data
+					dataBaseIsEmpty = false;
+				} else {
+					needLastMonth = true;
+				}
+			}
+			if (chCursor != null) {
+				chCursor.close();
+			}
+			dataBase.close();
+
+			// Start background sync of the database
+			handleTasks(9, dbNamesList[0], "", "", "", null, null);
+
+			if (!dataBaseIsEmpty) { // Sync second database only if first one is not empty
+				// Check if we have already synced the last month
 				/** Instance of data base */
 				dataBase = dbHelperLast.getReadableDatabase();
-				dataBase.beginTransaction();
-				dataBase.endTransaction();
+				/** Cursor with data from database */
+				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
+				if (dbCursor != null) {
+					if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
+						needLastMonth = true;
+					} else { // fill last log file array
+						lastLogDates.clear();
+						/** List with years in the database */
+						ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
+						for (int year = 0; year < yearsAvail.size(); year++) {
+							/** List with months of year in the database */
+							ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
+									0, yearsAvail.get(year));
+							for (int month = 0; month < monthsAvail.size(); month++) {
+								/** List with days of month of year in the database */
+								ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
+										monthsAvail.get(month),
+										yearsAvail.get(year));
+								for (int day = 0; day < daysAvail.size(); day++) {
+									lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
+											.substring(String.valueOf(yearsAvail.get(year)).length()) +
+											"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+											.substring(String.valueOf(monthsAvail.get(month)).length()) +
+											"-" + ("00" + String.valueOf(daysAvail.get(day)))
+											.substring(String.valueOf(daysAvail.get(day)).length()));
+								}
+							}
+						}
+						lastLogDatesIndex = lastLogDates.size() - 1;
+					}
+				}
+				if (dbCursor != null) {
+					dbCursor.close();
+				}
 				dataBase.close();
+			}
 
-                // Check if database is empty. If yes, sync only the database for this month
-                dataBase = dbHelperNow.getReadableDatabase();
-                /** Cursor with data from database */
-                Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
-                if (chCursor != null) {
-                    if (chCursor.getCount() != 0) { // local database is not empty, need can sync all data
-                        dataBaseIsEmpty = false;
-                    } else {
-                        needLastMonth = true;
-                    }
-                }
-                if (chCursor != null) {
-                    chCursor.close();
-                }
-                dataBase.close();
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of spMonitor");
+		} else {
+			dataBaseIsEmpty = false;
+			// Show message not on home WiFi
+			handleTasks(1, getResources().getString(R.string.err_spMonitor), "", "", "", null, null);
+			// Update of solar panel values
+			handleTasks(3, "/data/get", SOLAR_URL, "spm", Integer.toString(selDevice), null, null);
+		}
+	}
 
-				// Start background sync of the database
-				handleTasks(9, dbNamesList[0], "", "", "", null, null);
+	private void initAircons() {
+		if (deviceIsOn[aircon1Index]) { // Aircon 1 - Office
+			// Get initial status from Aircon 1
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 1");
+			initAir1IsOn = true;
+			// Update aircon status
+			handleTasks(3, "/?s", AIRCON_URL_1, "air", "0", null, null);
+			if (mPrefs.contains(prefsLocationName + "0")) {
+				locationName[0] = mPrefs.getString(prefsLocationName + "0", "");
+			}
+			// Update aircon 1 location name
+			handleTasks(4, locationName[0], "", "", "", null, null);
+			if (mPrefs.contains(prefsDeviceIcon + "0")) {
+				deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
+			}
+			// Update aircon 1 icon
+			//noinspection deprecation
+			handleTasks(7, "", "", "", "",
+					(ImageView) findViewById(R.id.im_icon_fd),
+					getResources().getDrawable(iconIDs[deviceIcon[0]]));
+		}
+		if (deviceIsOn[aircon2Index]) { // Aircon 2 - Living room
+			// Get initial status from Aircon 2
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 2");
+			initAir2IsOn = true;
+			// Update aircon 2 status
+			handleTasks(3, "/?s", AIRCON_URL_2, "air", "1", null, null);
+			if (mPrefs.contains(prefsLocationName + "1")) {
+				locationName[0] = mPrefs.getString(prefsLocationName + "1", "");
+			}
+			// Update aircon 2 location name
+			handleTasks(5, locationName[1], "", "", "", null, null);
+			if (mPrefs.contains(prefsDeviceIcon + "1")) {
+				deviceIcon[1] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
+			}
+			// Update aircon 2 icon
+			//noinspection deprecation
+			handleTasks(7, "", "", "", "",
+					(ImageView) findViewById(R.id.im_icon_ca),
+					getResources().getDrawable(iconIDs[deviceIcon[1]]));
+		}
+		if (deviceIsOn[aircon3Index]) { // Aircon 3 - Bedroom
+			// Get initial status from Aircon 3
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 3");
+			initAir3IsOn = true;
+			// Update aircon 3 status
+			handleTasks(3, "/?s", AIRCON_URL_3, "air", "2", null, null);
+			if (mPrefs.contains(prefsLocationName + "2")) {
+				locationName[0] = mPrefs.getString(prefsLocationName + "2", "");
+			}
+			// Update aircon 3 location name
+			handleTasks(6, locationName[2], "", "", "", null, null);
+			if (mPrefs.contains(prefsDeviceIcon + "2")) {
+				deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "2", 99);
+			}
+			// Update aircon 3 icon
+			//noinspection deprecation
+			handleTasks(7, "", "", "", "",
+					(ImageView) findViewById(R.id.im_icon_fd),
+					getResources().getDrawable(iconIDs[deviceIcon[2]]));
+		}
+		if (!deviceIsOn[aircon1Index] && !deviceIsOn[aircon2Index] && !deviceIsOn[aircon3Index]) {
+			// Show message no aircons found
+			handleTasks(2, getResources().getString(R.string.err_aircon),"","","", null, null);
+		}
+	}
 
-                if (!dataBaseIsEmpty) { // Sync second database only if first one is not empty
-                    // Check if we have already synced the last month
-                    /** Instance of data base */
-                    dataBase = dbHelperLast.getReadableDatabase();
-                    /** Cursor with data from database */
-                    Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
-                    if (dbCursor != null) {
-                        if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
-                            needLastMonth = true;
-                        } else { // fill last log file array
-                            lastLogDates.clear();
-                            /** List with years in the database */
-                            ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
-                            for (int year = 0; year < yearsAvail.size(); year++) {
-                                /** List with months of year in the database */
-                                ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
-                                        0, yearsAvail.get(year));
-                                for (int month = 0; month < monthsAvail.size(); month++) {
-                                    /** List with days of month of year in the database */
-                                    ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
-                                            monthsAvail.get(month),
-                                            yearsAvail.get(year));
-                                    for (int day = 0; day < daysAvail.size(); day++) {
-                                        lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
-                                                .substring(String.valueOf(yearsAvail.get(year)).length()) +
-                                                "-" + ("00" + String.valueOf(monthsAvail.get(month)))
-                                                .substring(String.valueOf(monthsAvail.get(month)).length()) +
-                                                "-" + ("00" + String.valueOf(daysAvail.get(day)))
-                                                .substring(String.valueOf(daysAvail.get(day)).length()));
-                                    }
-                                }
-                            }
-                            lastLogDatesIndex = lastLogDates.size() - 1;
-                        }
-                    }
-                    if (dbCursor != null) {
-                        dbCursor.close();
-                    }
-                    dataBase.close();
-                }
-
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of spMonitor");
-			} else {
-				// Show message not on home WiFi
-				handleTasks(1, getResources().getString(R.string.err_spMonitor), "", "", "", null, null);
-				// Update of solar panel values
-				handleTasks(3, "/data/get", SOLAR_URL, "spm", Integer.toString(selDevice), null, null);
-			}
-			if (deviceIsOn[secFrontIndex]) { // Security front
-				// Get initial status from Security
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of front Security");
-				initSec1IsOn = true;
-				// Update security status front sensor
-				handleTasks(3, "/?s", SECURITY_URL_FRONT_1, "sec", Integer.toString(selDevice), null, null);
-			} else {
-				// Show message not on home WiFi
-				handleTasks(0, getResources().getString(R.string.err_security), "", "", "", null, null);
-			}
-			if (deviceIsOn[secRearIndex]) { // Security back
-				// Get initial status from Security
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of rear Security");
-				initSec2IsOn = true;
-				// Update security status back sensor
-				handleTasks(3, "/?s", SECURITY_URL_BACK_1, "sec", Integer.toString(selDevice), null, null);
-				handleTasks(10, "", "", "", "", null, null);
-			} else {
-				// Show message not on home WiFi
-				handleTasks(0, getResources().getString(R.string.err_security), "", "", "", null, null);
-			}
-			if (deviceIsOn[aircon1Index]) { // Aircon 1 - Office
-				// Get initial status from Aircon 1
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 1");
-				initAir1IsOn = true;
-				// Update aircon status
-				handleTasks(3, "/?s", AIRCON_URL_1, "air", "0", null, null);
-				if (mPrefs.contains(prefsLocationName + "0")) {
-					locationName[0] = mPrefs.getString(prefsLocationName + "0", "");
-				}
-				// Update aircon 1 location name
-				handleTasks(4, locationName[0], "", "", "", null, null);
-				if (mPrefs.contains(prefsDeviceIcon + "0")) {
-					deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
-				}
-				// Update aircon 1 icon
-				//noinspection deprecation
-				handleTasks(7, "", "", "", "",
-						(ImageView) findViewById(R.id.im_icon_fd),
-						getResources().getDrawable(iconIDs[deviceIcon[0]]));
-			}
-			if (deviceIsOn[aircon2Index]) { // Aircon 2 - Living room
-				// Get initial status from Aircon 2
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 2");
-				initAir2IsOn = true;
-				// Update aircon 2 status
-				handleTasks(3, "/?s", AIRCON_URL_2, "air", "1", null, null);
-				if (mPrefs.contains(prefsLocationName + "1")) {
-					locationName[0] = mPrefs.getString(prefsLocationName + "1", "");
-				}
-				// Update aircon 2 location name
-				handleTasks(5, locationName[1], "", "", "", null, null);
-				if (mPrefs.contains(prefsDeviceIcon + "1")) {
-					deviceIcon[1] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
-				}
-				// Update aircon 2 icon
-				//noinspection deprecation
-				handleTasks(7, "", "", "", "",
-						(ImageView) findViewById(R.id.im_icon_ca),
-						getResources().getDrawable(iconIDs[deviceIcon[1]]));
-			}
-			if (deviceIsOn[aircon3Index]) { // Aircon 3 - Bedroom
-				// Get initial status from Aircon 3
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 3");
-				initAir3IsOn = true;
-				// Update aircon 3 status
-				handleTasks(3, "/?s", AIRCON_URL_3, "air", "2", null, null);
-				if (mPrefs.contains(prefsLocationName + "2")) {
-					locationName[0] = mPrefs.getString(prefsLocationName + "2", "");
-				}
-				// Update aircon 3 location name
-				handleTasks(6, locationName[2], "", "", "", null, null);
-				if (mPrefs.contains(prefsDeviceIcon + "2")) {
-					deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "2", 99);
-				}
-				// Update aircon 3 icon
-				//noinspection deprecation
-				handleTasks(7, "", "", "", "",
-						(ImageView) findViewById(R.id.im_icon_fd),
-						getResources().getDrawable(iconIDs[deviceIcon[2]]));
-			}
-			if (!deviceIsOn[aircon1Index] && !deviceIsOn[aircon2Index] && !deviceIsOn[aircon3Index]) {
-				// Show message no aircons found
-				handleTasks(2, getResources().getString(R.string.err_aircon),"","","", null, null);
-			}
-			return null;
+	private void initSecurity() {
+		if (deviceIsOn[secFrontIndex]) { // Security front
+			// Get initial status from Security
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of front Security");
+			initSec1IsOn = true;
+			// Update security status front sensor
+			handleTasks(3, "/?s", SECURITY_URL_FRONT_1, "sec", Integer.toString(selDevice), null, null);
+		} else {
+			// Show message not on home WiFi
+			handleTasks(0, getResources().getString(R.string.err_security), "", "", "", null, null);
+		}
+		if (deviceIsOn[secRearIndex]) { // Security back
+			// Get initial status from Security
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of rear Security");
+			initSec2IsOn = true;
+			// Update security status back sensor
+			handleTasks(3, "/?s", SECURITY_URL_BACK_1, "sec", Integer.toString(selDevice), null, null);
+			handleTasks(10, "", "", "", "", null, null);
+		} else {
+			// Show message not on home WiFi
+			handleTasks(0, getResources().getString(R.string.err_security), "", "", "", null, null);
 		}
 	}
 
@@ -2939,12 +2974,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 *      Drawable of icon for task 7
 	 */
 	private void handleTasks(final int task,
-	                         final String message,
-	                         final String url,
-	                         final String deviceID,
-	                         final String airconID,
-	                         final ImageView iconImage,
-	                         final Drawable iconDrawable) {
+							 final String message,
+							 final String url,
+							 final String deviceID,
+							 final String airconID,
+							 final ImageView iconImage,
+							 final Drawable iconDrawable) {
 		runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override

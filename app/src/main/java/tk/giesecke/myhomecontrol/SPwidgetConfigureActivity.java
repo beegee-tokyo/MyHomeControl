@@ -112,7 +112,7 @@ public class SPwidgetConfigureActivity extends Activity implements AdapterView.O
 		lvAlarmList.setAdapter(arrayAdapter);
 		lvAlarmList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-			                               int pos, long id) {
+										   int pos, long id) {
 				/** Instance of media player */
 				MediaPlayer mMediaPlayer = new MediaPlayer();
 				try {

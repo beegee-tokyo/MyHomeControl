@@ -136,7 +136,7 @@ class DataBaseHelper extends SQLiteOpenHelper {
 	 *            array list with all entries found
 	 */
 	public static ArrayList<Integer> getEntries(SQLiteDatabase db,
-	                                   String requestField, int requestLimiterMonth, int requestLimiterYear) {
+												String requestField, int requestLimiterMonth, int requestLimiterYear) {
 
 		/** Array list holding the found values */
 		ArrayList<Integer> returnArray = new ArrayList<>();

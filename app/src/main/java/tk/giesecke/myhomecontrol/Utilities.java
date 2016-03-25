@@ -201,7 +201,7 @@ public class Utilities extends MyHomeControl {
 				ivAlarmOnThis.setAlpha(0f);
 			}
 		} catch (JSONException ignore) {
-        }
+		}
 		try {
 			if (jsonResult.getInt("alarm_on") == 1) {
 				message += "Alarm active\n";

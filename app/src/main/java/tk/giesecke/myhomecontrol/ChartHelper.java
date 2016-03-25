@@ -63,10 +63,6 @@ public class ChartHelper extends MyHomeControl {
 	public static Float consPowerMin = 0.0f;
 	/** Consumption received from spMonitor device as minute average */
 	public static Float lastConsPowerMin = 0.0f;
-	/** Solar power received from spMonitor device as 5 seconds average */
-	public static Float solarPowerSec = 0.0f;
-	/** Consumption received from spMonitor device as 5 seconds average */
-	public static Float consPowerSec = 0.0f;
 	/** Light received from spMonitor device as 5 seconds average */
 	/** Flag for showing solar power data */
 	private static final boolean showSolar = true;
