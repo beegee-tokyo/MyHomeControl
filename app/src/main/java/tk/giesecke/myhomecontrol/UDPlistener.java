@@ -125,7 +125,6 @@ public class UDPlistener extends Service {
 						alarmNotif(jsonResult, intentContext);
 					}
 				} catch (JSONException ignore) {
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing device in JSON: " + message);
 					return;
 				}
 			} catch (JSONException e) {
@@ -178,20 +177,17 @@ public class UDPlistener extends Service {
 		try {
 			deviceIDString = jsonValues.getString("device");
 		} catch (JSONException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing deviceID in JSON object" + e.getMessage());
 			deviceIDString = "unknown";
 		}
 
 		try {
 			hasAlarmInt = jsonValues.getInt("alarm");
 		} catch (JSONException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing alarm status in JSON object" + e.getMessage());
 			hasAlarmInt = 0;
 		}
 		try {
 			hasAlarmActive = jsonValues.getInt("alarm_on");
 		} catch (JSONException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing alarm value in JSON object" + e.getMessage());
 			hasAlarmActive = 0;
 		}
 

@@ -75,7 +75,6 @@ public class GCMIntentService extends IntentService {
 								// Broadcast message inside the Android device
 								sendGCMBroadcast(message);
 							} catch (Exception ignore) {
-								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing device in JSON "+ jsonResult);
 							}
 						} catch (JSONException e) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());

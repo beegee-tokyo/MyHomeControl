@@ -44,7 +44,7 @@ public class StartBackgroundServices extends Service {
 				new Intent(intentContext, SolarSyncDBService.class),PendingIntent.FLAG_UPDATE_CURRENT);
 		/** Alarm manager for sync every 2 hours */
 		AlarmManager am = (AlarmManager) intentContext.getSystemService(Context.ALARM_SERVICE);
-		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 360000,
+		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000,
 				7200000, pi);
 	}
 }

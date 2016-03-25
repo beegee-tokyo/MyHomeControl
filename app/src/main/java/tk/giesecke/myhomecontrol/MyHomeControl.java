@@ -264,7 +264,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Flag for showing a log */
 	static boolean showingLog = false;
     // Flag for database empty */
-    boolean dataBaseIsEmpty = true;
+    static boolean dataBaseIsEmpty = true;
 
 	/** Instance of DataBaseHelper for this month*/
 	private DataBaseHelper dbHelperNow;
@@ -1680,7 +1680,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							solarViewUpdate(message);
 						}
 					} catch (JSONException ignore) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing device in JSON: " + message);
 					}
 				} catch (JSONException e) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());
@@ -1820,8 +1819,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								return;
 							}
 						} catch (Exception ignore) {
-							if (BuildConfig.DEBUG)
-								Log.d(DEBUG_LOG_TAG, "Missing device in JSON " + jsonResult);
 						}
 
 						if (result.comCmd.equalsIgnoreCase("/?s")) { // Status request
@@ -1833,36 +1830,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								tempString = jsonResult.getString("ssid");
 								message += "SSID: " + tempString + "\n";
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing ssid in JSON object" + e.getMessage());
 							}
 							try {
 								tempString = jsonResult.getString("ip");
 								message += "IP: " + tempString + "\n";
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing ip in JSON object" + e.getMessage());
 							}
 							try {
 								tempString = jsonResult.getString("mac");
 								message += "MAC: " + tempString + "\n";
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing mac in JSON object" + e.getMessage());
 							}
 							try {
 								tempString = jsonResult.getString("sketch");
 								message += "Sketch size: " + tempString + "\n";
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing sketch in JSON object" + e.getMessage());
 							}
 							try {
 								tempString = jsonResult.getString("freemem");
 								message += "Free Memory: " + tempString + "\n";
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing freemem in JSON object" + e.getMessage());
 							}
 
 							if (showDebug) {
@@ -1879,8 +1866,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									secStatus.setText("");
 								}
 							} catch (JSONException e) {
-								if (BuildConfig.DEBUG)
-									Log.d(DEBUG_LOG_TAG, "Missing result in JSON object" + e.getMessage());
 								secStatus.setText(getString(R.string.err_unknown));
 							}
 
@@ -2772,6 +2757,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
                 if (chCursor != null) {
                     if (chCursor.getCount() != 0) { // local database is not empty, need can sync all data
                         dataBaseIsEmpty = false;
+                    } else {
+                        needLastMonth = true;
                     }
                 }
                 if (chCursor != null) {

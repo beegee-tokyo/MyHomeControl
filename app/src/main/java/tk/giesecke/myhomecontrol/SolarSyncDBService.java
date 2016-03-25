@@ -47,7 +47,7 @@ public class SolarSyncDBService extends IntentService {
 			SharedPreferences mPrefs = intentContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 
 			// Try to sync only if we have connection and are on same WiFi as the spMonitor device
-			if (Utilities.isHomeWiFi(intentContext)) {
+			if (Utilities.isHomeWiFi(intentContext) && (!MyHomeControl.dataBaseIsEmpty)) {
 				if (android.os.Build.VERSION.SDK_INT > 9) {
 					StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 					StrictMode.setThreadPolicy(policy);

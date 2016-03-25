@@ -165,8 +165,6 @@ public class Utilities extends MyHomeControl {
 		try {
 			deviceIDString = jsonResult.getString("device");
 		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing deviceID in JSON object" + e.getMessage());
 			deviceIDString = "unknown";
 		}
 
@@ -202,10 +200,8 @@ public class Utilities extends MyHomeControl {
 				animatorThis.end();
 				ivAlarmOnThis.setAlpha(0f);
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing alarm status in JSON object" + e.getMessage());
-		}
+		} catch (JSONException ignore) {
+        }
 		try {
 			if (jsonResult.getInt("alarm_on") == 1) {
 				message += "Alarm active\n";
@@ -226,9 +222,7 @@ public class Utilities extends MyHomeControl {
 				}
 				mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing alarm setting in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.has("auto_on")) {
@@ -246,9 +240,7 @@ public class Utilities extends MyHomeControl {
 				secAutoOn = "10pm";
 				secAutoOnStored = 22;
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing auto on setting in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.has("auto_off")) {
@@ -266,9 +258,7 @@ public class Utilities extends MyHomeControl {
 				secAutoOff = "8am";
 				secAutoOffStored = 8;
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing auto off setting in JSON object" + e.getMessage());
+		} catch (JSONException ve) {
 		}
 		try {
 			if (jsonResult.getInt("auto") == 1) {
@@ -285,9 +275,7 @@ public class Utilities extends MyHomeControl {
 				message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
 				secChangeAlarm.setVisibility(View.INVISIBLE);
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing auto activation setting in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.getInt("light_on") == 1) {
@@ -297,27 +285,21 @@ public class Utilities extends MyHomeControl {
 				message += "Light not active\n";
 				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_off));
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing light setting in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.getInt("boot") != 0) {
 				message += "Device restarted!\n";
 			}
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing boot info in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			message += "Signal = " + jsonResult.getInt("rssi") + " dB\n";
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing rssi in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 		try {
 			message += "Debug: " + jsonResult.getString("reboot") + "\n";
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Missing reboot in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 		}
 
 		return message;
@@ -338,16 +320,12 @@ public class Utilities extends MyHomeControl {
 		int ldrValueInt;
 		try {
 			lightValueLong = jsonResult.getLong("light_val");
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing light value in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 			lightValueLong = 0;
 		}
 		try {
 			ldrValueInt = jsonResult.getInt("ldr_val");
-		} catch (JSONException e) {
-			if (BuildConfig.DEBUG)
-				Log.d(DEBUG_LOG_TAG, "Missing ldr value in JSON object" + e.getMessage());
+		} catch (JSONException ignore) {
 			ldrValueInt = 0;
 		}
 		/** String with the light related status */
