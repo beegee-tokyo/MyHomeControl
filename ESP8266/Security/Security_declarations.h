@@ -13,6 +13,9 @@
 #include <TimeLib.h> 
 #include <ESP8266FtpServer.h>
 
+/** Build time */
+const char compileDate[] = __DATE__ " " __TIME__;
+
 /* wifiAPinfo.h contains wifi SSID and password */
 /* file content looks like: */
 /* Begin of file:

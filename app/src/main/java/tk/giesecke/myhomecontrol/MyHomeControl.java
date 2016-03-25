@@ -263,6 +263,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static boolean showingLast = false;
 	/** Flag for showing a log */
 	static boolean showingLog = false;
+    // Flag for database empty */
+    boolean dataBaseIsEmpty = true;
 
 	/** Instance of DataBaseHelper for this month*/
 	private DataBaseHelper dbHelperNow;
@@ -435,7 +437,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** GCM project ID */
 	private static String GCM_SENDER_ID;
 
-
 	@Override
 	@SuppressWarnings("deprecation")
 	protected void onCreate(Bundle savedInstanceState) {
@@ -485,7 +486,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dataBase.beginTransaction();
 		dataBase.endTransaction();
 		dataBase.close();
-		dbHelperNow.close();
 		/** Instance of data base */
 		dataBase = dbHelperLast.getReadableDatabase();
 		dataBase.beginTransaction();
@@ -1788,7 +1788,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					break;
 				case "spm": // Caller is solar monitor view
 					initSolIsOn = false;
-					solarViewUpdate(result.comResult);
+                    if (!dataBaseIsEmpty) {
+                        solarViewUpdate(result.comResult);
+                    }
 					break;
 			}
 		}
@@ -2142,6 +2144,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			} else {
 				dataBase = dbHelperLast.getReadableDatabase();
 			}
+            // Is database in use?
+            while (dataBase.inTransaction()) {
+                if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "syncSolarDB Database is in use");
+            }
+
 			dataBase.beginTransaction();
 			/** Cursor with data from database */
 			Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
@@ -2269,6 +2276,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					}
 				}
 			}
+            dataBaseIsEmpty = false;
 			return result;
 		}
 
@@ -2431,7 +2439,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 								// Is database in use?
 								if (dataBase.inTransaction()) {
-									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Database is in use");
+									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "solarViewUpdate Database is in use");
 									dataBase.close();
 									return;
 								}
@@ -2440,55 +2448,60 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 								/** Cursor with data from the database */
 								Cursor newDataSet = DataBaseHelper.getLastRow(dataBase);
-								newDataSet.moveToFirst();
-								if (newDataSet.getInt(0) == requestedDate[0] - 2000 &&
-										newDataSet.getInt(1) == requestedDate[1] &&
-										newDataSet.getInt(2) == requestedDate[2]) {
+								if (newDataSet.getCount() != 0) {
+									newDataSet.moveToFirst();
+									if (newDataSet.getInt(0) == requestedDate[0] - 2000 &&
+											newDataSet.getInt(1) == requestedDate[1] &&
+											newDataSet.getInt(2) == requestedDate[2]) {
+										newDataSet.close();
+										/** Cursor with data from the database */
+										newDataSet = DataBaseHelper.getDay(dataBase,
+												requestedDate[2], requestedDate[1], requestedDate[0] - 2000);
+										ChartHelper.fillSeries(newDataSet);
+									}
 									newDataSet.close();
-									/** Cursor with data from the database */
-									newDataSet = DataBaseHelper.getDay(dataBase,
-											requestedDate[2], requestedDate[1], requestedDate[0] - 2000);
-									ChartHelper.fillSeries(newDataSet);
+									dataBase.endTransaction();
+									dataBase.close();
+									ChartHelper.initChart(true);
 								}
-								newDataSet.close();
-								dataBase.endTransaction();
-								dataBase.close();
-								ChartHelper.initChart(true);
 							}
-							/** Current time as string */
-							String nowTime = Utilities.getCurrentTime();
-							ChartHelper.plotData.addXValue(nowTime);
-							ChartHelper.timeStampsCont.add(nowTime);
-							ChartHelper.solarSeries.add
-									(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
-							ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
-							if (ChartHelper.consPowerMin < 0.0) {
-								ChartHelper.consPSeries.add
-										(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
-								ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
-								ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
-								ChartHelper.consumMPowerCont.add(0.0f);
-							} else {
-								ChartHelper.consMSeries.add
-										(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
-								ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
-								ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
-								ChartHelper.consumPPowerCont.add(0.0f);
-							}
+                            if (ChartHelper.plotData != null) {
+                                /** Current time as string */
+                                String nowTime = Utilities.getCurrentTime();
+                                ChartHelper.plotData.addXValue(nowTime);
+                                ChartHelper.timeStampsCont.add(nowTime);
+                                ChartHelper.solarSeries.add
+                                        (new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
+                                ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
+                                if (ChartHelper.consPowerMin < 0.0) {
+                                    ChartHelper.consPSeries.add
+                                            (new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
+                                    ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
+                                    ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
+                                    ChartHelper.consumMPowerCont.add(0.0f);
+                                } else {
+                                    ChartHelper.consMSeries.add
+                                            (new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
+                                    ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
+                                    ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
+                                    ChartHelper.consumPPowerCont.add(0.0f);
 
-							/** Text view to show min and max poser values */
-							TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
-							displayTxt = "(" + String.format("%.0f",
-									Collections.max(ChartHelper.consumMPowerCont)) + "W)";
-							maxPowerText.setText(displayTxt);
-							maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
-							displayTxt = "(" + String.format("%.0f",
-									Collections.max(ChartHelper.solarPowerCont)) + "W)";
-							maxPowerText.setText(displayTxt);
+                                    /** Text view to show min and max poser values */
+                                    TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
+                                    displayTxt = "(" + String.format("%.0f",
+                                            Collections.max(ChartHelper.consumMPowerCont)) + "W)";
+                                    maxPowerText.setText(displayTxt);
+                                    maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
+                                    displayTxt = "(" + String.format("%.0f",
+                                            Collections.max(ChartHelper.solarPowerCont)) + "W)";
+                                    maxPowerText.setText(displayTxt);
 
-							// let the chart know it's data has changed
-							ChartHelper.lineChart.notifyDataSetChanged();
-							ChartHelper.lineChart.invalidate();
+                                    // let the chart know it's data has changed
+                                    ChartHelper.lineChart.notifyDataSetChanged();
+                                    ChartHelper.lineChart.invalidate();
+                                }
+                            }
+
 						} catch (JSONException e) {
 							e.printStackTrace();
 							solStatus.setText(e.getMessage());
@@ -2745,54 +2758,70 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				dataBase.beginTransaction();
 				dataBase.endTransaction();
 				dataBase.close();
-				dbHelperNow.close();
+//				dbHelperNow.close();
 				/** Instance of data base */
 				dataBase = dbHelperLast.getReadableDatabase();
 				dataBase.beginTransaction();
 				dataBase.endTransaction();
 				dataBase.close();
 
+                // Check if database is empty. If yes, sync only the database for this month
+                dataBase = dbHelperNow.getReadableDatabase();
+                /** Cursor with data from database */
+                Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
+                if (chCursor != null) {
+                    if (chCursor.getCount() != 0) { // local database is not empty, need can sync all data
+                        dataBaseIsEmpty = false;
+                    }
+                }
+                if (chCursor != null) {
+                    chCursor.close();
+                }
+                dataBase.close();
+
 				// Start background sync of the database
 				handleTasks(9, dbNamesList[0], "", "", "", null, null);
 
-				// Check if we have already synced the last month
-				/** Instance of data base */
-				dataBase = dbHelperLast.getReadableDatabase();
-				/** Cursor with data from database */
-				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
-				if (dbCursor != null) {
-					if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
-						needLastMonth = true;
-					} else { // fill last log file array
-						lastLogDates.clear();
-						/** List with years in the database */
-						ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
-						for (int year = 0; year < yearsAvail.size(); year++) {
-							/** List with months of year in the database */
-							ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
-									0, yearsAvail.get(year));
-							for (int month = 0; month < monthsAvail.size(); month++) {
-								/** List with days of month of year in the database */
-								ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
-										monthsAvail.get(month),
-										yearsAvail.get(year));
-								for (int day = 0; day < daysAvail.size(); day++) {
-									lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
-											.substring(String.valueOf(yearsAvail.get(year)).length()) +
-											"-" + ("00" + String.valueOf(monthsAvail.get(month)))
-											.substring(String.valueOf(monthsAvail.get(month)).length()) +
-											"-" + ("00" + String.valueOf(daysAvail.get(day)))
-											.substring(String.valueOf(daysAvail.get(day)).length()));
-								}
-							}
-						}
-						lastLogDatesIndex = lastLogDates.size() - 1;
-					}
-				}
-				if (dbCursor != null) {
-					dbCursor.close();
-				}
-				dataBase.close();
+                if (!dataBaseIsEmpty) { // Sync second database only if first one is not empty
+                    // Check if we have already synced the last month
+                    /** Instance of data base */
+                    dataBase = dbHelperLast.getReadableDatabase();
+                    /** Cursor with data from database */
+                    Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
+                    if (dbCursor != null) {
+                        if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
+                            needLastMonth = true;
+                        } else { // fill last log file array
+                            lastLogDates.clear();
+                            /** List with years in the database */
+                            ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
+                            for (int year = 0; year < yearsAvail.size(); year++) {
+                                /** List with months of year in the database */
+                                ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
+                                        0, yearsAvail.get(year));
+                                for (int month = 0; month < monthsAvail.size(); month++) {
+                                    /** List with days of month of year in the database */
+                                    ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
+                                            monthsAvail.get(month),
+                                            yearsAvail.get(year));
+                                    for (int day = 0; day < daysAvail.size(); day++) {
+                                        lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
+                                                .substring(String.valueOf(yearsAvail.get(year)).length()) +
+                                                "-" + ("00" + String.valueOf(monthsAvail.get(month)))
+                                                .substring(String.valueOf(monthsAvail.get(month)).length()) +
+                                                "-" + ("00" + String.valueOf(daysAvail.get(day)))
+                                                .substring(String.valueOf(daysAvail.get(day)).length()));
+                                    }
+                                }
+                            }
+                            lastLogDatesIndex = lastLogDates.size() - 1;
+                        }
+                    }
+                    if (dbCursor != null) {
+                        dbCursor.close();
+                    }
+                    dataBase.close();
+                }
 
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of spMonitor");
 			} else {
@@ -2974,7 +3003,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					case 8: // Show communication spinner
 						comView.setVisibility(View.VISIBLE);
 						break;
-					case 9:
+					case 9: // Start background sync of database
 						new syncSolarDB().execute(message);
 						break;
 					case 10:

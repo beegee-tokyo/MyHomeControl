@@ -167,6 +167,8 @@ void createStatus(JsonObject& root, boolean makeShort) {
 
 		root["rssi"] = getRSSI();
 
+		root["build"] = compileDate;
+
 		root["reboot"] = lastRebootReason;
 	}
 }

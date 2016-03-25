@@ -17,7 +17,7 @@ const char compileDate[] = __DATE__ " " __TIME__;
 /**********************************************
 When doing breadboard test, enable this define
 ***********************************************/
-#define BREADBOARD
+//#define BREADBOARD
 
 #ifdef BREADBOARD
 	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
