@@ -2785,9 +2785,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			/** Cursor with data from database */
 			Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
 			if (chCursor != null) {
-				if (chCursor.getCount() != 0) { // local database is not empty, need can sync all data
+				if (chCursor.getCount() != 0) { // local database is not empty, no need can sync all data
 					dataBaseIsEmpty = false;
-				} else {
+				} else { // local database is empty, need to sync all data including last month
 					needLastMonth = true;
 				}
 			}

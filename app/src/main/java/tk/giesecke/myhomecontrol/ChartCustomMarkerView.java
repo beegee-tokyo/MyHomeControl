@@ -1,6 +1,9 @@
 package tk.giesecke.myhomecontrol;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.view.Display;
+import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.components.MarkerView;
@@ -17,8 +20,12 @@ public class ChartCustomMarkerView extends MarkerView {
 	private final TextView tvMarkerTime;
 	/** Pointer to text view for consumption */
 	private final TextView tvMarkerCons;
+	/** Pointer to text view for consumption */
+	private final TextView tvMarkerConsAll;
 	/** Pointer to text view for solar power */
 	private final TextView tvMarkerSolar;
+	/** Pointer to text view for solar power */
+	private final TextView tvMarkerSolarAll;
 
 	public ChartCustomMarkerView(Context context) {
 		super(context, R.layout.plot_marker);
@@ -26,8 +33,12 @@ public class ChartCustomMarkerView extends MarkerView {
 		tvMarkerTime = (TextView) findViewById(R.id.tv_marker_time);
 		/** Text view for consumption in marker */
 		tvMarkerCons = (TextView) findViewById(R.id.tv_marker_cons);
+		/** Text view for consumption in marker */
+		tvMarkerConsAll = (TextView) findViewById(R.id.tv_marker_cons_all);
 		/** Text view for solar power in marker */
 		tvMarkerSolar = (TextView) findViewById(R.id.tv_marker_solar);
+		/** Text view for solar power in marker */
+		tvMarkerSolarAll = (TextView) findViewById(R.id.tv_marker_solar_all);
 	}
 
 	// callbacks every time the MarkerView is redrawn, can be used to update the
@@ -45,11 +56,32 @@ public class ChartCustomMarkerView extends MarkerView {
 		}
 
 		tvMarkerTime.setText(ChartHelper.timeSeries.get(dataIndex));
+		/** Float value with consumption until touched data point */
+		float consAll = 0;
+		/** Entry for accumulate power consumption / production */
+		Entry consAllEntry;
+		/** Float value with production until touched data point */
+		float solAll = 0;
+		/** Entry for accumulate power production / production */
+		Entry solAllEntry;
+		for (int i=0; i<=dataIndex; i++) {
+			consAllEntry = ChartHelper.consMSeries.get(i);
+			if (touchCons.getVal() == 0) {
+				consAllEntry = ChartHelper.consPSeries.get(i);
+			}
+			consAll += consAllEntry.getVal()/60/1000;
+			solAllEntry = ChartHelper.solarSeries.get(i);
+			solAll += solAllEntry.getVal()/60/1000;
+		}
 		/** Text for update text view */
-		String updateTxt = (Float.toString(touchCons.getVal())+"W");
+		String updateTxt = (Float.toString(touchCons.getVal()) + "W");
 		tvMarkerCons.setText(updateTxt);
+		updateTxt = (String.format("%.3f", consAll) + "kWh");
+		tvMarkerConsAll.setText(updateTxt);
 		updateTxt = (Float.toString(touchSolar.getVal())+"W");
 		tvMarkerSolar.setText(updateTxt);
+		updateTxt = (String.format("%.3f", solAll) + "kWh");
+		tvMarkerSolarAll.setText(updateTxt);
 	}
 
 	/**
@@ -78,5 +110,30 @@ public class ChartCustomMarkerView extends MarkerView {
 	@Override
 	public int getYOffset(float ypos) {
 		return -getHeight();
+	}
+
+	@Override
+	public void draw(Canvas canvas, float posx, float posy)
+	{
+		// take offsets into consideration
+		posx = getDeviceWidth(MyHomeControl.appContext)/2;
+		posy = 30;
+
+		// translate to the correct position and draw
+		canvas.translate(posx, posy);
+		draw(canvas);
+		canvas.translate(-posx, -posy);
+	}
+
+	public static int getDeviceWidth(Context context){
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		return display.getWidth();
+	}
+
+	public static int getDeviceHeight(Context context){
+		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		Display display = wm.getDefaultDisplay();
+		return display.getHeight();
 	}
 }
