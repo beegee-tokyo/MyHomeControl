@@ -84,7 +84,7 @@ public class SecurityWidgetClick extends IntentService {
 								} else {
 									mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
 								}
-								SecurityWidget.updateAppWidget(this,appWidgetManager, mAppWidgetId, false);
+								SecurityWidget.updateAppWidget(this, appWidgetManager, mAppWidgetId, false);
 							}
 						}
 					} catch (IOException e) {

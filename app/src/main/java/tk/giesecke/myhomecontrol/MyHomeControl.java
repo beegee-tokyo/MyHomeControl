@@ -276,6 +276,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Flag for last month update request */
 	private static boolean needLastMonth = false;
 
+	/** AsyncTask for updating current month database */
+	private static AsyncTask atNow;
+	/** AsyncTask for updating last month database */
+	private static AsyncTask atLast;
+
 	// Aircon view related
 	/** Aircon control view */
 	private RelativeLayout airView = null;
@@ -716,6 +721,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		for (int appWidgetId : appWidgetIds) {
 			SecurityWidget.updateAppWidget(appContext,appWidgetManager,appWidgetId, false);
 		}
+
+		// Check if async tasks with database access are still running
+		if(atNow != null && atNow.getStatus() == AsyncTask.Status.RUNNING)
+			atNow.cancel(false);
+		if(atLast != null && atLast.getStatus() == AsyncTask.Status.RUNNING)
+			atLast.cancel(false);
+
 		// Close databases
 		dbHelperNow.close();
 		dbHelperLast.close();
@@ -1244,7 +1256,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					if (showingLog) {
 						showingLog = false;
 						if (Utilities.isHomeWiFi(this)) {
-							new syncSolarDB().execute(dbNamesList[0]);
+							atNow = new syncSolarDB().execute(dbNamesList[0]);
 						}
 
 						/** Pointer to text views showing the consumed / produced energy */
@@ -2269,7 +2281,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			initSolIsOn = false;
 			updateSynced(result.taskResult, result.syncMonth);
 			if (needLastMonth) {
-				new syncSolarDB().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, dbNamesList[1]);
+				atLast = new syncSolarDB().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, dbNamesList[1]);
 				needLastMonth = false;
 			}
 		}
@@ -2440,35 +2452,38 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							if (ChartHelper.autoRefreshOn) {
 								/** Integer list with today's date info */
 								int[] requestedDate = Utilities.getCurrentDate();
-								/** Instance of data base */
-								SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+								// In case activity is going into onPause databases might be closed already
+								if (dbHelperNow != null) { //activity is still running
+									/** Instance of data base */
+									SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
 
-								// Is database in use?
-								if (dataBase.inTransaction()) {
-									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "solarViewUpdate Database is in use");
-									dataBase.close();
-									return;
-								}
-
-								dataBase.beginTransaction();
-
-								/** Cursor with data from the database */
-								Cursor newDataSet = DataBaseHelper.getLastRow(dataBase);
-								if (newDataSet.getCount() != 0) {
-									newDataSet.moveToFirst();
-									if (newDataSet.getInt(0) == requestedDate[0] - 2000 &&
-											newDataSet.getInt(1) == requestedDate[1] &&
-											newDataSet.getInt(2) == requestedDate[2]) {
-										newDataSet.close();
-										/** Cursor with data from the database */
-										newDataSet = DataBaseHelper.getDay(dataBase,
-												requestedDate[2], requestedDate[1], requestedDate[0] - 2000);
-										ChartHelper.fillSeries(newDataSet);
+									// Is database in use?
+									if (dataBase.inTransaction()) {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "solarViewUpdate Database is in use");
+										dataBase.close();
+										return;
 									}
-									newDataSet.close();
-									dataBase.endTransaction();
-									dataBase.close();
-									ChartHelper.initChart(true);
+
+									dataBase.beginTransaction();
+
+									/** Cursor with data from the database */
+									Cursor newDataSet = DataBaseHelper.getLastRow(dataBase);
+									if (newDataSet.getCount() != 0) {
+										newDataSet.moveToFirst();
+										if (newDataSet.getInt(0) == requestedDate[0] - 2000 &&
+												newDataSet.getInt(1) == requestedDate[1] &&
+												newDataSet.getInt(2) == requestedDate[2]) {
+											newDataSet.close();
+											/** Cursor with data from the database */
+											newDataSet = DataBaseHelper.getDay(dataBase,
+													requestedDate[2], requestedDate[1], requestedDate[0] - 2000);
+											ChartHelper.fillSeries(newDataSet);
+										}
+										newDataSet.close();
+										dataBase.endTransaction();
+										dataBase.close();
+										ChartHelper.initChart(true);
+									}
 								}
 							}
 							if (ChartHelper.plotData != null) {
@@ -3026,7 +3041,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						comView.setVisibility(View.VISIBLE);
 						break;
 					case 9: // Start background sync of database
-						new syncSolarDB().execute(message);
+						atNow = new syncSolarDB().execute(message);
 						break;
 					case 10:
 						TableLayout backYardDots = (TableLayout) findViewById(R.id.tl_alarm_back);

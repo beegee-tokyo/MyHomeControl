@@ -125,15 +125,10 @@ public class ChartCustomMarkerView extends MarkerView {
 		canvas.translate(-posx, -posy);
 	}
 
-	public static int getDeviceWidth(Context context){
+	@SuppressWarnings("deprecation")
+	private static int getDeviceWidth(Context context){
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		Display display = wm.getDefaultDisplay();
 		return display.getWidth();
-	}
-
-	public static int getDeviceHeight(Context context){
-		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-		Display display = wm.getDefaultDisplay();
-		return display.getHeight();
 	}
 }
