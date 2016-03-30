@@ -73,7 +73,7 @@ void setup() {
 	setSyncInterval(3600); // Sync every hour
 
 	// If time is after 5pm (17) and before 8am we stop automatic function and switch off the aircon
-	if (hour() > endOfDay && hour() < startOfDay) {
+	if (hour() > endOfDay || hour() < startOfDay) {
 		dayTime = false;
 	}else {
 		dayTime = true;

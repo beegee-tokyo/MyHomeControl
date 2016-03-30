@@ -15,14 +15,14 @@ import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Update service for notifications and widgets
@@ -137,6 +137,30 @@ public class SolarUpdateService extends IntentService {
 					/** Background color for notification icon in SDK Lollipop and newer */
 					int notifColor;
 
+					// Average power consumption
+					if (UDPlistener.avgConsIndex < 10) { // Still filling the array?
+						UDPlistener.avgConsIndex++;
+						UDPlistener.avgConsumption.add(consPowerMin);
+						if (BuildConfig.DEBUG)
+							Log.d(DEBUG_LOG_TAG,
+									"Building up avg. consumption: i=" +
+											Integer.toString(UDPlistener.avgConsIndex)  +
+											" Array = " + Integer.toString(UDPlistener.avgConsumption.size()));
+					} else {
+						UDPlistener.avgConsumption.remove(0);
+						UDPlistener.avgConsumption.add(consPowerMin);
+					}
+
+					float avgConsumption = 0;
+					for (int i=0; i<UDPlistener.avgConsIndex; i++) {
+						avgConsumption += UDPlistener.avgConsumption.get(i);
+					}
+					avgConsumption = avgConsumption/(UDPlistener.avgConsIndex);
+					if (BuildConfig.DEBUG)
+						Log.d(DEBUG_LOG_TAG,
+								"Avg. consumption: " +
+										String.format("%.0f", avgConsumption));
+
 					notifIcon = Utilities.getNotifIcon(consPowerMin);
 
 					if (consPowerMin > 0.0d) {
@@ -149,7 +173,8 @@ public class SolarUpdateService extends IntentService {
 								String.format("%.0f", Math.abs(consPowerMin)) + "W";
 						notifColor = intentContext.getResources()
 								.getColor(android.R.color.holo_green_light);
-						if (consPowerMin < -200.0d) {
+//						if (consPowerMin < -200.0d) {
+						if (avgConsumption < -300.0d) {
 							/** Uri of selected alarm */
 							String selUri = mPrefs.getString(MyHomeControl.prefsSolarWarning,"");
 							if (!selUri.equalsIgnoreCase("")) {

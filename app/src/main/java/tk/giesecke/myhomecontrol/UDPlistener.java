@@ -26,6 +26,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 public class UDPlistener extends Service {
 
@@ -38,6 +39,9 @@ public class UDPlistener extends Service {
 	private DatagramSocket socket;
 	private static Context intentContext;
 	private WifiManager.MulticastLock lock = null;
+
+	public static ArrayList<Float> avgConsumption = new ArrayList<>();
+	public static int avgConsIndex = 0;
 
 	public UDPlistener() {
 	}
