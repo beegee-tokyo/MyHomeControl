@@ -33,6 +33,9 @@ When doing breadboard test, enable this define
 	End of file */
 #include "wifiAPinfo.h"
 
+/* gcmInfo.h contains the API key for Google cloud messaging */
+#include "gcmInfo.h"
+
 /** WiFiClient class to create TCP communication */
 WiFiClient tcpClient;
 
