@@ -235,8 +235,8 @@ boolean inSetup = true;
 boolean dayTime = false;
 /** Start of day time */
 int startOfDay = 8;
-/** End of day time */
-int endOfDay = 17;
+/** End of day time (hour - 1)*/
+int endOfDay = 16;
 
 /** Instance of the IR sender */
 IRsend My_Sender(IR_LED_OUT);
