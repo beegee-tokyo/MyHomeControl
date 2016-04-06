@@ -40,7 +40,7 @@ public class UDPlistener extends Service {
 	private static Context intentContext;
 	private WifiManager.MulticastLock lock = null;
 
-	public static ArrayList<Float> avgConsumption = new ArrayList<>();
+	public static final ArrayList<Float> avgConsumption = new ArrayList<>();
 	public static int avgConsIndex = 0;
 
 	public UDPlistener() {

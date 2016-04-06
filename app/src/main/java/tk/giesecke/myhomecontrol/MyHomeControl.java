@@ -547,47 +547,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		comView = (RelativeLayout) findViewById(R.id.com_progress);
 
 		// Setup views
-		/** Menu item pointer */
-		MenuItem menuItem;
 		switch (visibleView) {
 			case 0: // Security
-				if (abMenu != null) {
-					menuItem = abMenu.getItem(4); // Alarm sound menu entry
-					menuItem.setVisible(true);
-					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-					menuItem.setVisible(false);
-					menuItem = abMenu.getItem(6); // Aircon location menu entry
-					menuItem.setVisible(false);
-				}
-				solView.setVisibility(View.INVISIBLE);
-				airView.setVisibility(View.INVISIBLE);
-				secView.setVisibility(View.VISIBLE);
+				switchUI(0);
 				break;
 			case 1: // Solar panel
-				if (abMenu != null) {
-					menuItem = abMenu.getItem(4); // Alarm sound menu entry
-					menuItem.setVisible(false);
-					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-					menuItem.setVisible(true);
-					menuItem = abMenu.getItem(6); // Aircon location menu entry
-					menuItem.setVisible(false);
-				}
-				airView.setVisibility(View.INVISIBLE);
-				secView.setVisibility(View.INVISIBLE);
-				solView.setVisibility(View.VISIBLE);
+				switchUI(1);
 				break;
 			case 2: // Aircon
-				if (abMenu != null) {
-					menuItem = abMenu.getItem(4); // Alarm sound menu entry
-					menuItem.setVisible(false);
-					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-					menuItem.setVisible(false);
-					menuItem = abMenu.getItem(6); // Aircon location menu entry
-					menuItem.setVisible(true);
-				}
-				solView.setVisibility(View.INVISIBLE);
-				secView.setVisibility(View.INVISIBLE);
-				airView.setVisibility(View.VISIBLE);
+				switchUI(2);
 				break;
 		}
 
@@ -774,10 +742,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		/** Pointer to action bar */
-		Toolbar actionBar = (Toolbar) findViewById(R.id.toolbar);
-		/** Color of toolbar background */
-		Drawable toolBarDrawable;
 		/** Menu item pointer */
 		MenuItem menuItem;
 
@@ -889,26 +853,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 				}
 
-				if (android.os.Build.VERSION.SDK_INT >= 21) {
-					getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
-				}
-				if (android.os.Build.VERSION.SDK_INT >= 16) {
-					toolBarDrawable = new ColorDrawable(getResources().getColor(R.color.colorPrimary));
-					actionBar.setBackground(toolBarDrawable);
-				}
-				// Make security menu items visible
-				menuItem = abMenu.getItem(4); // Alarm sound menu entry
-				menuItem.setVisible(true);
-				menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-				menuItem.setVisible(false);
-				menuItem = abMenu.getItem(6); // Aircon location menu entry
-				menuItem.setVisible(false);
-				// Make security view visible
-				solView.setVisibility(View.INVISIBLE);
-				airView.setVisibility(View.INVISIBLE);
-				secView.setVisibility(View.VISIBLE);
-				visibleView = 0;
-				mPrefs.edit().putInt(prefsLastView,visibleView).apply();
+				// Show security UI
+				switchUI(0);
 				break;
 			case R.id.action_solar:
 				if (!initializeIsRunning) {
@@ -917,26 +863,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				// Update of solar panel values
 				new ESPcommunication().execute(SOLAR_URL, "/data/get", "", "spm", Integer.toString(selDevice));
 
-				if (android.os.Build.VERSION.SDK_INT >= 21) {
-					getWindow().setStatusBarColor(getResources().getColor(android.R.color.holo_green_dark));
-				}
-				if (android.os.Build.VERSION.SDK_INT >= 16) {
-					toolBarDrawable = new ColorDrawable(getResources().getColor(android.R.color.holo_green_light));
-					actionBar.setBackground(toolBarDrawable);
-				}
-
-				// Make solar panel menu items visible
-				menuItem = abMenu.getItem(4); // Alarm sound menu entry
-				menuItem.setVisible(false);
-				menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-				menuItem.setVisible(true);
-				menuItem = abMenu.getItem(6); // Aircon location menu entry
-				menuItem.setVisible(false);
-				secView.setVisibility(View.INVISIBLE);
-				airView.setVisibility(View.INVISIBLE);
-				solView.setVisibility(View.VISIBLE);
-				visibleView = 1;
-				mPrefs.edit().putInt(prefsLastView,visibleView).apply();
+				// Show solar panel UI
+				switchUI(1);
 				break;
 			case R.id.action_aircon:
 				if (Utilities.isHomeWiFi(this)) {
@@ -959,25 +887,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 				}
 
-				if (android.os.Build.VERSION.SDK_INT >= 21) {
-					getWindow().setStatusBarColor(getResources().getColor(android.R.color.holo_blue_dark));
-				}
-				if (android.os.Build.VERSION.SDK_INT >= 16) {
-					toolBarDrawable = new ColorDrawable(getResources().getColor(android.R.color.holo_blue_light));
-					actionBar.setBackground(toolBarDrawable);
-				}
-				// Make aircon menu items visible
-				menuItem = abMenu.getItem(4); // Alarm sound menu entry
-				menuItem.setVisible(false);
-				menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
-				menuItem.setVisible(false);
-				menuItem = abMenu.getItem(6); // Aircon location menu entry
-				menuItem.setVisible(true);
-				secView.setVisibility(View.INVISIBLE);
-				solView.setVisibility(View.INVISIBLE);
-				airView.setVisibility(View.VISIBLE);
-				visibleView = 2;
-				mPrefs.edit().putInt(prefsLastView,visibleView).apply();
+				// Show aircon UI
+				switchUI(2);
 				break;
 			case R.id.action_refresh:
 				if (Utilities.isHomeWiFi(this)) {
@@ -3149,6 +3060,93 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				handleMessage(MSG_REGISTER_WEB_SERVER);
 			}
 		}
+	}
+
+	/**
+	 * Switch to requested UI
+	 *
+	 * @param uiSelected
+	 *            0 = Security UI
+	 *            1 = Solar panel UI
+	 *            2 = Aircon control UI
+	 */
+	@SuppressWarnings("deprecation")
+	private void switchUI(int uiSelected) {
+
+		/** Pointer to action bar */
+		Toolbar actionBar = (Toolbar) findViewById(R.id.toolbar);
+		/** Color of toolbar background */
+		Drawable toolBarDrawable;
+		/** Menu item pointer */
+		MenuItem menuItem;
+		/** Color for status bar */
+		int statusBarColor;
+		/** Color for action bar */
+		int actionBarColor;
+
+		switch (uiSelected) {
+			case 0: // Security UI
+				statusBarColor = getResources().getColor(R.color.colorPrimaryDark);
+				actionBarColor = getResources().getColor(R.color.colorPrimary);
+				if (abMenu != null) {
+					// Make security menu items visible
+					menuItem = abMenu.getItem(4); // Alarm sound menu entry
+					menuItem.setVisible(true);
+					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
+					menuItem.setVisible(false);
+					menuItem = abMenu.getItem(6); // Aircon location menu entry
+					menuItem.setVisible(false);
+				}
+				// Make security view visible
+				solView.setVisibility(View.INVISIBLE);
+				airView.setVisibility(View.INVISIBLE);
+				secView.setVisibility(View.VISIBLE);
+				visibleView = 0;
+				break;
+			case 1: // Solar panel UI
+				statusBarColor = getResources().getColor(android.R.color.holo_green_dark);
+				actionBarColor = getResources().getColor(android.R.color.holo_green_light);
+				if (abMenu != null) {
+					// Make solar panel menu items visible
+					menuItem = abMenu.getItem(4); // Alarm sound menu entry
+					menuItem.setVisible(false);
+					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
+					menuItem.setVisible(true);
+					menuItem = abMenu.getItem(6); // Aircon location menu entry
+					menuItem.setVisible(false);
+				}
+				secView.setVisibility(View.INVISIBLE);
+				airView.setVisibility(View.INVISIBLE);
+				solView.setVisibility(View.VISIBLE);
+				visibleView = 1;
+				break;
+			case 2: // Aircon control UI
+			default: // Whatever
+				statusBarColor = getResources().getColor(android.R.color.holo_blue_dark);
+				actionBarColor = getResources().getColor(android.R.color.holo_blue_light);
+				if (abMenu != null) {
+					// Make aircon menu items visible
+					menuItem = abMenu.getItem(4); // Alarm sound menu entry
+					menuItem.setVisible(false);
+					menuItem = abMenu.getItem(5); // Solar alarm sound menu entry
+					menuItem.setVisible(false);
+					menuItem = abMenu.getItem(6); // Aircon location menu entry
+					menuItem.setVisible(true);
+				}
+				secView.setVisibility(View.INVISIBLE);
+				solView.setVisibility(View.INVISIBLE);
+				airView.setVisibility(View.VISIBLE);
+				visibleView = 2;
+				break;
+		}
+		if (android.os.Build.VERSION.SDK_INT >= 21) {
+			getWindow().setStatusBarColor(statusBarColor);
+		}
+		if (android.os.Build.VERSION.SDK_INT >= 16) {
+			toolBarDrawable = new ColorDrawable(actionBarColor);
+			actionBar.setBackground(toolBarDrawable);
+		}
+		mPrefs.edit().putInt(prefsLastView,visibleView).apply();
 	}
 }
 
