@@ -431,6 +431,7 @@ void checkPower() {
 			powerStatus = 0;
 			mustBroadcast = true;
 			mustWriteStatus = true;
+			avgConsIndex = 0; // reset average calculation
 		}
 	} else {
 		/** Check current status */
@@ -449,6 +450,7 @@ void checkPower() {
 						powerStatus = 1;
 						mustBroadcast = true;
 						mustWriteStatus = true;
+						avgConsIndex = 0; // reset average calculation
 					}
 				}
 				break;
@@ -462,6 +464,7 @@ void checkPower() {
 					powerStatus = 2;
 					mustBroadcast = true;
 					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
 				}
 				if (consPower > 200) { // consuming more than 200W
 					//Serial.print("Consumption > 200W : ");
@@ -472,6 +475,7 @@ void checkPower() {
 					powerStatus = 0;
 					mustBroadcast = true;
 					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
 				}
 				break;
 			case 2: // aircon is in cool mode, over production was > 375W
@@ -484,6 +488,7 @@ void checkPower() {
 					powerStatus = 1;
 					mustBroadcast = true;
 					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
 				}
 				break;
 		}
