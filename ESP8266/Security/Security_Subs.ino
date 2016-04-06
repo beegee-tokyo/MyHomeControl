@@ -528,6 +528,8 @@ void replyClient(WiFiClient httpClient) {
 	String s = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n";
 	/** Wait out time for client request */
 	int waitTimeOut = 0;
+	/** String to hold the response */
+	String jsonString;
 
 	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
@@ -543,7 +545,6 @@ void replyClient(WiFiClient httpClient) {
 		waitTimeOut++;
 		if (waitTimeOut > 3000) { // If no response for 3 seconds return
 			root["result"] = "timeout";
-			String jsonString;
 			root.printTo(jsonString);
 			s += jsonString;
 			httpClient.print(s);
@@ -560,8 +561,6 @@ void replyClient(WiFiClient httpClient) {
 	// Strip leading (GET, PUSH) and trailing (HTTP/1) characters
 	req = req.substring(req.indexOf("/"),req.length()-9);
 	// String for response
-	/** String to hold the response */
-	String jsonString;
 
 	// Switch on/off the alarm
 	if (req.substring(0, 4) == "/?a=") {
@@ -628,7 +627,7 @@ void replyClient(WiFiClient httpClient) {
 		httpClient.stop();
 		delay(1000);
 		return;
-		// Request short status
+		// Request time
 	} else if (req.substring(0, 3) == "/?t") {
 		root["time"] = now();
 		root.printTo(jsonString);
@@ -753,7 +752,7 @@ void replyClient(WiFiClient httpClient) {
 		/** String for the sub command */
 		String delReq = req.substring(3,4);
 		if (delReq == "a") { // Delete all registered devices
-			if (delRegisteredDevice(true)) {
+			if (delRegisteredDevice()) {
 				root["result"] = "success";
 			} else {
 				root["result"] = "failed";

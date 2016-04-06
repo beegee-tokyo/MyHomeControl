@@ -167,8 +167,16 @@ void sendBroadCast() {
 */
 void replyClient(WiFiClient httpClient) {
 	digitalWrite(COM_LED, LOW);
+	/** Flag for valid command */
 	boolean isValidCmd = false;
+	/** String for response to client */
+	String s = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n";
+	/** Wait out time for client request */
 	int waitTimeOut = 0;
+	/** String to hold the response */
+	String jsonString;
+
+	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
 
 	// Prepare json object for the response
@@ -182,8 +190,10 @@ void replyClient(WiFiClient httpClient) {
 		waitTimeOut++;
 		if (waitTimeOut > 3000) { // If no response for 3 seconds return
 			root["result"] = "timeout";
+			root.printTo(jsonString);
+			s += jsonString;
+			httpClient.print(s);
 			httpClient.flush();
-			root.printTo(httpClient);
 			httpClient.stop();
 			digitalWrite(COM_LED, HIGH);
 			return;
@@ -296,7 +306,7 @@ void replyClient(WiFiClient httpClient) {
 		/** String for the sub command */
 		String delReq = req.substring(3,4);
 		if (delReq == "a") { // Delete all registered devices
-			if (delRegisteredDevice(true)) {
+			if (delRegisteredDevice()) {
 				root["result"] = "success";
 			} else {
 				root["result"] = "failed";
@@ -355,9 +365,10 @@ void replyClient(WiFiClient httpClient) {
 		root["result"] = "success";
 	}
 	// Send the response to the client
+	root.printTo(jsonString);
+	s += jsonString;
+	httpClient.print(s);
 	httpClient.flush();
-	httpClient.print("HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n");
-	root.printTo(httpClient);
 	httpClient.stop();
 
 	digitalWrite(COM_LED, HIGH);

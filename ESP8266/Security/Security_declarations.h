@@ -25,6 +25,9 @@ const char compileDate[] = __DATE__ " " __TIME__;
 */
 #include "wifiAPinfo.h"
 
+/* gcmInfo.h contains the API key for Google cloud messaging */
+#include "gcmInfo.h"
+
 /** Red LED on GPIO0 for visual signal if alarm is on or off */
 #define alarmLED 0
 /** Blue LED on GPIO2 for communication activities */

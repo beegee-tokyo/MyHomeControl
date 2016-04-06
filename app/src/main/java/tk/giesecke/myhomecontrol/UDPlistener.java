@@ -87,6 +87,7 @@ public class UDPlistener extends Service {
 			}
 		}
 
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start listening");
 		// Start listener for UDP broadcast messages
 		startListenForUDPBroadcast();
 	}
@@ -119,13 +120,12 @@ public class UDPlistener extends Service {
 			try {
 				jsonResult = new JSONObject(message);
 				try {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 					String broadCastDevice = jsonResult.getString("device");
 					if (broadCastDevice.startsWith("sf")) { // Broadcast from front security device
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 						alarmNotif(jsonResult, intentContext);
 					}
 					if (broadCastDevice.startsWith("sb")) { // Broadcast from back security device
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 						alarmNotif(jsonResult, intentContext);
 					}
 				} catch (JSONException ignore) {
