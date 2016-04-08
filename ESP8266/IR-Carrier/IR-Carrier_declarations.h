@@ -20,9 +20,9 @@ When doing breadboard test, enable this define
 //#define BREADBOARD
 
 #ifdef BREADBOARD
-	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
+	#define DEVICE_ID "cab" // ID for Carrier Aircon
 #else
-	#define DEVICE_ID "fd1" // ID for FujiDenzo Aircon
+	#define DEVICE_ID "ca1" // ID for Carrier Aircon
 #endif
 
 /* wifiAPinfo.h contains wifi SSID and password */
@@ -50,9 +50,9 @@ FtpServer  ftpSrv;
 
 /** IP address of this module */
 #ifdef BREADBOARD
-	IPAddress ipAddr(192, 168, 0, 149);
+	IPAddress ipAddr(192, 168, 0, 148);
 #else
-	IPAddress ipAddr(192, 168, 0, 142);
+	IPAddress ipAddr(192, 168, 0, 143);
 #endif
 /** IP address of first slave */
 IPAddress ipSlave1(192, 168, 0, 143);
@@ -69,6 +69,18 @@ IPAddress debugIP (192,	168, 0, 150);
 
 /** Received command (from lan or serial connection) */
 int irCmd = 9999;
+/** Last processed command (from lan or serial connection) */
+int lastCmd = 99;
+/** Counter to check if command is repeated */
+byte cmdCnt = -1;
+
+/** Flag for fan speed change up or down */
+boolean fanSpeedUp = true;
+/* Flag to detect if we are in fan speed change mode */
+boolean isInFanMode = false;
+/** Timer to switch off fan speed change mode after 10 seconds */
+Ticker resetFanModeTimer;
+
 /** String to hold incoming command from serial port */
 String inString = "";
 
@@ -103,8 +115,8 @@ String inString = "";
 #define CMD_AUTO_ON			98
 #define CMD_AUTO_OFF		99
 
-// IR commands
-#include "IR-FujiDenzo_Codes.h"
+// IR commands for Carrier aircon
+#include "IR-Carrier_codes.h"
 
 /** Mode status of aircon (only guess, as human could have used remote)
 		acMode acTemp
@@ -195,9 +207,9 @@ byte acTemp =		B00000000;
 #define ION_MASK	B01000000
 
 /** Max selectable temperature */
-#define MAX_TEMP 32
+#define MAX_TEMP 29
 /** Min selectable temperature */
-#define MIN_TEMP 16
+#define MIN_TEMP 18
 
 /** IR LED on GPIO13 for communciation with aircon */
 #define IR_LED_OUT 13

@@ -17,9 +17,14 @@ void connectWiFi() {
 		Serial.print(".");
 		connectTimeout++;
 		if (connectTimeout > 60) { //Wait for 30 seconds (60 x 500 milliseconds) to reconnect
-			pinMode(16, OUTPUT); // Connected to RST pin
-			digitalWrite(16,LOW); // Initiate reset
-			ESP.reset(); // In case it didn't work
+			// pinMode(16, OUTPUT); // Connected to RST pin
+			// digitalWrite(16,LOW); // Initiate reset
+			// ESP.reset(); // In case it didn't work
+			delay(60); // Wait for a minute before retry
+			WiFi.disconnect();
+			WiFi.mode(WIFI_STA);
+			WiFi.config(ipAddr, ipGateWay, ipSubNet);
+			WiFi.begin(ssid, password);
 		}
 	}
 	digitalWrite(COM_LED, HIGH); // Turn off LED
@@ -133,8 +138,6 @@ void sendBroadCast() {
 	// String message;
 	// root.printTo(message);
 
-	// Send over Google Cloud Messaging
-	gcmSendMsg(root);
 	// if (tcpClient.connect(myServerName, 80)) {
 		// // This will send the request to the server
 		// tcpClient.print(String("GET ") + "/device_sendall.php/?message=" + message + " HTTP/1.1\r\n" +
@@ -151,6 +154,9 @@ void sendBroadCast() {
 	udpClientServer.endPacket();
 	udpClientServer.stop();
 
+	// Send over Google Cloud Messaging
+	gcmSendMsg(root);
+
 	digitalWrite(COM_LED, HIGH);
 }
 
@@ -161,8 +167,16 @@ void sendBroadCast() {
 */
 void replyClient(WiFiClient httpClient) {
 	digitalWrite(COM_LED, LOW);
+	/** Flag for valid command */
 	boolean isValidCmd = false;
+	/** String for response to client */
+	String s = "HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n";
+	/** Wait out time for client request */
 	int waitTimeOut = 0;
+	/** String to hold the response */
+	String jsonString;
+
+	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
 
 	// Prepare json object for the response
@@ -176,8 +190,10 @@ void replyClient(WiFiClient httpClient) {
 		waitTimeOut++;
 		if (waitTimeOut > 3000) { // If no response for 3 seconds return
 			root["result"] = "timeout";
+			root.printTo(jsonString);
+			s += jsonString;
+			httpClient.print(s);
 			httpClient.flush();
-			root.printTo(httpClient);
 			httpClient.stop();
 			digitalWrite(COM_LED, HIGH);
 			return;
@@ -307,7 +323,7 @@ void replyClient(WiFiClient httpClient) {
 		/** String for the sub command */
 		String delReq = req.substring(3,4);
 		if (delReq == "a") { // Delete all registered devices
-			if (delRegisteredDevice(true)) {
+			if (delRegisteredDevice()) {
 				root["result"] = "success";
 			} else {
 				root["result"] = "failed";
@@ -366,11 +382,31 @@ void replyClient(WiFiClient httpClient) {
 		root["result"] = "success";
 	}
 	// Send the response to the client
+	root.printTo(jsonString);
+	s += jsonString;
+	httpClient.print(s);
 	httpClient.flush();
-	httpClient.print("HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/json\r\n\r\n");
-	root.printTo(httpClient);
 	httpClient.stop();
 
 	digitalWrite(COM_LED, HIGH);
 }
+
+// For debug over TCP
+void sendDebug(String debugMsg) {
+	digitalWrite(COM_LED, LOW);
+	const int httpPort = 9999;
+	if (!tcpClient.connect(debugIP, httpPort)) {
+		Serial.println("connection to Debug PC " + String(debugIP[0]) + "." + String(debugIP[1]) + "." + String(debugIP[2]) + "." + String(debugIP[3]) + " failed");
+		tcpClient.stop();
+		digitalWrite(COM_LED, HIGH);
+		return;
+	}
+
+	debugMsg = "ca " + debugMsg;
+	tcpClient.print(debugMsg);
+
+	tcpClient.stop();
+	digitalWrite(COM_LED, HIGH);
+}
+
 

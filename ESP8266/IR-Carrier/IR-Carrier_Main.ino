@@ -36,15 +36,7 @@ void loop() {
 	if (sendUpdateTriggered) {
 		//Serial.println("Send Update triggered");
 		sendUpdateTriggered = false;
-		// Serial.println(getTime());
 		sendBroadCast();
-	}
-
-	if (timeStatus() != timeNotSet) {
-		if (now() != prevDisplay) { //update the display only if 	time has changed
-			prevDisplay = now();
-			digitalClockDisplay();	
-		}
 	}
 
 	// Handle the different AC commands
@@ -130,6 +122,79 @@ void loop() {
 	if (liveCnt == 100000) {
 		digitalWrite(ACT_LED, !digitalRead(ACT_LED));
 		liveCnt = 0;
+	}
+	
+	// If time is later than "endOfDay" or earlier than "startOfDay" we stop automatic function and switch off the aircon
+	if (hour() > endOfDay || hour() < startOfDay) {
+		if (dayTime) {
+			// If AC is on, switch it to FAN low speed and then switch it off
+			if ((acMode & AC_ON) == AC_ON && dayTime) { // AC is on
+				// Set mode to FAN
+				irCmd = CMD_MODE_FAN;
+				sendCmd();
+				// Set fan speed to LOW
+				byte currentSpeed = acMode & FAN_MASK;
+				irCmd = CMD_FAN_SPEED;
+				if (currentSpeed == 1 && fanSpeedUp) { // Fan speed is 1 and going up
+					// send fan speed command 3 times to achieve fan speed 0
+					sendCmd();
+					sendCmd();
+					sendCmd();
+				} else if (currentSpeed == 1 && !fanSpeedUp) { // Fan speed is 1 and going down
+					// send fan speed command once to achieve fan speed 0
+					sendCmd();
+				} else if (currentSpeed == 2) { // Fan speed is 2
+					// send fan speed command twice to achieve fan speed 0
+					sendCmd();
+					sendCmd();
+				}
+				// Switch AC off
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+			}
+			Serial.print("Switching off the auto mode at ");
+			Serial.print(hour());
+			Serial.println("h");
+			dayTime = false;
+			powerStatus = 0;
+			String debugMsg = "End of day, disable aircon auto mode (hour = " + String(hour()) + ")";
+			sendDebug(debugMsg);
+		}
+	}else {
+		if (!dayTime) {
+			Serial.print("Switching on the auto mode at ");
+			Serial.print(hour());
+			Serial.println("h");
+			dayTime = true;
+			String debugMsg = "Start of day, enable aircon auto mode (hour = " + String(hour()) + ")";
+			sendDebug(debugMsg);
+		}
+	}
+	
+	// Catch a bug with power status = 0 but aircon is on when in auto mode
+	// If AC is on and Auto mode is on but powerStatus is 0, switch it to FAN low speed and then switch it off
+	if ((acMode & AC_ON) == AC_ON && (acMode & AUTO_ON) == AUTO_ON && powerStatus == 0) {
+		// Set mode to FAN
+		irCmd = CMD_MODE_FAN;
+		sendCmd();
+		byte currentSpeed = acMode & FAN_MASK;
+		irCmd = CMD_FAN_SPEED;
+		if (currentSpeed == 1 && fanSpeedUp) { // Fan speed is 1 and going up
+			// send fan speed command 3 times to achieve fan speed 0
+			sendCmd();
+			sendCmd();
+			sendCmd();
+		} else if (currentSpeed == 1 && !fanSpeedUp) { // Fan speed is 1 and going down
+			// send fan speed command once to achieve fan speed 0
+			sendCmd();
+		} else if (currentSpeed == 2) { // Fan speed is 2
+			// send fan speed command twice to achieve fan speed 0
+			sendCmd();
+			sendCmd();
+		}
+		// Switch AC off
+		irCmd = CMD_ON_OFF;
+		sendCmd();
 	}
 	
 	// Handle FTP access

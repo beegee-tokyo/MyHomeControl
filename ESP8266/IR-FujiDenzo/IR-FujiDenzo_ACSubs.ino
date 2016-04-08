@@ -432,6 +432,8 @@ void checkPower() {
 			mustBroadcast = true;
 			mustWriteStatus = true;
 			avgConsIndex = 0; // reset average calculation
+			String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, switch aircon off, status to 0";
+			sendDebug(debugMsg);
 		}
 	} else {
 		/** Check current status */
@@ -451,6 +453,8 @@ void checkPower() {
 						mustBroadcast = true;
 						mustWriteStatus = true;
 						avgConsIndex = 0; // reset average calculation
+						String debugMsg = "Status was 0, consumption < -75W, switch aircon to fan mode, status to 1";
+						sendDebug(debugMsg);
 					}
 				}
 				break;
@@ -465,6 +469,8 @@ void checkPower() {
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
+					String debugMsg = "Status was 1, consumption < -300W, switch aircon to cool mode, status to 2";
+					sendDebug(debugMsg);
 				}
 				if (consPower > 200) { // consuming more than 200W
 					//Serial.print("Consumption > 200W : ");
@@ -476,6 +482,8 @@ void checkPower() {
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
+					String debugMsg = "Status was 1, consumption > 200W, switch aircon off, status to 0";
+					sendDebug(debugMsg);
 				}
 				break;
 			case 2: // aircon is in cool mode, over production was > 375W
@@ -489,6 +497,8 @@ void checkPower() {
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
+					String debugMsg = "Status was 2, consumption > 400W, switch aircon to fan mode, status to 1";
+					sendDebug(debugMsg);
 				}
 				break;
 		}
@@ -550,6 +560,8 @@ void getPowerVal(boolean doPowerCheck) {
 			avgConsPower[avgConsIndex] = consPower;
 			avgSolarPower[avgConsIndex] = solarPower;
 			avgConsIndex++;
+			String debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
+			sendDebug(debugMsg);
 		} else {
 			for (int i = 0; i < 9; i++) { // Shift values in array
 				avgConsPower[i] = avgConsPower[i + 1];
@@ -557,6 +569,10 @@ void getPowerVal(boolean doPowerCheck) {
 			}
 			avgConsPower[9] = consPower;
 			avgSolarPower[9] = solarPower;
+
+			String debugMsg = "Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
+			sendDebug(debugMsg);
+
 			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON && dayTime) {
 				checkPower();
 			}

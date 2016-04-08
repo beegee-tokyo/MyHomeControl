@@ -130,7 +130,6 @@ void loop() {
 				// Set mode to FAN
 				irCmd = CMD_MODE_FAN;
 				sendCmd();
-				// TODO adapt this for Carrier AC which toggles through the speeds
 				// Set fan speed to LOW
 				irCmd = CMD_FAN_LOW;
 				sendCmd();
@@ -143,6 +142,8 @@ void loop() {
 			Serial.println("h");
 			dayTime = false;
 			powerStatus = 0;
+			String debugMsg = "End of day, disable aircon auto mode (hour = " + String(hour()) + ")";
+			sendDebug(debugMsg);
 		}
 	}else {
 		if (!dayTime) {
@@ -150,6 +151,8 @@ void loop() {
 			Serial.print(hour());
 			Serial.println("h");
 			dayTime = true;
+			String debugMsg = "Start of day, enable aircon auto mode (hour = " + String(hour()) + ")";
+			sendDebug(debugMsg);
 		}
 	}
 	
@@ -159,7 +162,6 @@ void loop() {
 		// Set mode to FAN
 		irCmd = CMD_MODE_FAN;
 		sendCmd();
-		// TODO adapt this for Carrier AC which toggles through the speeds
 		// Set fan speed to LOW
 		irCmd = CMD_FAN_LOW;
 		sendCmd();

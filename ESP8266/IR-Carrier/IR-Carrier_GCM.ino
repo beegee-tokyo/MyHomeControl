@@ -225,16 +225,16 @@ boolean addRegisteredDevice(String newDeviceID) {
 	// Add new ID to regAndroidIds[]
 	regDevNum += 1;
 	regAndroidIds[regDevNum-1] = newDeviceID;
-
+	
 	if (writeRegIds()) {
-		#ifdef DEBUG_OUT
+		#ifdef DEBUG_OUT 
 		Serial.println("Successful added id: " + newDeviceID);
 		#endif
 		// Refresh list with registered devices
 		getRegisteredDevices();
 		return true;
 	} else {
-		#ifdef DEBUG_OUT
+		#ifdef DEBUG_OUT 
 		Serial.println("Failed to added id: " + newDeviceID);
 		#endif
 		// Refresh list with registered devices

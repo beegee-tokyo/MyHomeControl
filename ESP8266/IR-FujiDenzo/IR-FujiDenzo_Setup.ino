@@ -79,6 +79,15 @@ void setup() {
 		dayTime = true;
 	}
 
+	// Send reboot log to debug
+	String debugMsg = "Restart: Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
+	if (dayTime) {
+		debugMsg += " ,daytime is true (hour = " + String(hour()) + ")";
+	} else {
+		debugMsg += " ,daytime is false (hour = " + String(hour()) + ")";
+	}
+	sendDebug(debugMsg);
+
 	// Get first values from spMonitor
 	getPowerVal(false);
 

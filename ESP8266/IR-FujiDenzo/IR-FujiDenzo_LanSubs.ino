@@ -374,3 +374,22 @@ void replyClient(WiFiClient httpClient) {
 	digitalWrite(COM_LED, HIGH);
 }
 
+// For debug over TCP
+void sendDebug(String debugMsg) {
+	digitalWrite(COM_LED, LOW);
+	const int httpPort = 9999;
+	if (!tcpClient.connect(debugIP, httpPort)) {
+		Serial.println("connection to Debug PC " + String(debugIP[0]) + "." + String(debugIP[1]) + "." + String(debugIP[2]) + "." + String(debugIP[3]) + " failed");
+		tcpClient.stop();
+		digitalWrite(COM_LED, HIGH);
+		return;
+	}
+
+	debugMsg = "fd " + debugMsg;
+	tcpClient.print(debugMsg);
+
+	tcpClient.stop();
+	digitalWrite(COM_LED, HIGH);
+}
+
+

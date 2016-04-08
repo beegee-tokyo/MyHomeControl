@@ -10,7 +10,7 @@ void setup() {
 
 	Serial.setDebugOutput(false);
 	Serial.println("");
-	Serial.println("Hello from ESP8266");
+	Serial.println("Hello from ESP8266 aircon control");
 
 	// Setup WiFi event handler
 	WiFi.onEvent(WiFiEvent);
@@ -66,32 +66,51 @@ void setup() {
 		writeStatus();
 	}
 	
+	// Set initial time
+	setTime(getNtpTime());
+
+	// Initialize NTP client
+	setSyncProvider(getNtpTime);
+	setSyncInterval(3600); // Sync every hour
+
+	// If time is after 5pm (17) and before 8am we stop automatic function and switch off the aircon
+	if (hour() > endOfDay || hour() < startOfDay) {
+		dayTime = false;
+	}else {
+		dayTime = true;
+	}
+
+	// Send reboot log to debug
+	String debugMsg = "Restart: Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
+	if (dayTime) {
+		debugMsg += " ,daytime is true (hour = " + String(hour()) + ")";
+	} else {
+		debugMsg += " ,daytime is false (hour = " + String(hour()) + ")";
+	}
+	sendDebug(debugMsg);
+
 	// Get first values from spMonitor
-	//Only used in main control ESP on 192.168.0.142 address
+	// Only used in main control ESP on 192.168.0.142 address
 	//getPowerVal(false);
 
-	// Start update of consumption value every 60 seconds if enabled
-	//	getPowerTimer.attach(60, triggerGetPower);
+	// Start update of consumption value every 60 seconds
+	// Only used in main control ESP on 192.168.0.142 address
+	// getPowerTimer.attach(60, triggerGetPower);
 
-	// Start sending status update every 1 minutes (1x60=60 seconds)
-	// TODO testing to send only if status changed or power value changed by more than 10 Watt
-	sendUpdateTimer.attach(60, triggerSendUpdate);
-	Serial.println("");
-	Serial.print("Current time: ");
-	Serial.println(getTime());
+	// Start sending status update every 5 minutes (5x60=300 seconds)
+	sendUpdateTimer.attach(300, triggerSendUpdate);
+
 	// Send aircon restart message
 	sendBroadCast();
 	inSetup = false;
 	
-	// Setup NTP time updates
-	Udp.begin(localPort);
-	setSyncProvider(getNtpTime);
-
 	// Start FTP server
 	ftpSrv.begin(DEVICE_ID,DEVICE_ID);    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
 		
 	ArduinoOTA.onStart([]() {
 		Serial.println("OTA start");
+		// Safe actual status
+		writeStatus();
 		ledFlasher.attach(0.1, redLedFlash); // Flash very fast if we started update
 		resetFanModeTimer.detach();
 		sendUpdateTimer.detach();
