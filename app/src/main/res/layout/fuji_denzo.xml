@@ -307,7 +307,7 @@
 			android:layout_height="wrap_content"
 			android:layout_margin="2dp"
 			android:layout_weight="1"
-			android:background="@android:color/holo_green_light"
+			android:background="@android:color/holo_blue_bright"
 			android:gravity="center_horizontal"
 			android:onClick="onClick"
 			android:text="@string/bt_txt_plus"

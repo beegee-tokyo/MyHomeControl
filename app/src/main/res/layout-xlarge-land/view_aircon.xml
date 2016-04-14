@@ -12,7 +12,7 @@
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	tools:showIn="@layout/activity_my_home_control"
 	android:id="@+id/view_aircon"
-	android:visibility="invisible"
+	android:visibility="visible"
 	tools:ignore="ButtonStyle">
 
 	<include layout="@layout/fuji_denzo"
@@ -30,5 +30,14 @@
 		android:layout_width="fill_parent"
 		android:layout_height="match_parent"
 		android:layout_below="@+id/carrier"/>
+
+	<ProgressBar
+		android:id="@+id/pb_aircon"
+		style="?android:attr/progressBarStyleSmall"
+		android:layout_width="300dp"
+		android:layout_height="300dp"
+		android:layout_centerInParent="true"
+		android:background="@android:color/transparent"
+		android:visibility="invisible"/>
 
 </RelativeLayout>

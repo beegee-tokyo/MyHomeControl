@@ -12,7 +12,7 @@
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	tools:showIn="@layout/activity_my_home_control"
 	android:id="@+id/view_solar"
-	android:visibility="visible"
+	android:visibility="invisible"
 	tools:ignore="ButtonStyle,Overdraw"
 	android:background="@android:color/black">
 
@@ -283,5 +283,14 @@
 			android:textColor="@android:color/white"/>
 
 	</ScrollView>
+
+	<ProgressBar
+		android:id="@+id/pb_solar"
+		style="?android:attr/progressBarStyleSmall"
+		android:layout_width="300dp"
+		android:layout_height="300dp"
+		android:layout_centerInParent="true"
+		android:background="@android:color/transparent"
+		android:visibility="invisible"/>
 
 </RelativeLayout>

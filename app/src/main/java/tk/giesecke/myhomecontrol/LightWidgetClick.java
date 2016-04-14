@@ -81,6 +81,9 @@ public class LightWidgetClick extends IntentService {
 		}
 	}
 
+	/**
+	 * Class to switch back the widget icon after 2 minutes
+	 */
 	private class changeBackWidget extends TimerTask
 	{
 		final Context context;

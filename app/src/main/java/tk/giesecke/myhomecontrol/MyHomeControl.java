@@ -42,6 +42,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.NumberPicker;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -117,21 +118,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private final String prefsLocationName = "airconLocation";
 	/** Shared preferences value for show debug messages flag */
 	private final String prefsDeviceIcon = "airconIcon";
-
-	/** Flag for Initialization activity */
-	private static boolean initializeIsRunning = false;
-	/** Flag for initialization of security front running */
-	private static boolean initSec1IsOn = false;
-	/** Flag for initialization of security back running */
-	private static boolean initSec2IsOn = false;
-	/** Flag for initialization of solar panel running */
-	private static boolean initSolIsOn = false;
-	/** Flag for initialization of aircon 1 running */
-	private static boolean initAir1IsOn = false;
-	/** Flag for initialization of aircon 2 running */
-	private static boolean initAir2IsOn = false;
-	/** Flag for initialization of aircon 3 running */
-	private static boolean initAir3IsOn = false;
 
 	/** View for selecting device to change icon and device name */
 	private View locationSettingsView;
@@ -423,7 +409,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final String CMD_AUTO_OFF = "99";
 
 	/** Communication progress bar view */
-	private static RelativeLayout comView = null;
+	//private static RelativeLayout comView = null;
+	/** Communication progress bar for security */
+	private ProgressBar pbSecCom;
+	/** Communication progress bar for solar monitor */
+	private ProgressBar pbSolCom;
+	/** Communication progress bar for aircon */
+	private ProgressBar pbAirCom;
 
 	// For Google Cloud Messaging
 	/** Name of stored registration id in shared preferences */
@@ -543,8 +535,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		secView = (RelativeLayout) findViewById(R.id.view_security);
 		solView = (RelativeLayout) findViewById(R.id.view_solar);
 		airView = (RelativeLayout) findViewById(R.id.view_aircon);
-		// Get layout for the communication animation
-		comView = (RelativeLayout) findViewById(R.id.com_progress);
+
+		// Get the pointers to the progress bars
+		pbSecCom = (ProgressBar) findViewById(R.id.pb_security);
+		pbSolCom = (ProgressBar) findViewById(R.id.pb_solar);
+		pbAirCom = (ProgressBar) findViewById(R.id.pb_aircon);
 
 		// Setup views
 		switch (visibleView) {
@@ -577,7 +572,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 		if (Utilities.isHomeWiFi(this)) {
 			// Start initialization
-			initializeIsRunning = true;
+			//initializeIsRunning = true;
 			new Initialize().execute();
 			// Start display update every 1 minutes
 			autoUpdate = new Timer();
@@ -586,7 +581,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				public void run() {
 					runOnUiThread(new Runnable() {
 						public void run() {
-							comView.setVisibility(View.VISIBLE);
+							//comView.setVisibility(View.VISIBLE);
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "UI update triggered");
 							// Update solar UI
 							new ESPcommunication()
@@ -595,57 +590,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 											"",
 											"spm",
 											"0");
-							if (Utilities.isHomeWiFi(appContext)) {
-								if (deviceIsOn[secFrontIndex]) {
-									// Update security UI
-									new ESPcommunication()
-											.execute(SECURITY_URL_FRONT_1,
-													"/?s",
-													"",
-													"sec",
-													Integer.toString(selDevice));
-								}
-								if (deviceIsOn[secRearIndex]) {
-									// Update security UI
-									new ESPcommunication()
-											.execute(SECURITY_URL_BACK_1,
-													"/?s",
-													"",
-													"sec",
-													Integer.toString(selDevice));
-								}
-								if (deviceIsOn[aircon1Index]) {
-									// Update aircon 1 UI
-									new ESPcommunication()
-											.execute(AIRCON_URL_1,
-													"/?s",
-													"",
-													"air",
-													"0");
-								}
-								if (deviceIsOn[aircon2Index]) {
-									// Update aircon 2 UI
-									new ESPcommunication()
-											.execute(AIRCON_URL_2,
-													"/?s",
-													"",
-													"air",
-													"0");
-								}
-								if (deviceIsOn[aircon3Index]) {
-									// Update aircon 3 UI
-									new ESPcommunication()
-											.execute(AIRCON_URL_3,
-													"/?s",
-													"",
-													"air",
-													"0");
-								}
-							}
+							pbSolCom.setVisibility(View.VISIBLE);
 						}
 					});
 				}
-			}, 1000, 60 * 1000); // updates every 1 minute
+			}, 60000, 60000); // delay for first update = 1 minute, then updates every 1 minute
 		} else {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 			new Initialize().execute();
@@ -656,7 +605,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				public void run() {
 					runOnUiThread(new Runnable() {
 						public void run() {
-							comView.setVisibility(View.VISIBLE);
+							pbSolCom.setVisibility(View.VISIBLE);
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Solar UI triggered");
 							new ESPcommunication()
 									.execute(SOLAR_URL, "/data/get", "", "spm", "0");
@@ -844,9 +793,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.action_security:
 				if (Utilities.isHomeWiFi(this)) {
-					if (!initializeIsRunning) {
-						comView.setVisibility(View.VISIBLE);
-					}
+					pbSecCom.setVisibility(View.VISIBLE);
 					// Update of security values
 					new ESPcommunication().execute(SECURITY_URL_FRONT_1, "/?s", "", "sec", Integer.toString(selDevice));
 				} else {
@@ -857,9 +804,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				switchUI(0);
 				break;
 			case R.id.action_solar:
-				if (!initializeIsRunning) {
-					comView.setVisibility(View.VISIBLE);
-				}
+				pbSolCom.setVisibility(View.VISIBLE);
 				// Update of solar panel values
 				new ESPcommunication().execute(SOLAR_URL, "/data/get", "", "spm", Integer.toString(selDevice));
 
@@ -869,9 +814,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			case R.id.action_aircon:
 				if (Utilities.isHomeWiFi(this)) {
 					// Update of security values
-					if (!initializeIsRunning) {
-						comView.setVisibility(View.VISIBLE);
-					}
+					pbAirCom.setVisibility(View.VISIBLE);
 					switch (selDevice) {
 						case 0:
 							new ESPcommunication().execute(AIRCON_URL_1,"/?s","","air",Integer.toString(selDevice));
@@ -1553,9 +1496,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 		}
 		if (!url.isEmpty()) {
-			if (!initializeIsRunning) {
-				comView.setVisibility(View.VISIBLE);
-			}
+			//if (!initializeIsRunning) {
+				if (id.equalsIgnoreCase("sec")) {
+					pbSecCom.setVisibility(View.VISIBLE);
+				}
+				if (id.equalsIgnoreCase("spm")) {
+					pbSolCom.setVisibility(View.VISIBLE);
+				}
+				if (id.equalsIgnoreCase("air")) {
+					pbAirCom.setVisibility(View.VISIBLE);
+				}
+			//}
 			new ESPcommunication().execute(url,cmd,"",id,Integer.toString(selDevice));
 			if (id.equalsIgnoreCase("air")) {
 				new ESPcommunication().execute(url,"/?s","",id,Integer.toString(selDevice));
@@ -1574,7 +1525,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			String message = intent.getStringExtra("message");
 
 			/** Return values for onPostExecute */
-			ESPcommResultWrapper result = new ESPcommResultWrapper();
+			CommResultWrapper result = new CommResultWrapper();
 
 			// Check if response is a JSON array
 			if (Utilities.isJSONValid(message)) {
@@ -1587,20 +1538,28 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							String broadCastDevice = jsonResult.getString("device");
 							if (broadCastDevice.startsWith("sf")) { // Broadcast from security device
 								result.comCmd = "/?s";
+								pbSecCom.setVisibility(View.VISIBLE);
 								securityViewUpdate(result);
+								pbSecCom.setVisibility(View.INVISIBLE);
 							} else if (broadCastDevice.startsWith("fd")) { // Broadcast from aircon device 0
 								// TODO update aircon view
 								result.comCmd = "/?s";
 								result.deviceIndex = 0;
+								pbAirCom.setVisibility(View.VISIBLE);
 								airconViewUpdate(result);
+								pbAirCom.setVisibility(View.INVISIBLE);
 							} else if (broadCastDevice.startsWith("ca")) { // Broadcast from aircon device 1
 								// TODO update aircon view
 								result.comCmd = "/?s";
 								result.deviceIndex = 1;
+								pbAirCom.setVisibility(View.VISIBLE);
 								airconViewUpdate(result);
+								pbAirCom.setVisibility(View.INVISIBLE);
 							}
 						} else { // Message from spMonitor update service
+							pbSolCom.setVisibility(View.VISIBLE);
 							solarViewUpdate(message);
+							pbSolCom.setVisibility(View.INVISIBLE);
 						}
 					} catch (JSONException ignore) {
 					}
@@ -1611,16 +1570,33 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	};
 
-	private class ESPcommunication extends AsyncTask<String, String, ESPcommResultWrapper> {
+	/**
+	 * Communication in Async Task between Android and ESP8266 or Arduino Yun
+	 */
+	private class ESPcommunication extends AsyncTask<String, String, CommResultWrapper> {
 
+		/**
+		 * Background process of communication
+		 *
+		 * @param params
+		 * 		params[0] = URL
+		 * 		params[1] = command to be sent to ESP or Arduino
+		 * 		params[2] = result of communication
+		 * 		params[3] = ID of requester
+		 * 			spm = solar panel monitor view
+		 * 			air = aircon control view
+		 * 			sec = security control view
+		 * 	@return <code>CommResultWrapper</code>
+		 * 			Requester ID and result of communication
+		 */
 		@Override
-		protected ESPcommResultWrapper doInBackground(String... params) {
+		protected CommResultWrapper doInBackground(String... params) {
 
 			/** A HTTP client to access the ESP device */
 			OkHttpClient client = new OkHttpClient();
 
 			/** Return values for onPostExecute */
-			ESPcommResultWrapper result = new ESPcommResultWrapper();
+			CommResultWrapper result = new CommResultWrapper();
 
 			result.httpURL = params[0];
 			result.comCmd = params[1];
@@ -1684,32 +1660,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			return result;
 		}
 
-		protected void onPostExecute(ESPcommResultWrapper result) {
+		/**
+		 * Called when AsyncTask background process is finished
+		 *
+		 * @param result
+		 * 		CommResultWrapper with requester ID and result of communication
+		 */
+		protected void onPostExecute(CommResultWrapper result) {
 			switch (result.callID) {
 				case "sec": // Caller is security view
-					if (result.httpURL.equalsIgnoreCase(SECURITY_URL_FRONT_1)) {
-						initSec1IsOn = false;
-					} else {
-						initSec2IsOn = false;
-					}
 					securityViewUpdate(result);
 					break;
 				case "air": // Caller is aircon view
-					switch (result.deviceIndex) {
-						case 0:
-							initAir1IsOn = false;
-							break;
-						case 1:
-							initAir2IsOn = false;
-							break;
-						case 2:
-							initAir3IsOn = false;
-							break;
-					}
 					airconViewUpdate(result);
 					break;
 				case "spm": // Caller is solar monitor view
-					initSolIsOn = false;
 					if (!dataBaseIsEmpty) {
 						solarViewUpdate(result.comResult);
 					}
@@ -1724,7 +1689,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * @param result
 	 * 		result sent by onPostExecute
 	 */
-	private void securityViewUpdate(final ESPcommResultWrapper result) {
+	private void securityViewUpdate(final CommResultWrapper result) {
 		runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override
@@ -1798,12 +1763,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());
 					}
 				}
-				if (!initSolIsOn && !initSec1IsOn && !initSec2IsOn && !initAir1IsOn && !initAir2IsOn && !initAir3IsOn) {
-					initializeIsRunning = false;
-				}
-				if (!initializeIsRunning) {
-					comView.setVisibility(View.INVISIBLE);
-				}
+				pbSecCom.setVisibility(View.INVISIBLE);
 				// Update security widgets
 				/** App widget manager for all widgets of this app */
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(appContext);
@@ -1824,13 +1784,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * Parse JSON and show received status in UI
 	 *
 	 * @param result
-	 *            ESPcommResultWrapper
+	 *            CommResultWrapper
 	 *               isSearchDevice = flag that device search is active
 	 *               deviceIndex = index of device that is investigated
 	 *               reqCmd = command to be sent to the ESP device
 	 *               comResult = return string as JSON from the ESP device
 	 */
-	private void airconViewUpdate(ESPcommResultWrapper result) {
+	private void airconViewUpdate(CommResultWrapper result) {
 
 		try {
 			/** JSON object with the result from the ESP device */
@@ -1894,12 +1854,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		} else {
 			airStatus.setText("");
 		}
-		if (!initSolIsOn && !initSec1IsOn && !initSec2IsOn && !initAir1IsOn && !initAir2IsOn && !initAir3IsOn) {
-			initializeIsRunning = false;
-		}
-		if (!initializeIsRunning) {
-			comView.setVisibility(View.INVISIBLE);
-		}
+		pbAirCom.setVisibility(View.INVISIBLE);
 	}
 
 	/**
@@ -2189,7 +2144,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 
 		protected void onPostExecute(SolarCommResultWrapper result) {
-			initSolIsOn = false;
 			updateSynced(result.taskResult, result.syncMonth);
 			if (needLastMonth) {
 				atLast = new syncSolarDB().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, dbNamesList[1]);
@@ -2417,29 +2371,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
 									ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
 									ChartHelper.consumPPowerCont.add(0.0f);
-
-									/** Text view to show min and max poser values */
-									TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
-									displayTxt = "(" + String.format("%.0f",
-											Collections.max(ChartHelper.consumMPowerCont)) + "W)";
-									maxPowerText.setText(displayTxt);
-									maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
-									displayTxt = "(" + String.format("%.0f",
-											Collections.max(ChartHelper.solarPowerCont)) + "W)";
-									maxPowerText.setText(displayTxt);
-
-									// let the chart know it's data has changed
-									ChartHelper.lineChart.notifyDataSetChanged();
-									ChartHelper.lineChart.invalidate();
 								}
+								/** Text view to show min and max poser values */
+								TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
+								displayTxt = "(" + String.format("%.0f",
+										Collections.max(ChartHelper.consumMPowerCont)) + "W)";
+								maxPowerText.setText(displayTxt);
+								maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
+								displayTxt = "(" + String.format("%.0f",
+										Collections.max(ChartHelper.solarPowerCont)) + "W)";
+								maxPowerText.setText(displayTxt);
+
+								// let the chart know it's data has changed
+								ChartHelper.lineChart.notifyDataSetChanged();
+								ChartHelper.lineChart.invalidate();
 							}
 
 						} catch (JSONException e) {
 							e.printStackTrace();
 							solStatus.setText(e.getMessage());
-							if (!initializeIsRunning) {
-								comView.setVisibility(View.INVISIBLE);
-							}
+							pbSolCom.setVisibility(View.INVISIBLE);
 							return;
 						}
 
@@ -2448,12 +2399,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				} else {
 					solStatus.setText(value);
 				}
-				if (!initSolIsOn && !initSec1IsOn && !initSec2IsOn && !initAir1IsOn && !initAir2IsOn && !initAir3IsOn) {
-					initializeIsRunning = false;
-				}
-				if (!initializeIsRunning) {
-					comView.setVisibility(View.INVISIBLE);
-				}
+				pbSolCom.setVisibility(View.INVISIBLE);
 			}
 		});
 	}
@@ -2524,17 +2470,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					if (syncMonth.equalsIgnoreCase(dbNamesList[0])) {
 						logDatesIndex = thisLogDates.size() - 1;
 						ChartHelper.initChart(true);
-						if (!initializeIsRunning) {
-							comView.setVisibility(View.INVISIBLE);
-						}
-						if (!initSolIsOn && !initSec1IsOn && !initSec2IsOn && !initAir1IsOn && !initAir2IsOn && !initAir3IsOn) {
-							comView.setVisibility(View.INVISIBLE);
-							initializeIsRunning = false;
-						}
 					} else {
 						lastLogDatesIndex = thisLogDates.size() - 1;
 					}
 				}
+				pbSolCom.setVisibility(View.INVISIBLE);
 				// Get latest value and update UI
 				new ESPcommunication().execute(SOLAR_URL, "/data/get", "", "spm", Integer.toString(selDevice));
 			}
@@ -2646,9 +2586,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	/**
-	 * Find all available devices
-	 * Check if Google Cloud Messaging is registered
-	 * Send status request to all available devices
+	 * Initializing method
+	 * - Find all available devices
+	 * - Check if Google Cloud Messaging is registered
+	 * - Call initializing methods for all devices
 	 */
 	private class Initialize extends AsyncTask<String, String, Void> {
 
@@ -2687,6 +2628,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
+	/**
+	 * Initializing method for solar panel monitor
+	 * Check local databases and request update if necessary
+	 * Send status update request
+	 */
 	private void initSPM() {
 		if (deviceIsOn[spMonitorIndex]) { // spMonitor
 			// Get initial status from spMonitor device
@@ -2699,7 +2645,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			dataBase.beginTransaction();
 			dataBase.endTransaction();
 			dataBase.close();
-//				dbHelperNow.close();
 			/** Instance of data base */
 			dataBase = dbHelperLast.getReadableDatabase();
 			dataBase.beginTransaction();
@@ -2776,11 +2721,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
+	/**
+	 * Initializing method for aircon control
+	 * Send status update request
+	 */
 	private void initAircons() {
 		if (deviceIsOn[aircon1Index]) { // Aircon 1 - Office
 			// Get initial status from Aircon 1
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 1");
-			initAir1IsOn = true;
 			// Update aircon status
 			handleTasks(3, "/?s", AIRCON_URL_1, "air", "0", null, null);
 			if (mPrefs.contains(prefsLocationName + "0")) {
@@ -2800,7 +2748,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (deviceIsOn[aircon2Index]) { // Aircon 2 - Living room
 			// Get initial status from Aircon 2
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 2");
-			initAir2IsOn = true;
 			// Update aircon 2 status
 			handleTasks(3, "/?s", AIRCON_URL_2, "air", "1", null, null);
 			if (mPrefs.contains(prefsLocationName + "1")) {
@@ -2820,8 +2767,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (deviceIsOn[aircon3Index]) { // Aircon 3 - Bedroom
 			// Get initial status from Aircon 3
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of Aircon 3");
-			initAir3IsOn = true;
-			// Update aircon 3 status
 			handleTasks(3, "/?s", AIRCON_URL_3, "air", "2", null, null);
 			if (mPrefs.contains(prefsLocationName + "2")) {
 				locationName[0] = mPrefs.getString(prefsLocationName + "2", "");
@@ -2843,11 +2788,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
+	/**
+	 * Initializing method for security control
+	 * Send status update request
+	 */
 	private void initSecurity() {
 		if (deviceIsOn[secFrontIndex]) { // Security front
 			// Get initial status from Security
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of front Security");
-			initSec1IsOn = true;
 			// Update security status front sensor
 			handleTasks(3, "/?s", SECURITY_URL_FRONT_1, "sec", Integer.toString(selDevice), null, null);
 		} else {
@@ -2857,7 +2805,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (deviceIsOn[secRearIndex]) { // Security back
 			// Get initial status from Security
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of rear Security");
-			initSec2IsOn = true;
 			// Update security status back sensor
 			handleTasks(3, "/?s", SECURITY_URL_BACK_1, "sec", Integer.toString(selDevice), null, null);
 			handleTasks(10, "", "", "", "", null, null);
@@ -2948,8 +2895,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					case 7: // Aircon location icon
 						iconImage.setImageDrawable(iconDrawable);
 						break;
-					case 8: // Show communication spinner
-						comView.setVisibility(View.VISIBLE);
+					case 8: // Show all communication spinner
+						pbSecCom.setVisibility(View.VISIBLE);
+						pbSolCom.setVisibility(View.VISIBLE);
+						pbAirCom.setVisibility(View.VISIBLE);
 						break;
 					case 9: // Start background sync of database
 						atNow = new syncSolarDB().execute(message);

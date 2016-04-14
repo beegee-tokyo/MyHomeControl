@@ -96,7 +96,6 @@ public class GCMIntentService extends IntentService {
 		/** Intent for broadcast */
 		Intent broadCastIntent = new Intent();
 		broadCastIntent.setAction(UDPlistener.BROADCAST_RECEIVED);
-		broadCastIntent.putExtra("sender", "GCM");
 		broadCastIntent.putExtra("message", msgReceived);
 		sendBroadcast(broadCastIntent);
 	}

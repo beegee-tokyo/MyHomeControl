@@ -11,19 +11,9 @@
 	app:layout_behavior="@string/appbar_scrolling_view_behavior"
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	android:id="@+id/view_solar"
-	android:visibility="visible"
+	android:visibility="invisible"
 	android:background="@android:color/black"
 	tools:ignore="ButtonStyle,Overdraw">
-
-	<ProgressBar
-		android:id="@+id/pb_refresh_rot"
-		style="?android:attr/progressBarStyleSmall"
-		android:layout_width="200dp"
-		android:layout_height="200dp"
-		android:visibility="invisible"
-		android:layout_centerInParent="true"
-		android:layout_alignParentTop="true"
-		android:background="@android:color/transparent"/>
 
 	<Button
 		android:layout_width="wrap_content"
@@ -278,5 +268,14 @@
 		android:layout_alignEnd="@+id/tv_cons_val"
 		android:layout_below="@+id/tv_cons_val"
 		android:gravity="center_horizontal"/>
+
+	<ProgressBar
+		android:id="@+id/pb_solar"
+		style="?android:attr/progressBarStyleSmall"
+		android:layout_width="300dp"
+		android:layout_height="300dp"
+		android:layout_centerInParent="true"
+		android:background="@android:color/transparent"
+		android:visibility="invisible"/>
 
 </RelativeLayout>

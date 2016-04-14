@@ -29,6 +29,4 @@
 
 	<include layout="@layout/view_aircon"/>
 
-	<include layout="@layout/view_progress"/>
-
 </android.support.design.widget.CoordinatorLayout>

@@ -31,6 +31,18 @@ public class SecurityWidget extends AppWidgetProvider {
 		// Enter relevant functionality for when the last widget is disabled
 	}
 
+	/**
+	 * Updates a widgets
+	 *
+	 * @param context
+	 *            Context of this application
+	 * @param appWidgetManager
+	 *            Instance of the appWidgetManager
+	 * @param appWidgetId
+	 *            ID of the widget to be updated
+	 * @param isChanging
+	 *            Flag if status is changing between alarm on and alarm off
+	 */
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
 								int appWidgetId, boolean isChanging) {
 

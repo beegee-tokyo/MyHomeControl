@@ -2,10 +2,8 @@ package tk.giesecke.myhomecontrol;
 
 /**
  * Wrapper to send several parameters to onPostExecute of AsyncTask
- *
- * comResult = return string as JSON from the ESP device
  */
-public class ESPcommResultWrapper {
+public class CommResultWrapper {
 	/** URL to be called */
 	public String httpURL;
 	/** Command to be send */

@@ -30,17 +30,26 @@ import java.util.ArrayList;
 
 public class UDPlistener extends Service {
 
+	/** Tag for debug messages */
 	private static final String DEBUG_LOG_TAG = "MHC-BROAD";
 
+	/** UDP server port where we receive the UDP broadcasts */
 	private static final int UDP_SERVER_PORT = 5000;
+	/** Action for broadcast message to main activity */
 	public static final String BROADCAST_RECEIVED = "BC_RECEIVED";
 
+	/** Flag if listener is restarted after a broadcast was received */
 	private final Boolean shouldRestartSocketListen=true;
+	/** Socket for broadcast datagram */
 	private DatagramSocket socket;
+	/** Context of this intent */
 	private static Context intentContext;
+	/** Multicast lock to keep WiFi awake until broadcast is received */
 	private WifiManager.MulticastLock lock = null;
 
+	/** Array to calculate average consumption (to avoid too many alerts */
 	public static final ArrayList<Float> avgConsumption = new ArrayList<>();
+	/** Counter for entries in average consumption array */
 	public static int avgConsIndex = 0;
 
 	public UDPlistener() {
@@ -79,6 +88,7 @@ public class UDPlistener extends Service {
 		}
 
 		// Get the MulticastLock to be able to receive multicast UDP messages
+		/** Wifi manager to check wifi status */
 		WifiManager wifi = (WifiManager)getSystemService( Context.WIFI_SERVICE );
 		if(wifi != null){
 			if (lock != null) { // In case we restart after receiver problem
@@ -93,7 +103,16 @@ public class UDPlistener extends Service {
 	}
 
 	// UDP stuff starts here
+	/**
+	 * Wait for UDP broadcasts
+	 *
+	 * @param broadcastIP
+	 * 		IP mask to listen to
+	 * @param port
+	 * 		Port to listen to
+	 */
 	private void listenAndWaitAndThrowIntent(InetAddress broadcastIP, Integer port) {
+		/** Byte buffer for incoming data */
 		byte[] recvBuf = new byte[250];
 		if (socket == null || socket.isClosed()) {
 			try {
@@ -102,6 +121,7 @@ public class UDPlistener extends Service {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Cannot open socket " + e.getMessage());
 			}
 		}
+		/** Datagram packet for incoming data */
 		DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Waiting for UDP broadcast");
 		try {
@@ -110,17 +130,21 @@ public class UDPlistener extends Service {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Socket receive failed " + e.getMessage());
 		}
 
+		/** IP address of UDP broadcast sender */
 		String senderIP = packet.getAddress().getHostAddress();
+		/** Message attached to UDP broadcast */
 		String message = new String(packet.getData()).trim();
 
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 
 		// Check if response is a JSON array
 		if (Utilities.isJSONValid(message)) {
+			/** Json object for received data */
 			JSONObject jsonResult;
 			try {
 				jsonResult = new JSONObject(message);
 				try {
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
+					/** Device ID from UDP broadcast message */
 					String broadCastDevice = jsonResult.getString("device");
 					if (broadCastDevice.startsWith("sf")) { // Broadcast from front security device
 						alarmNotif(jsonResult, intentContext);
@@ -136,15 +160,20 @@ public class UDPlistener extends Service {
 				return;
 			}
 			// Send broadcast to listening activities
-			sendMyBroadcast(senderIP, message);
+			sendMyBroadcast(message);
 		}
 	}
 
+	/**
+	 * Start listener for UDP messages
+	 */
 	private void startListenForUDPBroadcast() {
 		Thread UDPBroadcastThread = new Thread(new Runnable() {
 			public void run() {
 				try {
+					/** IP mask from where we expect the UDP broadcasts */
 					InetAddress broadcastIP = InetAddress.getByName("192.168.0.255"); //172.16.238.42 //192.168.1.255
+					/** Port from where we expect the UDP broadcasts */
 					Integer port = UDP_SERVER_PORT;
 					while (shouldRestartSocketListen) {
 						listenAndWaitAndThrowIntent(broadcastIP, port);
@@ -160,10 +189,10 @@ public class UDPlistener extends Service {
 	}
 
 	// send broadcast from activity to all receivers listening to the action "ACTION_STRING_ACTIVITY"
-	private void sendMyBroadcast(String ipAddress, String msgReceived) {
+	private void sendMyBroadcast(String msgReceived) {
+		/** Intent for activity internal broadcast message */
 		Intent broadCastIntent = new Intent();
 		broadCastIntent.setAction(BROADCAST_RECEIVED);
-		broadCastIntent.putExtra("sender", ipAddress);
 		broadCastIntent.putExtra("message", msgReceived);
 		sendBroadcast(broadCastIntent);
 	}
@@ -175,8 +204,11 @@ public class UDPlistener extends Service {
 	 *            JSON object with values
 	 */
 	public static void alarmNotif(JSONObject jsonValues, Context notifContext) {
+		/** Flag for active alarm */
 		int hasAlarmInt;
+		/** Flag for alarm on/off */
 		int hasAlarmActive;
+		/** String with device ID */
 		String deviceIDString;
 		try {
 			deviceIDString = jsonValues.getString("device");
@@ -213,7 +245,7 @@ public class UDPlistener extends Service {
 			//noinspection deprecation
 			notifColor = notifContext.getResources().getColor(android.R.color.holo_red_light);
 
-			/* Pointer to notification builder for export/import arrow */
+			/** Pointer to notification builder for export/import arrow */
 			NotificationCompat.Builder myNotifBuilder;
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
 				myNotifBuilder = new NotificationCompat.Builder(notifContext)
@@ -232,7 +264,7 @@ public class UDPlistener extends Service {
 						.setWhen(System.currentTimeMillis());
 			}
 
-			/* Pointer to notification manager for export/import arrow */
+			/** Pointer to notification manager for export/import arrow */
 			NotificationManager notificationManager = (NotificationManager) notifContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
 			/** Access to shared preferences of app widget */
@@ -249,7 +281,7 @@ public class UDPlistener extends Service {
 				myNotifBuilder.setColor(notifColor);
 			}
 
-			/* Pointer to notification */
+			/** Pointer to notification */
 			Notification alarmNotification = myNotifBuilder.build();
 			notificationManager.notify(2, alarmNotification);
 		}
@@ -280,7 +312,7 @@ public class UDPlistener extends Service {
 		notifColor = context.getResources()
 				.getColor(android.R.color.holo_green_light);
 
-		/* Pointer to notification builder for export/import arrow */
+		/** Pointer to notification builder for export/import arrow */
 		NotificationCompat.Builder myNotifBuilder;
 		myNotifBuilder = new NotificationCompat.Builder(context)
 				.setContentTitle(context.getString(R.string.app_name))
@@ -313,7 +345,7 @@ public class UDPlistener extends Service {
 		} else {
 			mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
 		}
-		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Widget");
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Security Widget");
 		/** App widget manager for all widgets of this app */
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(updateContext);
 		/** Component name of this widget */

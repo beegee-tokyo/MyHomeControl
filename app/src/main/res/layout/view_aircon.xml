@@ -31,4 +31,13 @@
 		android:layout_height="match_parent"
 		android:layout_below="@+id/carrier"/>
 
+	<ProgressBar
+		android:id="@+id/pb_aircon"
+		style="?android:attr/progressBarStyleSmall"
+		android:layout_width="300dp"
+		android:layout_height="300dp"
+		android:layout_centerInParent="true"
+		android:background="@android:color/transparent"
+		android:visibility="invisible"/>
+
 </RelativeLayout>
