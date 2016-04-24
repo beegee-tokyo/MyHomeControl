@@ -11,6 +11,8 @@ void setup() {
 	Serial.setDebugOutput(false);
 	Serial.println("");
 	Serial.println("Hello from ESP8266 aircon control");
+	Serial.print("SW build: ");
+	Serial.println(compileDate);
 
 	// Setup WiFi event handler
 	WiFi.onEvent(WiFiEvent);
@@ -29,20 +31,6 @@ void setup() {
 
 	My_Sender.begin();
 
-	Serial.println(F("00 - On/Off"));
-	Serial.println(F("11 - Cool"));
-	Serial.println(F("12 - Dry"));
-	Serial.println(F("13 - Fan"));
-	Serial.println(F("20 - High Fan"));
-	Serial.println(F("21 - Medium Fan"));
-	Serial.println(F("22 - Low Fan"));
-	Serial.println(F("30 - Plus"));
-	Serial.println(F("31 - Minus"));
-	Serial.println(F("40 - Timer"));
-	Serial.println(F("98 - Auto function on"));
-	Serial.println(F("99 - Auto function off"));
-
-
 	// Initialize file system.
 	boolean foundStatus = SPIFFS.begin();
 	if (foundStatus) { // File system found
@@ -55,16 +43,24 @@ void setup() {
 	{
 		/* Asume aircon off, timer off, power control enabled, */
 		/* aircon mode fan, fan speed low, temperature set to 25 deg Celsius */
-		acMode = acMode | AUTO_ON | TIM_OFF | AC_OFF | MODE_FAN | FAN_LOW;
+		acMode = acMode | AUTO_ON | TIM_OFF | AC_OFF | MODE_FAN | FAN_LOW | TUR_OFF | SWP_OFF | ION_OFF;
 		acTemp = acTemp & TEMP_CLR; // set temperature bits to 0
 		acTemp = acTemp + 25; // set temperature bits to 25
 	}
 
+	// If device was in auto power mode before reset set powerStatus to 0
 	if ((acMode & AUTO_OFF) == AUTO_OFF) {
 		powerStatus = 0;
 		writeStatus();
 	}
 	
+	// If device was in timer mode before reset reset the flag
+	// As we do not know why the device restarted we do not know the status of the aircon
+	if ((acMode & TIM_ON) == TIM_ON) {
+		acMode = acMode & TIM_CLR;
+		acMode = acMode | TIM_OFF;
+	}
+
 	// Set initial time
 	setTime(getNtpTime());
 
@@ -89,10 +85,12 @@ void setup() {
 	sendDebug(debugMsg);
 
 	// Get first values from spMonitor
-	getPowerVal(false);
+	// Only used in main control ESP on 192.168.0.142 address
+	//getPowerVal(false);
 
 	// Start update of consumption value every 60 seconds
-	getPowerTimer.attach(60, triggerGetPower);
+	// Only used in main control ESP on 192.168.0.142 address
+	// getPowerTimer.attach(60, triggerGetPower);
 
 	// Start sending status update every 5 minutes (5x60=300 seconds)
 	sendUpdateTimer.attach(300, triggerSendUpdate);
@@ -105,15 +103,19 @@ void setup() {
 	ftpSrv.begin(DEVICE_ID,DEVICE_ID);    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
 		
 	ArduinoOTA.onStart([]() {
-		Serial.println("OTA start");
+		String debugMsg = "OTA start";
+		sendDebug(debugMsg);
+		Serial.println(debugMsg);
 		// Safe actual status
 		writeStatus();
 		ledFlasher.attach(0.1, redLedFlash); // Flash very fast if we started update
-		getPowerTimer.detach();
+		resetFanModeTimer.detach();
 		sendUpdateTimer.detach();
+		timerEndTimer.detach();
 		WiFiUDP::stopAll();
 		WiFiClient::stopAll();
 		server.close();
+		otaUpdate = true;
 	});
 
 	// Start OTA server.

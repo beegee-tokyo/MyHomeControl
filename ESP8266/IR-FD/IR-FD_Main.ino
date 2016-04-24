@@ -2,48 +2,14 @@ void loop() {
 	// Handle OTA updates
 	ArduinoOTA.handle();
 
+	if (otaUpdate) { // If the OTA update is active we do nothing else here in the main loop
+		return;
+	}
+	
 	// Handle new client request on HTTP server if available
 	WiFiClient client = server.available();
 	if (client) {
 		replyClient(client);
-	}
-
-	// Handle serial communication
-	while (Serial.available()) {
-		int inChar = Serial.read();
-		if (isDigit(inChar)) {
-			// convert the incoming byte to a char
-			// and add it to the string:
-			inString += (char)inChar;
-		}
-		// if you get a newline, print the string,
-		// then the string's value:
-		if (inChar == '\n') {
-			irCmd = inString.toInt();
-			if (irCmd > 99) {
-				Serial.println("Invalid command");
-				irCmd = 9999;
-			}
-			// clear the string for new input:
-			Serial.println("inString after receiving \n " + inString);
-			inString = "";
-			Serial.println("irCmd after receiving \n " + String(irCmd));
-			replySerial();
-		}
-	}
-
-	// Handle update of consumption power
-	if (powerUpdateTriggered) {
-		//Serial.println("Power Update triggered");
-		powerUpdateTriggered = false;
-		getPowerVal(true);
-	}
-
-	// Handle frequent status update
-	if (sendUpdateTriggered) {
-		//Serial.println("Send Update triggered");
-		sendUpdateTriggered = false;
-		sendBroadCast();
 	}
 
 	// Handle the different AC commands
@@ -94,10 +60,11 @@ void loop() {
 					// Set mode to FAN
 					irCmd = CMD_MODE_FAN;
 					sendCmd();
-					// TODO adapt this for Carrier AC which toggles through the speeds
+					delay(1000);
 					// Set fan speed to LOW
 					irCmd = CMD_FAN_LOW;
 					sendCmd();
+					delay(1000);
 					// Switch AC off
 					irCmd = CMD_ON_OFF;
 					sendCmd();
@@ -115,6 +82,57 @@ void loop() {
 		}
 	}
 
+	// Handle update of consumption power
+	if (powerUpdateTriggered) {
+		#ifdef DEBUG_OUT 
+		Serial.println("Power Update triggered");
+		#endif
+		powerUpdateTriggered = false;
+		getPowerVal(true);
+	}
+
+	// Handle frequent status update
+	if (sendUpdateTriggered) {
+		#ifdef DEBUG_OUT 
+		Serial.println("Send Update triggered");
+		#endif
+		sendUpdateTriggered = false;
+		sendBroadCast();
+	}
+
+	// Handle end of timer
+	if (timerEndTriggered) {
+		#ifdef DEBUG_OUT 
+		Serial.println("Timer reached 1 hour");
+		#endif
+		timerEndTimer.detach(); // Stop timer
+		timerEndTriggered = false;
+		String debugMsg;
+		// If AC is on, switch it to FAN low speed and then switch it off
+		if ((acMode & AC_ON) == AC_ON) { // AC is on
+			// Set mode to FAN
+			irCmd = CMD_MODE_FAN;
+			sendCmd();
+			delay(1000);
+			// Set fan speed to LOW
+			irCmd = CMD_FAN_LOW;
+			sendCmd();
+			delay(1000);
+			// Switch AC off
+			irCmd = CMD_ON_OFF;
+			sendCmd();
+			debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+		} else {
+			debugMsg = "End of timer, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+		}
+		acMode = acMode & TIM_CLR; // set timer bit to 0 (off)
+		powerStatus = 0;
+		sendDebug(debugMsg);
+		#ifdef DEBUG_OUT 
+		Serial.println(debugMsg);
+		#endif
+	}
+
 	// Give a "I am alive" signal
 	liveCnt++;
 	if (liveCnt == 100000) {
@@ -125,49 +143,40 @@ void loop() {
 	// If time is later than "endOfDay" or earlier than "startOfDay" we stop automatic function and switch off the aircon
 	if (hour() > endOfDay || hour() < startOfDay) {
 		if (dayTime) {
-			// If AC is on, switch it to FAN low speed and then switch it off
-			if ((acMode & AC_ON) == AC_ON && dayTime) { // AC is on
-				// Set mode to FAN
-				irCmd = CMD_MODE_FAN;
-				sendCmd();
-				// Set fan speed to LOW
-				irCmd = CMD_FAN_LOW;
-				sendCmd();
-				// Switch AC off
-				irCmd = CMD_ON_OFF;
-				sendCmd();
+			if ((acMode & TIM_OFF) == TIM_OFF) { // If timer is active wait for the end of the timer
+				// If AC is on, switch it to FAN low speed and then switch it off
+				if ((acMode & AC_ON) == AC_ON) { // AC is on
+					// Set mode to FAN
+					irCmd = CMD_MODE_FAN;
+					sendCmd();
+					delay(1000);
+					// Set fan speed to LOW
+					irCmd = CMD_FAN_LOW;
+					sendCmd();
+					delay(1000);
+					// Switch AC off
+					irCmd = CMD_ON_OFF;
+					sendCmd();
+					delay(1000);
+				}
+				dayTime = false;
+				powerStatus = 0;
+				String debugMsg = "End of day, disable aircon auto mode (hour = " + String(hour()) + ")";
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
 			}
-			Serial.print("Switching off the auto mode at ");
-			Serial.print(hour());
-			Serial.println("h");
-			dayTime = false;
-			powerStatus = 0;
-			String debugMsg = "End of day, disable aircon auto mode (hour = " + String(hour()) + ")";
-			sendDebug(debugMsg);
 		}
 	}else {
 		if (!dayTime) {
-			Serial.print("Switching on the auto mode at ");
-			Serial.print(hour());
-			Serial.println("h");
 			dayTime = true;
 			String debugMsg = "Start of day, enable aircon auto mode (hour = " + String(hour()) + ")";
 			sendDebug(debugMsg);
+			#ifdef DEBUG_OUT 
+			Serial.println(debugMsg);
+			#endif
 		}
-	}
-	
-	// Catch a bug with power status = 0 but aircon is on when in auto mode
-	// If AC is on and Auto mode is on but powerStatus is 0, switch it to FAN low speed and then switch it off
-	if ((acMode & AC_ON) == AC_ON && (acMode & AUTO_ON) == AUTO_ON && powerStatus == 0) {
-		// Set mode to FAN
-		irCmd = CMD_MODE_FAN;
-		sendCmd();
-		// Set fan speed to LOW
-		irCmd = CMD_FAN_LOW;
-		sendCmd();
-		// Switch AC off
-		irCmd = CMD_ON_OFF;
-		sendCmd();
 	}
 	
 	// Handle FTP access

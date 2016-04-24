@@ -1,11 +1,11 @@
 /**
-	triggerGetPower
-	called by Ticker getPowerTimer
-	sets flag powerUpdateTriggered to true for handling in loop()
-	will initiate a call to getPowerVal() from loop()
+	resetFanMode
+	called by Ticker resetFanModeTimer
+	resets flag for fan speed change mode
 */
-void triggerGetPower() {
-	powerUpdateTriggered = true;
+void resetFanMode () {
+	isInFanMode = false;
+	resetFanModeTimer.detach();
 }
 
 /**
@@ -19,6 +19,16 @@ void triggerSendUpdate() {
 }
 
 /**
+	triggerTimerEnd
+	called by Ticker timerEndTimer
+	sets flag timerEndTriggered to true for handling in loop()
+	will initiate switching off the aircon after 1 hour
+*/
+void triggerTimerEnd() {
+	timerEndTriggered = true;
+}
+
+/**
  * Change status of red led on each call
  * called by Ticker ledFlasher
  */
@@ -27,6 +37,26 @@ void redLedFlash() {
 	digitalWrite(ACT_LED, !state);
 }
 
+/**
+ * Change status of blue led on each call
+ * called by Ticker ledFlasher
+ */
+void blueLedFlash() {
+	int state = digitalRead(COM_LED);
+	digitalWrite(COM_LED, !state);
+}
+
+/** 
+ * Format int number as string with leading 0
+ */
+ String formatInt(int number) {
+	if (number < 10) {
+		return "0" + String(number);
+	} else {
+		return String(number);
+	}
+ }
+ 
 /**
 	writeStatus
 	writes current status into status.txt
@@ -48,10 +78,12 @@ bool writeStatus() {
 	root["acMode"] = acMode;
 	root["acTemp"] = acTemp;
 	root["powerStatus"] = powerStatus;
+	root["onTime"] = onTime;
 	
 	String jsonTxt;
 	root.printTo(jsonTxt);
 	
+	#ifdef DEBUG_OUT 
 	Serial.println("writeStatus:");
 	Serial.print("acMode = ");
 	Serial.println(acMode);
@@ -59,8 +91,10 @@ bool writeStatus() {
 	Serial.println(acTemp);
 	Serial.print("powerStatus = ");
 	Serial.println(powerStatus);
-	root.printTo(Serial);
-	Serial.println();
+	Serial.print("onTime = ");
+	Serial.println(onTime);
+	Serial.println(jsonTxt);
+	#endif
 	
 	// Save status to file
 	statusFile.println(jsonTxt);
@@ -74,7 +108,9 @@ bool writeStatus() {
 	global variables are updated from the content
 */
 bool readStatus() {
+	#ifdef DEBUG_OUT 
 	Serial.println("readStatus:");
+	#endif
 	// open file for reading.
 	File statusFile = SPIFFS.open("/status.txt", "r");
 	if (!statusFile)
@@ -99,35 +135,58 @@ bool readStatus() {
 	if (!root.success())
 	{
 		// Parsing fail
+		#ifdef DEBUG_OUT 
 		Serial.println("Failed to parse status json");
+		#endif
 		return false;
 	}
 	if (root.containsKey("acMode")) {
 		acMode = root["acMode"];
 	} else {
+		#ifdef DEBUG_OUT 
 		Serial.println("Could not find acMode");
+		#endif
 		return false;
 	}
 	if (root.containsKey("acTemp")) {
 		acTemp = root["acTemp"];
 	} else {
+		#ifdef DEBUG_OUT 
 		Serial.println("Could not find acTemp");
+		#endif
 		return false;
 	}
 	if (root.containsKey("powerStatus")) {
 		powerStatus = root["powerStatus"];
 	} else {
+		#ifdef DEBUG_OUT 
 		Serial.println("Could not find powerStatus");
+		#endif
+		powerStatus = 0;
 		return false;
 	}
+	if (root.containsKey("onTime")) {
+		onTime = root["onTime"];
+	} else {
+		#ifdef DEBUG_OUT 
+		Serial.println("Could not find onTime");
+		#endif
+		onTime = 1;
+		return false;
+	}
+	#ifdef DEBUG_OUT 
 	Serial.print("acMode = ");
 	Serial.println(acMode);
 	Serial.print("acTemp = ");
 	Serial.println(acTemp);
 	Serial.print("powerStatus = ");
 	Serial.println(powerStatus);
-	root.printTo(Serial);
-	Serial.println();
+	Serial.print("onTime = ");
+	Serial.println(onTime);
+	String status;
+	root.printTo(status);
+	Serial.println(status);
+	#endif
 	
 	return true;
 }
@@ -140,8 +199,8 @@ void parseCmd(JsonObject& root) {
 	String statResponse;
 	// The following commands are followed independant of AC on or off
 	switch (irCmd) {
-		case CMD_REMOTE_0: // Auto mode controlled off
-			if ((acMode & AUTO_ON) != AUTO_ON) {
+		case CMD_REMOTE_0: // Second aircon off
+			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
 				irCmd = 9999;
 				root["result"] = "auto_off";
 			} else {
@@ -151,8 +210,8 @@ void parseCmd(JsonObject& root) {
 				writeStatus();
 			}
 			break;
-		case CMD_REMOTE_1: // Auto mode controlled fan mode
-			if ((acMode & AUTO_ON) != AUTO_ON) {
+		case CMD_REMOTE_1: // Second aircon fan mode
+			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
 				irCmd = 9999;
 				root["result"] = "auto_off";
 			} else {
@@ -162,8 +221,8 @@ void parseCmd(JsonObject& root) {
 				writeStatus();
 			}
 			break;
-		case CMD_REMOTE_2: // Auto mode controlled cool mode
-			if ((acMode & AUTO_ON) != AUTO_ON) {
+		case CMD_REMOTE_2: // Second aircon cool mode
+			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
 				irCmd = 9999;
 				root["result"] = "auto_off";
 			} else {
@@ -186,6 +245,9 @@ void parseCmd(JsonObject& root) {
 			root["result"] = "success";
 			root["cmd"] = CMD_AUTO_OFF;
 			writeStatus();
+			break;
+		case CMD_OTHER_TIMER: // Timer on/off
+			root["cmd"] = CMD_OTHER_TIMER;
 			break;
 		case CMD_RESET: // Command to reset device
 			root["result"] = "success";
@@ -229,9 +291,6 @@ void parseCmd(JsonObject& root) {
 					case CMD_TEMP_MINUS: // Temp -
 						root["cmd"] = CMD_TEMP_MINUS;
 						break;
-					case CMD_OTHER_TIMER: // Switch to Timer
-						root["cmd"] = CMD_OTHER_TIMER;
-						break;
 					case CMD_OTHER_SWEEP: // Switch on/off sweep
 						root["cmd"] = CMD_OTHER_SWEEP;
 						break;
@@ -247,7 +306,8 @@ void parseCmd(JsonObject& root) {
 						root["cmd"] = CMD_OTHER_ION;
 						break;
 					default:
-						root["result"] = "fail - unknown command";
+						String wrongCmd = "fail - unknown command: " + String(irCmd);
+						root["result"] = wrongCmd;
 						irCmd = 9999;
 						break;
 				}

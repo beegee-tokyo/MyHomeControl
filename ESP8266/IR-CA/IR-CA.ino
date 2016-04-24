@@ -1,5 +1,5 @@
 /**
-	Web controlled IR remote for FujiDenzo aircon
+	Web controlled IR remote for Carrier aircon
 
 	Hardware
 	Adafruit HUZZAH ESP8266 (ESP-12) module - https://www.adafruit.com/products/2471
@@ -12,10 +12,10 @@
 	Switch on/off the aircon depending on command or production of solar panels.
 
 	@author Bernd Giesecke
-	@version 0.2 beta March, 2016.
+	@version 0.3 beta April, 2016.
 */
 
 /* Security.h contains all includes, defines, variables and instance declarations */
-#include "IR-FujiDenzo_declarations.h"
+#include "IR-CA_declarations.h"
 /* Security_function.h contains all function declarations */
-#include "IR-FujiDenzo_functions.h"
+#include "IR-CA_functions.h"

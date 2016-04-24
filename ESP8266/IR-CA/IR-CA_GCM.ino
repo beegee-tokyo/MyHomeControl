@@ -442,6 +442,7 @@ boolean gcmSendOut(String data) {
 		#endif
 		gcmClient.println(postStr); // Here we send the complete POST request to the GCM server
 	
+		delay(100);
 		// Get response from GCM server
 		#ifdef DEBUG_OUT 
 		Serial.println("Response from GCM server:");

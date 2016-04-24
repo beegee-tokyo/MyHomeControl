@@ -66,38 +66,19 @@ public class Utilities extends MyHomeControl {
 	/**
 	 * Scan the local subnet and update the list of devices
 	 */
-	public static void findDevicesOnLAN(Context appContext){
-		/** Array list to hold found IP addresses */
-		ArrayList<String> hosts = new ArrayList<>();
-
-		String subnet = appContext.getResources().getString(R.string.MY_LOCAL_SUB);
-		for(int i=140; i<150; i++){ // Home automation devices IPs are from ...140 to ...149
-			try {
-				/** IP address under test */
-				InetAddress inetAddress = InetAddress.getByName(subnet + String.valueOf(i));
-				if(inetAddress.isReachable(500)){
-					hosts.add(inetAddress.getHostName());
-					Log.d(DEBUG_LOG_TAG, inetAddress.getHostName());
-				}
-			} catch (IOException e) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Exception " + e);
-			}
-		}
-		for (int i=0; i<hosts.size(); i++) {
-			// SPmonitor, Security front, Aircon 1, Aircon 2, Aircon 3, Security back
-			if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SOLAR_URL.substring(7))) {
+	public static void checkMainDevices(){
+		try {
+			if(InetAddress.getByName("192.168.0.140").isReachable(5000)){
 				MyHomeControl.deviceIsOn[spMonitorIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_FRONT_1.substring(7))) {
-				MyHomeControl.deviceIsOn[secFrontIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_BACK_1.substring(7))) {
-				MyHomeControl.deviceIsOn[secRearIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_1.substring(7))) {
-				MyHomeControl.deviceIsOn[aircon1Index] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_2.substring(7))) {
-				MyHomeControl.deviceIsOn[aircon2Index] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_3.substring(7))) {
-				MyHomeControl.deviceIsOn[aircon3Index] = true;
 			}
+			if(InetAddress.getByName("192.168.0.141").isReachable(5000)){
+				MyHomeControl.deviceIsOn[secFrontIndex] = true;
+			}
+			if(InetAddress.getByName("192.168.0.142").isReachable(10000)){
+				MyHomeControl.deviceIsOn[aircon1Index] = true;
+			}
+		} catch (IOException e) {
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Exception " + e);
 		}
 	}
 

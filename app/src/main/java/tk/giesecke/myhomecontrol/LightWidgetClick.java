@@ -10,6 +10,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -48,7 +49,12 @@ public class LightWidgetClick extends IntentService {
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 
 				/** A HTTP client to access the ESP device */
-				OkHttpClient client = new OkHttpClient();
+				// Set timeout to 5 minutes in case we have a lot of data to load
+				OkHttpClient client = new OkHttpClient.Builder()
+						.connectTimeout(300, TimeUnit.SECONDS)
+						.writeTimeout(10, TimeUnit.SECONDS)
+						.readTimeout(300, TimeUnit.SECONDS)
+						.build();
 
 				/** URL to be called */
 				String urlString = MyHomeControl.SECURITY_URL_FRONT_1 + "/?b"; // URL to call

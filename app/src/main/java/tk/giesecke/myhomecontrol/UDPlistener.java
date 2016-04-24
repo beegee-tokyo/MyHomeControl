@@ -146,10 +146,8 @@ public class UDPlistener extends Service {
 				try {
 					/** Device ID from UDP broadcast message */
 					String broadCastDevice = jsonResult.getString("device");
-					if (broadCastDevice.startsWith("sf")) { // Broadcast from front security device
-						alarmNotif(jsonResult, intentContext);
-					}
-					if (broadCastDevice.startsWith("sb")) { // Broadcast from back security device
+					if (broadCastDevice.startsWith("sf")
+							|| broadCastDevice.startsWith("sb")) { // Broadcast from security device
 						alarmNotif(jsonResult, intentContext);
 					}
 				} catch (JSONException ignore) {

@@ -17,12 +17,12 @@ const char compileDate[] = __DATE__ " " __TIME__;
 /**********************************************
 When doing breadboard test, enable this define
 ***********************************************/
-//#define BREADBOARD
+#define BREADBOARD
 
 #ifdef BREADBOARD
-	#define DEVICE_ID "cab" // ID for Carrier Aircon
+	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
 #else
-	#define DEVICE_ID "ca1" // ID for Carrier Aircon
+	#define DEVICE_ID "fd1" // ID for FujiDenzo Aircon
 #endif
 
 /* wifiAPinfo.h contains wifi SSID and password */
@@ -50,9 +50,9 @@ FtpServer  ftpSrv;
 
 /** IP address of this module */
 #ifdef BREADBOARD
-	IPAddress ipAddr(192, 168, 0, 148);
+	IPAddress ipAddr(192, 168, 0, 149);
 #else
-	IPAddress ipAddr(192, 168, 0, 143);
+	IPAddress ipAddr(192, 168, 0, 142);
 #endif
 /** IP address of first slave */
 IPAddress ipSlave1(192, 168, 0, 143);
@@ -69,17 +69,6 @@ IPAddress debugIP (192,	168, 0, 150);
 
 /** Received command (from lan or serial connection) */
 int irCmd = 9999;
-/** Last processed command (from lan or serial connection) */
-int lastCmd = 99;
-/** Counter to check if command is repeated */
-byte cmdCnt = -1;
-
-/** Flag for fan speed change up or down */
-boolean fanSpeedUp = true;
-/* Flag to detect if we are in fan speed change mode */
-boolean isInFanMode = false;
-/** Timer to switch off fan speed change mode after 10 seconds */
-Ticker resetFanModeTimer;
 
 /** String to hold incoming command from serial port */
 String inString = "";
@@ -115,8 +104,8 @@ String inString = "";
 #define CMD_AUTO_ON			98
 #define CMD_AUTO_OFF		99
 
-// IR commands for Carrier aircon
-#include "IR-Carrier_codes.h"
+// IR commands for FujiDenzo aircon
+#include "IR-FD_Codes.h"
 
 /** Mode status of aircon (only guess, as human could have used remote)
 		acMode acTemp
@@ -126,8 +115,8 @@ String inString = "";
 							1 sweep on
 		a = auto mode:		0 power control disabled
 							1 power control enabled
-		t = timer:			0 normal mode
-							1 timer button pressed
+		t = timer:			0 timer is off
+							1 timer is running
 		p = status:			0 off
 							1 on
 		mm = mode:			00 fan
@@ -207,9 +196,9 @@ byte acTemp =		B00000000;
 #define ION_MASK	B01000000
 
 /** Max selectable temperature */
-#define MAX_TEMP 29
+#define MAX_TEMP 32
 /** Min selectable temperature */
-#define MIN_TEMP 18
+#define MIN_TEMP 16
 
 /** IR LED on GPIO13 for communciation with aircon */
 #define IR_LED_OUT 13
@@ -224,19 +213,29 @@ Ticker getPowerTimer;
 Ticker sendUpdateTimer;
 /** Timer for flashing red detection LED */
 Ticker ledFlasher;
+/** Timer for aircon 1 hour timer */
+Ticker timerEndTimer;
 
 /** Flag for request to contact spMonitor server to get current consumption */
 boolean powerUpdateTriggered = false;
 /** Flag for broadcast status & consumption */
 boolean sendUpdateTriggered = false;
+/** Flag for timer has reached 1 hour */
+boolean timerEndTriggered = false;
 /** Flag for boot status */
 boolean inSetup = true;
 /** Flag for day time */
 boolean dayTime = false;
+/** Flag for debugging enabled */
+boolean debugOn = true;
 /** Start of day time */
 int startOfDay = 8;
 /** End of day time (hour - 1) */
 int endOfDay = 17;
+/** Time in seconds for timer function */
+int onTime = 3600; // default 1 hour
+/** Flag for OTA update running */
+boolean otaUpdate = false;
 
 /** Instance of the IR sender */
 IRsend My_Sender(IR_LED_OUT);

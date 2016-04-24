@@ -16,11 +16,13 @@ void connectWiFi() {
 		delay(500);
 		Serial.print(".");
 		connectTimeout++;
+		digitalWrite(COM_LED,!digitalRead(COM_LED));
 		if (connectTimeout > 60) { //Wait for 30 seconds (60 x 500 milliseconds) to reconnect
 			// pinMode(16, OUTPUT); // Connected to RST pin
 			// digitalWrite(16,LOW); // Initiate reset
 			// ESP.reset(); // In case it didn't work
 			delay(60); // Wait for a minute before retry
+			connectTimeout = 0;
 			WiFi.disconnect();
 			WiFi.mode(WIFI_STA);
 			WiFi.config(ipAddr, ipGateWay, ipSubNet);
@@ -125,6 +127,13 @@ void sendBroadCast() {
 		root["auto"] = 0;
 	}
 	
+	// Display timer status of aircon
+	if ((acMode & TIM_ON) == TIM_ON) {
+		root["timer"] = 1;
+	} else {
+		root["timer"] = 0;
+	}
+
 	// Display device id
 	root["device"] = DEVICE_ID;
 	
@@ -135,22 +144,11 @@ void sendBroadCast() {
 		root["boot"] = 0;
 	}
 
-	// String message;
-	// root.printTo(message);
-
-	// if (tcpClient.connect(myServerName, 80)) {
-		// // This will send the request to the server
-		// tcpClient.print(String("GET ") + "/device_sendall.php/?message=" + message + " HTTP/1.1\r\n" +
-						// "Host: " + myServerName + "\r\n" +
-						// "Connection: close\r\n\r\n");
-	// } else {
-		// Serial.println("connection failed");
-	// }
-	// tcpClient.stop();
-	
 	// Broadcast per UTP to LAN
+	String broadCast;
+	root.printTo(broadCast);
 	udpClientServer.beginPacketMulticast(multiIP, 5000, ipAddr);
-	root.printTo(udpClientServer);
+	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
 
@@ -179,7 +177,7 @@ void replyClient(WiFiClient httpClient) {
 	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
 
-	// Prepare json object for the response
+	/** json object for the response */
 	JsonObject& root = jsonBuffer.createObject();
 	root["result"] = "fail";
 	root["device"] = DEVICE_ID;
@@ -200,23 +198,46 @@ void replyClient(WiFiClient httpClient) {
 		}
 	}
 
-	// Read the first line of the request
+	/** First line of the request */
 	String req = httpClient.readStringUntil('\r');
 	// Strip leading (GET, PUSH) and trailing (HTTP/1) characters
 	req = req.substring(req.indexOf("/"),req.length()-9);
-	// Prepare the response
+	/** Response to client */
 	String statResponse = "fail " + req;
 	root["result"] = statResponse;
 
 	if (req.substring(0, 4) == "/?c=") { // command received
-		if (req.substring(5, 6) != " ") {
-			statResponse = req.substring(4, 6);
-			irCmd = statResponse.toInt();
-			parseCmd(root);
+		if (isDigit(req.charAt(4))) {
+			if (isDigit(req.charAt(5))) {
+				statResponse = req.substring(4, 6);
+				irCmd = statResponse.toInt();
+				parseCmd(root);
+			} else {
+				irCmd = 9999;
+				root["reason"] = "Invalid command";
+			}
 		} else {
 			irCmd = 9999;
+			root["reason"] = "Invalid command";
 		}
-	} else if (req.substring(0, 3) == "/?s") { // status request received
+		// Timer duration received
+	} else if (req.substring(0, 4) == "/?t=") {
+		if (isDigit(req.charAt(4))) {
+			statResponse = req.substring(4, 5);
+			onTime = statResponse.toInt()*3600;
+			#ifdef DEBUG_OUT 
+			Serial.print("Changed timer to ");
+			Serial.print(onTime);
+			Serial.println(" seconds");
+			#endif
+			root["result"] = "success";
+			root["onTime"] = onTime;
+		} else {
+			root["result"] = "fail";
+			root["reason"] = "Invalid time";
+		}
+		 // status request received
+	} else if (req.substring(0, 3) == "/?s") {
 		root["result"] = "success";
 		// Display status of aircon
 		if ((acMode & AC_ON) == AC_ON) {
@@ -233,6 +254,12 @@ void replyClient(WiFiClient httpClient) {
 			root["mode"] = 2;
 		} else if (testMode == MODE_AUTO) {
 			root["mode"] = 3;
+		}
+		// Display timer status of aircon
+		if ((acMode & TIM_ON) == TIM_ON) {
+			root["timer"] = 1;
+		} else {
+			root["timer"] = 0;
 		}
 		testMode = acMode & FAN_MASK;
 		root["speed"] = testMode;
@@ -377,7 +404,12 @@ void replyClient(WiFiClient httpClient) {
 			root["result"] = "failed";
 			root["reason"] = failReason;
 		}
-	} else if (req.substring(0, 3) == "/?r") { // initialization request received
+		// toggle debugging
+	} else if (req.substring(0, 3) == "/?b"){
+		debugOn = !debugOn;
+		root["result"] = "success";
+		// initialization request received
+	} else if (req.substring(0, 3) == "/?r") {
 		irCmd = CMD_INIT_AC;
 		root["result"] = "success";
 	}
@@ -393,20 +425,23 @@ void replyClient(WiFiClient httpClient) {
 
 // For debug over TCP
 void sendDebug(String debugMsg) {
-	digitalWrite(COM_LED, LOW);
-	const int httpPort = 9999;
-	if (!tcpClient.connect(debugIP, httpPort)) {
-		Serial.println("connection to Debug PC " + String(debugIP[0]) + "." + String(debugIP[1]) + "." + String(debugIP[2]) + "." + String(debugIP[3]) + " failed");
+	if (debugOn) {
+		digitalWrite(COM_LED, LOW);
+		const int httpPort = 9999;
+		if (!tcpClient.connect(debugIP, httpPort)) {
+			Serial.println("connection to Debug PC " + String(debugIP[0]) + "." + String(debugIP[1]) + "." + String(debugIP[2]) + "." + String(debugIP[3]) + " failed");
+			tcpClient.stop();
+			digitalWrite(COM_LED, HIGH);
+			return;
+		}
+
+		String sendMsg = DEVICE_ID;
+		debugMsg = sendMsg + " " + debugMsg;
+		tcpClient.print(debugMsg);
+
 		tcpClient.stop();
 		digitalWrite(COM_LED, HIGH);
-		return;
 	}
-
-	debugMsg = "ca " + debugMsg;
-	tcpClient.print(debugMsg);
-
-	tcpClient.stop();
-	digitalWrite(COM_LED, HIGH);
 }
 
 

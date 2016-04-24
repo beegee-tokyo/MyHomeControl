@@ -265,27 +265,62 @@ void sendCmd() {
 			}
 			break;
 		case CMD_OTHER_TIMER: // Timer
-			if ((acMode & AC_ON) == AC_ON) {
-				if ((acMode & TIM_ON) == TIM_ON) { // TIMER is on
-					acMode = acMode & TIM_CLR; // set timer bit to 0
-					acMode = acMode | TIM_OFF;
+			if ((acMode & TIM_ON) == TIM_ON) { // TIMER is already on
+				timerEndTimer.detach(); // Stop timer
+				timerEndTriggered = false;
+				acMode = acMode & TIM_CLR; // set timer bit to 0
+				// Switch off the aircon
+				if ((acMode & AC_ON) == AC_ON) { // // Switch off the aircon if still on
+					// Set mode to FAN
+					irCmd = CMD_MODE_FAN;
+					sendCmd();
+					delay(1000);
+					// Set fan speed to LOW
+					irCmd = CMD_FAN_LOW;
+					sendCmd();
+					delay(1000);
+					// Switch AC off
+					irCmd = CMD_ON_OFF;
+					sendCmd();
+					delay(1000);
+					String debugMsg = "Timer stopped manually, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				} else {
-					acMode = acMode & TIM_CLR; // set timer bit to 1
-					acMode = acMode | TIM_ON;
+					String debugMsg = "Timer stopped manually, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
-				chkCmdCnt();
-				switch (cmdCnt) {
-					case 0:
-						buildBuffer(&sendBuffer[0], &TIMER_0[0]);
-						break;
-					case 1:
-						buildBuffer(&sendBuffer[0], &TIMER_1[0]);
-						break;
-					case 2:
-						buildBuffer(&sendBuffer[0], &TIMER_2[0]);
-						break;
+				powerStatus = 0;
+			} else { // Timer is not yet on
+				acMode = acMode & TIM_CLR; // set timer bit to 0
+				acMode = acMode | TIM_ON; // set timer bit to 1 (on)
+				// Switch on the aircon
+				if (!((acMode & AC_ON) == AC_ON)) { // // Switch on the aircon if off
+					// Switch AC on
+					irCmd = CMD_ON_OFF;
+					sendCmd();
+					delay(1000);
 				}
-				isValidCmd = true;
+				// Set fan speed to LOW
+				irCmd = CMD_FAN_LOW;
+				sendCmd();
+				delay(1000);
+				// Set mode to cooling
+				irCmd = CMD_MODE_COOL;
+				sendCmd();
+				powerStatus = 0;
+				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60mx60s=3600 seconds)
+				timerEndTimer.attach(onTime, triggerTimerEnd);
+				String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + formatInt(onTime/3600) + "hours";
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
 			}
 			break;
 		case CMD_OTHER_SWEEP: // SWEEP
@@ -363,6 +398,7 @@ void sendCmd() {
 	}
 	// Send the command
 	if (isValidCmd) {
+		writeStatus();
 		sendCode(0, &sendBuffer[0], 51);
 	}
 

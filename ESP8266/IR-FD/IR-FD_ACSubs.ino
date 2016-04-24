@@ -133,18 +133,63 @@ void sendCmd() {
 			buildBuffer(&sendBuffer[0], &MINUS[0]);
 			break;
 		case CMD_OTHER_TIMER: // Timer
-			if ((acMode & AC_ON) == AC_ON) {
-				if ((acMode & TIM_ON) == TIM_ON) { // TIMER is on
-					acMode = acMode & TIM_CLR; // set timer bit to 0
-					acMode = acMode | TIM_OFF;
-					isValidCmd = true;
+			if ((acMode & TIM_ON) == TIM_ON) { // TIMER is already on
+				timerEndTimer.detach(); // Stop timer
+				timerEndTriggered = false;
+				acMode = acMode & TIM_CLR; // set timer bit to 0
+				// Switch off the aircon
+				if ((acMode & AC_ON) == AC_ON) { // // Switch off the aircon if still on
+					// Set mode to FAN
+					irCmd = CMD_MODE_FAN;
+					sendCmd();
+					delay(1000);
+					// Set fan speed to LOW
+					irCmd = CMD_FAN_LOW;
+					sendCmd();
+					delay(1000);
+					// Switch AC off
+					irCmd = CMD_ON_OFF;
+					sendCmd();
+					delay(1000);
+					String debugMsg = "Timer stopped manually, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				} else {
-					acMode = acMode & TIM_CLR; // set power bit to 0
-					acMode = acMode | TIM_ON;
-					isValidCmd = true;
+					String debugMsg = "Timer stopped manually, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
+				powerStatus = 0;
+			} else { // Timer is not yet on
+				acMode = acMode & TIM_CLR; // set timer bit to 0
+				acMode = acMode | TIM_ON; // set timer bit to 1 (on)
+				// Switch on the aircon
+				if (!((acMode & AC_ON) == AC_ON)) { // // Switch on the aircon if off
+					// Switch AC on
+					irCmd = CMD_ON_OFF;
+					sendCmd();
+					delay(1000);
+				}
+				// Set fan speed to LOW
+				irCmd = CMD_FAN_LOW;
+				sendCmd();
+				delay(1000);
+				// Set mode to cooling
+				irCmd = CMD_MODE_COOL;
+				sendCmd();
+				powerStatus = 0;
+				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60mx60s=3600 seconds)
+				timerEndTimer.attach(onTime, triggerTimerEnd);
+				String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + formatInt(onTime/3600) + "hours";
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
 			}
-			buildBuffer(&sendBuffer[0], &TIMER[0]);
 			break;
 	}
 	// Send the command
@@ -304,136 +349,38 @@ void checkPower() {
 		solarPower += avgSolarPower[i];
 	}
 
-	// If deviation to old power is bigger than 50 Watt send a broadcast
-	double powerChange = consPowerOld - consPower;
-	if (abs(powerChange) > 50) {
-		// Set flag to report the change
-		mustBroadcast = true;
-		// Save new 'old' power value
-		consPowerOld = consPower;
-	}
-	
-	/***************************************************/
-	/* Below code is for future use with second aircon */
-	/***************************************************/
-	// if (solarPower == 0) { // No solar panel production
-		// if (powerStatus != 0) {
-			// irCmd = CMD_ON_OFF; // Switch off aircon
-			// sendCmd();
-			// // Switch off slave aircon
-			// switchSlaveAC(ipSlave1,CMD_REMOTE_0);
-			// powerStatus = 0;
-			// mustBroadcast = true;
-		// }
-	// } else {
-		// /** Check current status */
-		// switch (powerStatus) {
-			// case 0: // aircon is off, no overproduction
-				// // aircon should be off, but maybe user switched it on manually
-				// if ((acMode & AC_ON) != AC_ON) {
-					// if (consPower < -100) { // over production exceeds 100W
-						// Serial.print("Over production > 100W : ");
-						// Serial.print(consPower, 2);
-						// Serial.println("Switching on AC in FAN mode");
-						// irCmd = CMD_ON_OFF; // Switch on aircon in FAN mode
-						// sendCmd();
-						// powerStatus = 1;
-						// mustBroadcast = true;
-					// }
-				// }
-				// break;
-			// case 1: // aircon is in fan mode, over production was > 100W
-				// if (consPower < -100) { // over production exceeds 200W
-					// Serial.print("Over production > 200W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching on slave AC in FAN mode");
-					// // Switch slave aircon to FAN mode
-					// if (switchSlaveAC(ipSlave1,CMD_REMOTE_1)) {
-						// powerStatus = 2;
-						// mustBroadcast = true;
-					// } else {
-					// }
-				// }
-				// if (consPower > 200) { // consuming more than 200W
-					// Serial.print("Consumption > 200W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching off AC");
-					// irCmd = CMD_ON_OFF; // Switch off aircon
-					// sendCmd();
-					// powerStatus = 0;
-					// mustBroadcast = true;
-				// }
-				// break;
-			// case 2: // both aircons are in fan mode, over production was > 200W
-				// if (consPower < -400) { // over production exceeds 600W
-					// Serial.print("Over production > 600W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching on AC in COOL mode");
-					// irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
-					// sendCmd();
-					// powerStatus = 3;
-					// mustBroadcast = true;
-				// }
-				// if (consPower > 300) { // consuming more than 300W
-					// Serial.print("Consumption > 300W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching off slave AC");
-					// // Switch off slave aircon
-					// switchSlaveAC(ipSlave1,CMD_REMOTE_0);
-					// powerStatus = 1;
-					// mustBroadcast = true;
-				// }
-				// break;
-			// case 3: // aircon is in cool mode, over production was > 600W
-				// if (consPower < -400) { // over production exceeds 1000W
-					// // Switch on second aircon in COOL mode
-					// Serial.print("Over production > 1000W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching on second AC in COOL mode");
-					// // Switch slave aircon to COOL mode
-					// switchSlaveAC(ipSlave1,CMD_REMOTE_2);
-					// powerStatus = 4;
-					// mustBroadcast = true;
-				// }
-				// if (consPower > 400) { // consuming more than 400W
-					// Serial.print("Consumption > 400W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching back to FAN mode");
-					// irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-					// sendCmd();
-					// powerStatus = 1;
-					// mustBroadcast = true;
-				// }
-				// break;
-			// case 4: // both aircons are in COOL mode, over production was > 1400W
-				// if (consPower > 400) { // consuming more than 400W
-					// Serial.print("Consumption > 400W : ");
-					// Serial.print(consPower, 2);
-					// Serial.println("Switching slave AC back to FAN mode");
-					// // Switch slave aircon to COOL mode
-					// switchSlaveAC(ipSlave1,CMD_REMOTE_1);
-					// powerStatus = 3;
-					// mustBroadcast = true;
-				// }
-				// break;
-		// }
-	// }
 	/***************************************************/
 	/* Below code is for use with one aircon */
 	/***************************************************/
 	// Check if the solar production of the last 10 minutes was 0 Watt
 	if (solarPower == 0) { // No solar panel production
 		if (powerStatus != 0) {
-			irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-			sendCmd();
-			irCmd = CMD_ON_OFF; // Switch off aircon
-			sendCmd();
-			powerStatus = 0;
-			mustBroadcast = true;
-			mustWriteStatus = true;
-			avgConsIndex = 0; // reset average calculation
-			String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, switch aircon off, status to 0";
-			sendDebug(debugMsg);
+			if ((acMode & AC_ON) == AC_ON) {
+				irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
+				sendCmd();
+				delay(1000);
+				irCmd = CMD_ON_OFF; // Switch off aircon
+				sendCmd();
+				powerStatus = 0;
+				mustBroadcast = true;
+				mustWriteStatus = true;
+				avgConsIndex = 0; // reset average calculation
+				String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, switch aircon off, status to 0";
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
+			} else {
+				powerStatus = 0;
+				mustBroadcast = true;
+				mustWriteStatus = true;
+				avgConsIndex = 0; // reset average calculation
+				String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, aircon was already off, switch status to 0";
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
+			}
 		}
 	} else {
 		/** Check current status */
@@ -442,11 +389,9 @@ void checkPower() {
 				// aircon should be off, but maybe user switched it on manually
 				if ((acMode & AC_ON) != AC_ON) {
 					if (consPower < -75) { // over production exceeds 75W
-						//Serial.print("Over production > 75W : ");
-						//Serial.print(consPower, 2);
-						//Serial.println("Switching on AC in FAN mode");
 						irCmd = CMD_ON_OFF; // Switch on aircon in FAN mode
 						sendCmd();
+						delay(1000);
 						irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
 						sendCmd();
 						powerStatus = 1;
@@ -455,14 +400,14 @@ void checkPower() {
 						avgConsIndex = 0; // reset average calculation
 						String debugMsg = "Status was 0, consumption < -75W, switch aircon to fan mode, status to 1";
 						sendDebug(debugMsg);
+						#ifdef DEBUG_OUT 
+						Serial.println(debugMsg);
+						#endif
 					}
 				}
 				break;
 			case 1: // aircon is in fan mode, over production was > 75W
 				if (consPower < -300) { // over production exceeds 375W
-					//Serial.print("Over production > 375W : ");
-					//Serial.print(consPower, 2);
-					//Serial.println("Switching on AC in COOL mode");
 					irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
 					sendCmd();
 					powerStatus = 2;
@@ -471,11 +416,11 @@ void checkPower() {
 					avgConsIndex = 0; // reset average calculation
 					String debugMsg = "Status was 1, consumption < -300W, switch aircon to cool mode, status to 2";
 					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
 				if (consPower > 200) { // consuming more than 200W
-					//Serial.print("Consumption > 200W : ");
-					//Serial.print(consPower, 2);
-					//Serial.println("Switching off AC");
 					irCmd = CMD_ON_OFF; // Switch off aircon
 					sendCmd();
 					powerStatus = 0;
@@ -484,13 +429,13 @@ void checkPower() {
 					avgConsIndex = 0; // reset average calculation
 					String debugMsg = "Status was 1, consumption > 200W, switch aircon off, status to 0";
 					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
 				break;
 			case 2: // aircon is in cool mode, over production was > 375W
 				if (consPower > 400) { // consuming more than 400W
-					//Serial.print("Consumption > 400W : ");
-					//Serial.print(consPower, 2);
-					//Serial.println("Switching back to FAN mode");
 					irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
 					sendCmd();
 					powerStatus = 1;
@@ -499,6 +444,9 @@ void checkPower() {
 					avgConsIndex = 0; // reset average calculation
 					String debugMsg = "Status was 2, consumption > 400W, switch aircon to fan mode, status to 1";
 					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
 				break;
 		}
@@ -518,11 +466,13 @@ void checkPower() {
 	Get current power consumption from spMonitor device on address ipSPM
 */
 void getPowerVal(boolean doPowerCheck) {
-	digitalWrite(COM_LED, LOW);
+	//digitalWrite(COM_LED, LOW);
+	ledFlasher.attach(0.1, blueLedFlash); // Flash very fast while we get data
 	const int httpPort = 80;
 	if (!tcpClient.connect(ipSPM, httpPort)) {
 		Serial.println("connection to time server " + String(ipSPM[0]) + "." + String(ipSPM[1]) + "." + String(ipSPM[2]) + "." + String(ipSPM[3]) + " failed");
 		tcpClient.stop();
+		ledFlasher.detach();
 		digitalWrite(COM_LED, HIGH);
 		return;
 	}
@@ -536,6 +486,7 @@ void getPowerVal(boolean doPowerCheck) {
 		delay(1);
 		waitTimeOut++;
 		if (waitTimeOut > 2000) { // If no more response for 2 seconds return
+			ledFlasher.detach();
 			digitalWrite(COM_LED, HIGH);
 			return;
 		}
@@ -548,20 +499,27 @@ void getPowerVal(boolean doPowerCheck) {
 	JsonObject& root = jsonBuffer.parseObject(json);
 	if (!root.success()) {
 		Serial.println("parseObject() failed");
+		ledFlasher.detach();
 		digitalWrite(COM_LED, HIGH);
 		return;
 	}
+	ledFlasher.detach();
+	digitalWrite(COM_LED, HIGH);
 
 	// Switch between status depending on consumption
 	if (root.containsKey("value")) {
+		String debugMsg;
 		consPower = root["value"]["C"];
 		solarPower = root["value"]["S"];
 		if (avgConsIndex < 10) {
 			avgConsPower[avgConsIndex] = consPower;
 			avgSolarPower[avgConsIndex] = solarPower;
 			avgConsIndex++;
-			String debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
+			debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
 			sendDebug(debugMsg);
+			#ifdef DEBUG_OUT 
+			Serial.println(debugMsg);
+			#endif
 		} else {
 			for (int i = 0; i < 9; i++) { // Shift values in array
 				avgConsPower[i] = avgConsPower[i + 1];
@@ -570,14 +528,20 @@ void getPowerVal(boolean doPowerCheck) {
 			avgConsPower[9] = consPower;
 			avgSolarPower[9] = solarPower;
 
-			String debugMsg = "Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
-			sendDebug(debugMsg);
-
-			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON && dayTime) {
+			// If deviation to old power is bigger than 50 Watt send a broadcast
+			double powerChange = consPowerOld - consPower;
+			if (abs(powerChange) > 50) {
+				debugMsg = "Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
+				consPowerOld = consPower;
+			}
+			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON && dayTime && (acMode & TIM_ON) == TIM_OFF) {
 				checkPower();
 			}
 		}
 	}
-	digitalWrite(COM_LED, HIGH);
 }
 

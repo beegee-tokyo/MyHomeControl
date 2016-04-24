@@ -23,6 +23,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -164,24 +165,24 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** deviceIsOn index for Aircon 1 */
 	static final int aircon1Index = 2;
 	/** deviceIsOn index for Aircon 2 */
-	static final int aircon2Index = 3;
+	public static final int aircon2Index = 3;
 	/** deviceIsOn index for Aircon 3 */
-	static final int aircon3Index = 4;
+	public static final int aircon3Index = 4;
 	/** deviceIsOn index for Security back */
-	static final int secRearIndex = 5;
+	public static final int secRearIndex = 5;
 
 	/** URL to spMonitor ESP8266*/
 	static String SOLAR_URL;
 	/** URL to Front Security ESP8266*/
 	public static String SECURITY_URL_FRONT_1;
 	/** URL to Back Security ESP8266*/
-	static String SECURITY_URL_BACK_1;
+	public static String SECURITY_URL_BACK_1;
 	/** URL to FujiDenzo aircon ESP8266*/
-	static String AIRCON_URL_1;
+	public static String AIRCON_URL_1;
 	/** URL to Carrier aircon ESP8266*/
-	static String AIRCON_URL_2;
+	public static String AIRCON_URL_2;
 	/** URL to another aircon ESP8266*/
-	static String AIRCON_URL_3;
+	public static String AIRCON_URL_3;
 
 	// Security view related
 	/** Security view */
@@ -341,7 +342,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** ID of the selected device */
 	private static int selDevice = 0;
 	/** IP address of the selected device */
-	private final String[] espIP = {"192.168.0.142",
+	public static final String[] espIP = {"192.168.0.142",
 			"192.168.0.143",
 			"192.168.0.144",
 			"192.168.0.145",
@@ -359,9 +360,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final int CARRIER = 1;
 	private static final int OTHER_AIRCON = 2;
 	/** Location of the device */
-	private final String[] locationName = {"Office", "Living", "Bedroom", "", "", "", "", ""};
+	private final String[] locationName = {"Office", "Living", "Bedroom", "", "", "", "", "Test"};
 	/** Icon for the device */
-	private final int[] deviceIcon = {7, 6, 1, 0, 0, 0, 0, 0};
+	private final int[] deviceIcon = {7, 6, 1, 0, 0, 0, 0, 3};
 	/** Fan speed of device */
 	private static final int[] fanStatus = {0, 0, 0, 0, 0, 0, 0, 0};
 	/** Mode status of device */
@@ -370,6 +371,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final int[] powerStatus = {0, 0, 0, 0, 0, 0, 0, 0};
 	/** Cooling temperature of device */
 	private static final int[] coolStatus = {0, 0, 0, 0, 0, 0, 0, 0};
+	/** Timer setting of device */
+	private static final int[] deviceTimer = {1, 1, 1, 1, 1, 1, 1, 1};
 	/** Consumption status of device (only from master device */
 	private static double consStatus = 0;
 	/** Auto power status of device (only from master device */
@@ -398,9 +401,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final String CMD_TEMP_PLUS = "30";
 	private static final String CMD_TEMP_MINUS = "31";
 
-	/* Timer function not supported atm
-	static final String CMD_OTHER_TIMER = "40";
-	 */
+	private static final String CMD_OTHER_TIMER = "40";
 	private static final String CMD_OTHER_SWEEP = "41";
 	private static final String CMD_OTHER_TURBO = "42";
 	private static final String CMD_OTHER_ION = "43";
@@ -408,8 +409,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final String CMD_AUTO_ON = "98";
 	private static final String CMD_AUTO_OFF = "99";
 
-	/** Communication progress bar view */
-	//private static RelativeLayout comView = null;
 	/** Communication progress bar for security */
 	private ProgressBar pbSecCom;
 	/** Communication progress bar for solar monitor */
@@ -448,30 +447,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		// Get context of the application to be reused in Async Tasks
 		appContext = this;
 
-		// Register the receiver for messages from UDP & GCM listener
-		// Create an intent filter to listen to the broadcast sent with the action "ACTION_STRING_ACTIVITY"
-		IntentFilter intentFilter = new IntentFilter(UDPlistener.BROADCAST_RECEIVED);
-		//Map the intent filter to the receiver
-		registerReceiver(activityReceiver, intentFilter);
-
-		/******************************************************************/
-		/* Next values must be changed to your GCM project ID             */
-		/* and the URL or IP address of your ESP8266 device               */
-		/******************************************************************/
-		// Get project ID and ESP8266 URL
-		SOLAR_URL = this.getResources().getString(R.string.SOLAR_URL); // = "http://192.168.xxx.xx0";
-		SECURITY_URL_FRONT_1 = this.getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
-		SECURITY_URL_BACK_1 = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
-		AIRCON_URL_1 = this.getResources().getString(R.string.AIRCON_URL_1); // = "http://192.168.xxx.xx2";
-		AIRCON_URL_2 = this.getResources().getString(R.string.AIRCON_URL_2); // = "http://192.168.xxx.xx3";
-		AIRCON_URL_3 = this.getResources().getString(R.string.AIRCON_URL_3); // = "http://192.168.xxx.xx5";
-
 		// Enable access to internet
 		if (Build.VERSION.SDK_INT > 9) {
 			/** ThreadPolicy to get permission to access internet */
 			StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 			StrictMode.setThreadPolicy(policy);
 		}
+
+		// Initialize variables for buttons, layouts, views, ...
+		setGlobalVar();
 
 		// In case the database is not yet existing, open it once
 		/** Instance of data base */
@@ -489,9 +473,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dataBase.endTransaction();
 		dataBase.close();
 
-		// Initialize variables for buttons, layouts, views, ...
-		setGlobalVar();
-
 		if (Utilities.isHomeWiFi(this)) {
 			secStatus.setText(getResources().getString(R.string.at_home));
 			airStatus.setText(getResources().getString(R.string.at_home));
@@ -502,26 +483,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			solStatus.setText(getResources().getString(R.string.not_home));
 		}
 
-		/** Pointer to text views showing the consumed / produced energy */
-		TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
-		energyText.setVisibility(View.INVISIBLE);
-		energyText = (TextView) findViewById(R.id.tv_solar_energy);
-		energyText.setVisibility(View.INVISIBLE);
-
-		/** Button to stop/start continuous UI refresh */
-		Button btStop = (Button) findViewById(R.id.bt_stop);
-		if (showingLog) {
-			btStop.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-			btStop.setText(getResources().getString(R.string.start));
-		}
-
-		// Get index of last selected device */
-		selDevice = mPrefs.getInt(prefsSelDevice, 0);
-
-		// Set visible view flag to security
-		visibleView = mPrefs.getInt(prefsLastView, 0);
-		// Set flag for debug output
-		showDebug = mPrefs.getBoolean(prefsShowDebug, false);
+		// Register the receiver for messages from UDP & GCM listener
+		// Create an intent filter to listen to the broadcast sent with the action "ACTION_STRING_ACTIVITY"
+		IntentFilter intentFilter = new IntentFilter(UDPlistener.BROADCAST_RECEIVED);
+		//Map the intent filter to the receiver
+		registerReceiver(activityReceiver, intentFilter);
 	}
 
 	/**
@@ -531,6 +497,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@Override
 	protected void onResume() {
 		super.onResume();
+
+		// Start initialization
+		new Initialize().execute();
+
 		// Get the layouts of all three possible views
 		secView = (RelativeLayout) findViewById(R.id.view_security);
 		solView = (RelativeLayout) findViewById(R.id.view_solar);
@@ -564,6 +534,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				airFDView.setVisibility(View.INVISIBLE);
 				airCAView.setVisibility(View.VISIBLE);
 				break;
+			case 2:
+				airCAView.setVisibility(View.INVISIBLE);
+				airFDView.setVisibility(View.VISIBLE);
+				break;
 		}
 
 		// Open databases
@@ -571,9 +545,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperLast = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME_LAST);
 
 		if (Utilities.isHomeWiFi(this)) {
-			// Start initialization
-			//initializeIsRunning = true;
-			new Initialize().execute();
 			// Start display update every 1 minutes
 			autoUpdate = new Timer();
 			autoUpdate.schedule(new TimerTask() {
@@ -597,7 +568,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			}, 60000, 60000); // delay for first update = 1 minute, then updates every 1 minute
 		} else {
 			Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
-			new Initialize().execute();
 			// Start display update every 10 minutes
 			autoUpdate = new Timer();
 			autoUpdate.schedule(new TimerTask() {
@@ -612,12 +582,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						}
 					});
 				}
-			}, 1000, 10 * 60 * 1000); // updates every 10 minute
+			}, 60000, 10 * 60 * 1000); // delay for first update = 1 minute, then updates every 10 minute
 		}
 		if (!isMyServiceRunning(UDPlistener.class)) {
 			// Start background services
 			startService(new Intent(this, StartBackgroundServices.class));
 		}
+		// Start searching for other devices with a delay of 10 seconds
+		new Handler().postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				new FindAllDevices(getApplicationContext()).execute();
+			}
+		}, 10000);
 	}
 
 	/**
@@ -955,561 +932,135 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onClick(View v) {
-		/** URL for communication with ESP */
-		String url = "";
-		/** Command for ESP */
-		String cmd = "";
-		/** Sender ID (sec, air or spm) */
-		String id = "";
-		/** Button to go to previous  log */
-		Button prevButton  = (Button) findViewById(R.id.bt_prevLog);
-		/** Button to go to next log */
-		Button nextButton  = (Button) findViewById(R.id.bt_nextLog);
 
-		switch (v.getId()) {
-			case R.id.bt_prevLog:
-				if (logDatesIndex == 0) {
-					if ((lastLogDatesIndex == lastLogDates.size()-1) && !showingLast) {
-						lastLogDatesIndex++;
-					}
-					showingLast = true;
-				} else {
-					showingLast = false;
-				}
-				if (!showingLast) { // use this months database
-					if (logDatesIndex > 0) {
-						logDatesIndex--;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
-						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-						stopButton.setText(getResources().getString(R.string.start));
-						ChartHelper.autoRefreshOn = false;
-						showingLog = true;
-						// Get data from data base
-						/** String list with requested date info */
-						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
-						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+		if (!handleSPMbuttons(v)) { // Check if it was a solar panel view button and handle it
+			if (!handleSecurityButtons(v)) { // Check if it was a security view button and handle it
+				if (!handleAirconButtons(v)) { // Check if it was a aircon view button and handle it
+					// Handle other buttons right here
+					switch (v.getId()) {
+						case R.id.dia_sel_device0:
+						case R.id.dia_sel_device1:
+						case R.id.dia_sel_device2:
+							switch (v.getId()) {
+								case R.id.dia_sel_device0:
+									dlgDeviceIndex = FUJIDENZO;
+									break;
+								case R.id.dia_sel_device1:
+									dlgDeviceIndex = CARRIER;
+									break;
+								default:
+									dlgDeviceIndex = OTHER_AIRCON;
+									break;
+							}
+							// get location_selector.xml view
+							/** Layout inflater for dialog to change device name and icon */
+							LayoutInflater airconDialogInflater = LayoutInflater.from(this);
+							/** View of aircon device name and icon change dialog */
+							airconDialogView = airconDialogInflater.inflate(R.layout.locations, null);
+							/** Alert dialog builder for dialog to change device name and icon */
+							AlertDialog.Builder airconDialogBuilder = new AlertDialog.Builder(this);
+							// set location_selector.xml to alert dialog builder
+							airconDialogBuilder.setView(airconDialogView);
 
-						/** Cursor with new data from the database */
-						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
-						newDataSet.close();
-						dataBase.close();
+							/** Button to set onClickListener for icon buttons in the dialog */
+							ImageButton btOnlyClickListener;
 
-						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
-					}
-				} else { // use last months database
-					if (lastLogDatesIndex > 0) {
-						lastLogDatesIndex--;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
-						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-						stopButton.setText(getResources().getString(R.string.start));
-						ChartHelper.autoRefreshOn = false;
-						showingLog = true;
-						// Get data from data base
-						/** String list with requested date info */
-						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
-						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
+							for (int i = 0; i < 8; i++) {
+								btOnlyClickListener = (ImageButton) airconDialogView.findViewById(iconButtons[i]);
+								btOnlyClickListener.setOnClickListener(this);
+							}
 
-						/** Cursor with new data from the database */
-						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
-						newDataSet.close();
-						dataBase.close();
+							dlgIconIndex = deviceIcon[dlgDeviceIndex];
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
 
-						if (lastLogDatesIndex == 0) {
-							prevButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
-						} else {
-							prevButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
-						}
-						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
-					}
-				}
-				break;
-			case R.id.bt_nextLog:
-				if (lastLogDatesIndex == lastLogDates.size()-1) {
-					if ((logDatesIndex == 0) && showingLast) {
-						logDatesIndex--;
-					}
-					showingLast = false;
-				} else {
-					showingLast = true;
-				}
-				if (!showingLast) { // use this months database
-					if (logDatesIndex < logDates.size()-1) {
-						logDatesIndex++;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
-						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-						stopButton.setText(getResources().getString(R.string.start));
-						ChartHelper.autoRefreshOn = false;
-						showingLog = true;
-						// Get data from data base
-						/** String list with requested date info */
-						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
-						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+							/** Edit text field for the user selected device name */
+							final EditText userInput = (EditText) airconDialogView.findViewById(R.id.dia_et_location);
+							userInput.setText(locationName[dlgDeviceIndex]);
 
-						/** Cursor with new data from the database */
-						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
-						newDataSet.close();
-						dataBase.close();
+							// set dialog message
+							airconDialogBuilder
+									.setTitle(getResources().getString(R.string.dialog_change_title))
+									.setCancelable(false)
+									.setPositiveButton("OK",
+											new DialogInterface.OnClickListener() {
+												@SuppressWarnings("deprecation")
+												public void onClick(DialogInterface dialog, int id) {
+													locationName[dlgDeviceIndex] = userInput.getText().toString();
+													deviceIcon[dlgDeviceIndex] = dlgIconIndex;
+													// Update underlying dialog box with new device name
+													/** Button of selection dialog that we are processing */
+													Button btToChangeName = (Button) locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
+													btToChangeName.setText(locationName[dlgDeviceIndex]);
+													locationSettingsView.invalidate();
+													// Update UI
+													/** Text view to show location name */
+													TextView locationText;
+													/** Image view to show location icon */
+													ImageView locationIcon;
+													if (dlgDeviceIndex == FUJIDENZO) {
+														locationText = (TextView) findViewById(R.id.txt_device_fd);
+														locationText.setText(locationName[dlgDeviceIndex]);
+														locationIcon = (ImageView) findViewById(R.id.im_icon_fd);
+														locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
+													} else if (dlgDeviceIndex == CARRIER) {
+														locationText = (TextView) findViewById(R.id.txt_device_ca);
+														locationText.setText(locationName[dlgDeviceIndex]);
+														locationIcon = (ImageView) findViewById(R.id.im_icon_ca);
+														locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
+													} else if (dlgDeviceIndex == OTHER_AIRCON) {
+														// TODO add another aircon layout
+														if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected another aircon");
+													}
+													// TODO add other aircon control layouts here
+												}
+											})
+									.setNegativeButton("Cancel",
+											new DialogInterface.OnClickListener() {
+												public void onClick(DialogInterface dialog, int id) {
+													dialog.cancel();
+												}
+											});
 
-						if (logDatesIndex == logDates.size()-1) {
-							nextButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
-						} else {
-							nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
-						}
-						prevButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
-					}
-				} else { // use last months database
-					if (lastLogDatesIndex < lastLogDates.size()-1) {
-						lastLogDatesIndex++;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
-						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-						stopButton.setText(getResources().getString(R.string.start));
-						ChartHelper.autoRefreshOn = false;
-						showingLog = true;
-						// Get data from data base
-						/** String list with requested date info */
-						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
-						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
+							// create alert dialog
+							AlertDialog alertDialog = airconDialogBuilder.create();
 
-						/** Cursor with new data from the database */
-						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
-						newDataSet.close();
-						dataBase.close();
-
-						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+							// show it
+							alertDialog.show();
+							break;
+						case R.id.im_bath:
+							dlgIconIndex = 0;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_bed:
+							dlgIconIndex = 1;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_dining:
+							dlgIconIndex = 2;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_entertain:
+							dlgIconIndex = 3;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_kids:
+							dlgIconIndex = 4;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_kitchen:
+							dlgIconIndex = 5;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_living:
+							dlgIconIndex = 6;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
+						case R.id.im_office:
+							dlgIconIndex = 7;
+							Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+							break;
 					}
 				}
-				break;
-			case R.id.bt_stop:
-				if (ChartHelper.autoRefreshOn) {
-					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-					Button stopButton = (Button) findViewById(R.id.bt_stop);
-					stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
-					stopButton.setText(getResources().getString(R.string.start));
-					ChartHelper.autoRefreshOn = false;
-				} else {
-					if (showingLog) {
-						showingLog = false;
-						if (Utilities.isHomeWiFi(this)) {
-							atNow = new syncSolarDB().execute(dbNamesList[0]);
-						}
-
-						/** Pointer to text views showing the consumed / produced energy */
-						TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
-						energyText.setVisibility(View.INVISIBLE);
-						energyText = (TextView) findViewById(R.id.tv_solar_energy);
-						energyText.setVisibility(View.INVISIBLE);
-
-						logDatesIndex = logDates.size()-1;
-						nextButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
-					}
-					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-					Button stopButton = (Button) findViewById(R.id.bt_stop);
-					stopButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
-					stopButton.setText(getResources().getString(R.string.stop));
-					ChartHelper.autoRefreshOn = true;
-				}
-				break;
-			case R.id.dot_alarm_status:
-				if (hasAlarmOnFront) {
-					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
-					url = SECURITY_URL_FRONT_1;
-					cmd = "/?a=0";
-					id = "sec";
-				} else {
-					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
-					url = SECURITY_URL_FRONT_1;
-					cmd = "/?a=1";
-					id = "sec";
-				}
-				break;
-			case R.id.dot_alarm_status_back:
-				if (hasAlarmOnBack) {
-					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
-					url = SECURITY_URL_BACK_1;
-					cmd = "/?a=0";
-					id = "sec";
-				} else {
-					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
-					url = SECURITY_URL_BACK_1;
-					cmd = "/?a=1";
-					id = "sec";
-				}
-				break;
-			case R.id.dot_light:
-				ivLightStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_light_on));
-				url = SECURITY_URL_FRONT_1;
-				cmd = "/?b";
-				id = "sec";
-				break;
-			case R.id.bt_auto_fd:
-			case R.id.bt_auto_ca:
-				if (autoOnStatus[selDevice] == 1) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_AUTO_OFF;
-					id = "air";
-				} else {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_AUTO_ON;
-					id = "air";
-				}
-				break;
-			case R.id.bt_on_off_fd:
-			case R.id.bt_on_off_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_ON_OFF;
-				id = "air";
-				break;
-			case R.id.bt_fan_high_fd:
-				if (fanStatus[selDevice] != 2) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_FAN_HIGH;
-					id = "air";
-				}
-				break;
-			case R.id.bt_fan_med_fd:
-				if (fanStatus[selDevice] != 1) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_FAN_MED;
-					id = "air";
-				}
-				break;
-			case R.id.bt_fan_low_fd:
-				if (fanStatus[selDevice] != 0) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_FAN_LOW;
-					id = "air";
-				}
-				break;
-			case R.id.bt_autom_ca:
-				if (modeStatus[selDevice] != 3) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_MODE_AUTO;
-					id = "air";
-				}
-				break;
-			case R.id.bt_cool_fd:
-			case R.id.bt_cool_ca:
-				if (modeStatus[selDevice] != 2) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_MODE_COOL;
-					id = "air";
-				}
-				break;
-			case R.id.bt_dry_fd:
-			case R.id.bt_dry_ca:
-				if (modeStatus[selDevice] != 1) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_MODE_DRY;
-					id = "air";
-				}
-				break;
-			case R.id.bt_fan_fd:
-			case R.id.bt_fan_ca:
-				if (modeStatus[selDevice] != 0) {
-					url = "http://" + espIP[selDevice];
-					cmd = "/?c=" + CMD_MODE_FAN;
-					id = "air";
-				}
-				break;
-			case R.id.bt_sweep_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_OTHER_SWEEP;
-				id = "air";
-				break;
-			case R.id.bt_turbo_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_OTHER_TURBO;
-				id = "air";
-				break;
-			case R.id.bt_ion_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_OTHER_ION;
-				id = "air";
-				break;
-			case R.id.bt_plus_fd:
-			case R.id.bt_plus_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_TEMP_PLUS;
-				id = "air";
-				break;
-			case R.id.bt_minus_fd:
-			case R.id.bt_minus_ca:
-				url = "http://" + espIP[selDevice];
-				cmd = "/?c=" + CMD_TEMP_MINUS;
-				id = "air";
-				break;
-			case R.id.bt_fanspeed_ca:
-				url = "http://" + espIP[selDevice] + "/?c=" + CMD_FAN_SPEED;
-				break;
-			case R.id.im_icon_fd:
-				if (deviceIsOn[aircon2Index]) { // Is Carrier aircon online?
-					airFDView.setVisibility(View.INVISIBLE);
-					airCAView.setVisibility(View.VISIBLE);
-					selDevice = 1;
-					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
-				} else if (deviceIsOn[aircon3Index]) { // Is other aircon online?
-					// TODO switch to third aircon view
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Trying to switch to aircon 3");
-					selDevice = 2;
-					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
-				}
-				break;
-			case R.id.im_icon_ca:
-				if (deviceIsOn[aircon3Index]) { // Is other aircon online?
-					// TODO switch to third aircon view
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Trying to switch to aircon 3");
-					selDevice = 2;
-					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
-				} else if (deviceIsOn[aircon1Index]) {
-					airCAView.setVisibility(View.INVISIBLE);
-					airFDView.setVisibility(View.VISIBLE);
-					selDevice = 0;
-					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
-				}
-				break;
-			case R.id.dia_sel_device0:
-			case R.id.dia_sel_device1:
-			case R.id.dia_sel_device2:
-				switch (v.getId()) {
-					case R.id.dia_sel_device0:
-						dlgDeviceIndex = FUJIDENZO;
-						break;
-					case R.id.dia_sel_device1:
-						dlgDeviceIndex = CARRIER;
-						break;
-					default:
-						dlgDeviceIndex = OTHER_AIRCON;
-						break;
-				}
-				// get location_selector.xml view
-				/** Layout inflater for dialog to change device name and icon */
-				LayoutInflater airconDialogInflater = LayoutInflater.from(this);
-				/** View of aircon device name and icon change dialog */
-				airconDialogView = airconDialogInflater.inflate(R.layout.locations, null);
-				/** Alert dialog builder for dialog to change device name and icon */
-				AlertDialog.Builder airconDialogBuilder = new AlertDialog.Builder(this);
-				// set location_selector.xml to alert dialog builder
-				airconDialogBuilder.setView(airconDialogView);
-
-				/** Button to set onClickListener for icon buttons in the dialog */
-				ImageButton btOnlyClickListener;
-
-				for (int i = 0; i < 8; i++) {
-					btOnlyClickListener = (ImageButton) airconDialogView.findViewById(iconButtons[i]);
-					btOnlyClickListener.setOnClickListener(this);
-				}
-
-				dlgIconIndex = deviceIcon[dlgDeviceIndex];
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-
-				/** Edit text field for the user selected device name */
-				final EditText userInput = (EditText) airconDialogView.findViewById(R.id.dia_et_location);
-				userInput.setText(locationName[dlgDeviceIndex]);
-
-				// set dialog message
-				airconDialogBuilder
-						.setTitle(getResources().getString(R.string.dialog_change_title))
-						.setCancelable(false)
-						.setPositiveButton("OK",
-								new DialogInterface.OnClickListener() {
-									@SuppressWarnings("deprecation")
-									public void onClick(DialogInterface dialog, int id) {
-										locationName[dlgDeviceIndex] = userInput.getText().toString();
-										deviceIcon[dlgDeviceIndex] = dlgIconIndex;
-										// Update underlying dialog box with new device name
-										/** Button of selection dialog that we are processing */
-										Button btToChangeName = (Button) locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
-										btToChangeName.setText(locationName[dlgDeviceIndex]);
-										locationSettingsView.invalidate();
-										// Update UI
-										/** Text view to show location name */
-										TextView locationText;
-										/** Image view to show location icon */
-										ImageView locationIcon;
-										if (dlgDeviceIndex == FUJIDENZO) {
-											locationText = (TextView) findViewById(R.id.txt_device_fd);
-											locationText.setText(locationName[dlgDeviceIndex]);
-											locationIcon = (ImageView) findViewById(R.id.im_icon_fd);
-											locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
-										} else if (dlgDeviceIndex == CARRIER) {
-											locationText = (TextView) findViewById(R.id.txt_device_ca);
-											locationText.setText(locationName[dlgDeviceIndex]);
-											locationIcon = (ImageView) findViewById(R.id.im_icon_ca);
-											locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
-										} else if (dlgDeviceIndex == OTHER_AIRCON) {
-											// TODO add another aircon layout
-											if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected another aircon");
-										}
-										// TODO add other aircon control layouts here
-									}
-								})
-						.setNegativeButton("Cancel",
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog, int id) {
-										dialog.cancel();
-									}
-								});
-
-				// create alert dialog
-				AlertDialog alertDialog = airconDialogBuilder.create();
-
-				// show it
-				alertDialog.show();
-				break;
-			case R.id.im_bath:
-				dlgIconIndex = 0;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_bed:
-				dlgIconIndex = 1;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_dining:
-				dlgIconIndex = 2;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_entertain:
-				dlgIconIndex = 3;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_kids:
-				dlgIconIndex = 4;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_kitchen:
-				dlgIconIndex = 5;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_living:
-				dlgIconIndex = 6;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.im_office:
-				dlgIconIndex = 7;
-				Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
-				break;
-			case R.id.cb_sec_auto_alarm:
-				if (secAutoAlarm.isChecked()) {
-					String onTime = Integer.toString(secAutoOnStored);
-					if (secAutoOnStored < 10) {
-						onTime = "0" + onTime;
-					}
-					String offTime = Integer.toString(secAutoOffStored);
-					if (secAutoOffStored < 10) {
-						offTime = "0" + offTime;
-					}
-					url = SECURITY_URL_FRONT_1;
-					cmd = "/?a=2," + onTime + "," + offTime;
-					id = "sec";
-					secAutoAlarm.setText(getResources().getString(R.string.sec_auto_alarm_on,secAutoOn,secAutoOff));
-					secChangeAlarm.setVisibility(View.VISIBLE);
-				} else {
-					url = SECURITY_URL_FRONT_1;
-					cmd = "/?a=3";
-					id = "sec";
-					secAutoAlarm.setText(getResources().getString(R.string.sec_auto_alarm_off));
-					secChangeAlarm.setVisibility(View.INVISIBLE);
-				}
-				break;
-			case R.id.tv_change_alarm:
-				final Dialog d = new Dialog(MyHomeControl.this);
-				final int orgOnTime = secAutoOnStored;
-				final int orgOffTime = secAutoOffStored;
-				d.setTitle("NumberPicker");
-				d.setContentView(R.layout.alarm_settings);
-				Button cancelButton = (Button) d.findViewById(R.id.bt_sec_cancel);
-				Button okButton = (Button) d.findViewById(R.id.bt_sec_ok);
-				final NumberPicker npOnTime = (NumberPicker) d.findViewById(R.id.np_Alarm_on);
-				npOnTime.setMaxValue(23);
-				npOnTime.setMinValue(0);
-				npOnTime.setValue(secAutoOnStored);
-				npOnTime.setWrapSelectorWheel(false);
-				npOnTime.setOnValueChangedListener( new NumberPicker.OnValueChangeListener() {
-					@Override
-					public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-						secAutoOnStored = newVal;
-					}
-				});
-				final NumberPicker npOffTime = (NumberPicker) d.findViewById(R.id.np_Alarm_off);
-				npOffTime.setMaxValue(23);
-				npOffTime.setMinValue(0);
-				npOffTime.setValue(secAutoOffStored);
-				npOffTime.setWrapSelectorWheel(false);
-				npOffTime.setOnValueChangedListener( new NumberPicker.OnValueChangeListener() {
-					@Override
-					public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-						secAutoOffStored = newVal;
-					}
-				});
-				cancelButton.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						// Reset changed values
-						secAutoOnStored = orgOnTime;
-						secAutoOffStored = orgOffTime;
-						d.dismiss();
-					}
-				});
-				okButton.setOnClickListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						String onTime = Integer.toString(secAutoOnStored);
-						if (secAutoOnStored < 10) {
-							onTime = "0" + onTime;
-						}
-						String offTime = Integer.toString(secAutoOffStored);
-						if (secAutoOffStored < 10) {
-							offTime = "0" + offTime;
-						}
-						new ESPcommunication().execute(SECURITY_URL_FRONT_1,
-								"/?a=2," + onTime + "," + offTime,
-								"","sec",
-								"0");
-						new ESPcommunication().execute(SECURITY_URL_FRONT_1,
-								"/?s",
-								"","sec",
-								"0");
-						d.dismiss();
-					}
-				});
-				d.show();
-				break;
-		}
-		if (!url.isEmpty()) {
-			//if (!initializeIsRunning) {
-				if (id.equalsIgnoreCase("sec")) {
-					pbSecCom.setVisibility(View.VISIBLE);
-				}
-				if (id.equalsIgnoreCase("spm")) {
-					pbSolCom.setVisibility(View.VISIBLE);
-				}
-				if (id.equalsIgnoreCase("air")) {
-					pbAirCom.setVisibility(View.VISIBLE);
-				}
-			//}
-			new ESPcommunication().execute(url,cmd,"",id,Integer.toString(selDevice));
-			if (id.equalsIgnoreCase("air")) {
-				new ESPcommunication().execute(url,"/?s","",id,Integer.toString(selDevice));
 			}
 		}
 	}
@@ -1593,7 +1144,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		protected CommResultWrapper doInBackground(String... params) {
 
 			/** A HTTP client to access the ESP device */
-			OkHttpClient client = new OkHttpClient();
+			// Set timeout to 5 minutes in case we have a lot of data to load
+			OkHttpClient client = new OkHttpClient.Builder()
+					.connectTimeout(300, TimeUnit.SECONDS)
+					.writeTimeout(10, TimeUnit.SECONDS)
+					.readTimeout(300, TimeUnit.SECONDS)
+					.build();
 
 			/** Return values for onPostExecute */
 			CommResultWrapper result = new CommResultWrapper();
@@ -1800,6 +1356,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					if (deviceResult.has("device")) {
 						deviceName[result.deviceIndex] = deviceResult.getString("device");
 						if (deviceName[result.deviceIndex].substring(0, 2).equalsIgnoreCase("fd")) {
+							deviceType[result.deviceIndex] = FUJIDENZO;
+						}
+						if (deviceName[result.deviceIndex].substring(0, 2).equalsIgnoreCase("fb")) {
 							deviceType[result.deviceIndex] = FUJIDENZO;
 						}
 						if (deviceName[result.deviceIndex].substring(0, 2).equalsIgnoreCase("ca")) {
@@ -2278,12 +1837,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							if (jsonValues.has("cp")) {
 								result += "W cp=";
 								try {
-									result += jsonValues.getString("cp") + "\n";
+									result += jsonValues.getString("cp ");
 								} catch (Exception excError) {
-									result += "---" + "\n";
+									result += "--- ";
 								}
 							} else {
-								result += "\n";
+								result += " ";
 							}
 
 							/** Double for the result of solar current and consumption used at 1min updates */
@@ -2315,85 +1874,49 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							valueFields.setText(displayTxt);
 
 							if (ChartHelper.autoRefreshOn) {
-								/** Integer list with today's date info */
-								int[] requestedDate = Utilities.getCurrentDate();
-								// In case activity is going into onPause databases might be closed already
-								if (dbHelperNow != null) { //activity is still running
-									/** Instance of data base */
-									SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
-
-									// Is database in use?
-									if (dataBase.inTransaction()) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "solarViewUpdate Database is in use");
-										dataBase.close();
-										return;
+								if (ChartHelper.plotData != null) {
+									/** Current time as string */
+									String nowTime = Utilities.getCurrentTime();
+									ChartHelper.plotData.addXValue(nowTime);
+									ChartHelper.timeStampsCont.add(nowTime);
+									ChartHelper.solarSeries.add
+											(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
+									ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
+									if (ChartHelper.consPowerMin < 0.0) {
+										ChartHelper.consPSeries.add
+												(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
+										ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
+										ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
+										ChartHelper.consumMPowerCont.add(0.0f);
+									} else {
+										ChartHelper.consMSeries.add
+												(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
+										ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
+										ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
+										ChartHelper.consumPPowerCont.add(0.0f);
 									}
+									/** Text view to show min and max poser values */
+									TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
+									displayTxt = "(" + String.format("%.0f",
+											Collections.max(ChartHelper.consumMPowerCont)) + "W)";
+									maxPowerText.setText(displayTxt);
+									maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
+									displayTxt = "(" + String.format("%.0f",
+											Collections.max(ChartHelper.solarPowerCont)) + "W)";
+									maxPowerText.setText(displayTxt);
 
-									dataBase.beginTransaction();
-
-									/** Cursor with data from the database */
-									Cursor newDataSet = DataBaseHelper.getLastRow(dataBase);
-									if (newDataSet.getCount() != 0) {
-										newDataSet.moveToFirst();
-										if (newDataSet.getInt(0) == requestedDate[0] - 2000 &&
-												newDataSet.getInt(1) == requestedDate[1] &&
-												newDataSet.getInt(2) == requestedDate[2]) {
-											newDataSet.close();
-											/** Cursor with data from the database */
-											newDataSet = DataBaseHelper.getDay(dataBase,
-													requestedDate[2], requestedDate[1], requestedDate[0] - 2000);
-											ChartHelper.fillSeries(newDataSet);
-										}
-										newDataSet.close();
-										dataBase.endTransaction();
-										dataBase.close();
-										ChartHelper.initChart(true);
-									}
+									// let the chart know it's data has changed
+									ChartHelper.lineChart.notifyDataSetChanged();
+									ChartHelper.lineChart.invalidate();
 								}
 							}
-							if (ChartHelper.plotData != null) {
-								/** Current time as string */
-								String nowTime = Utilities.getCurrentTime();
-								ChartHelper.plotData.addXValue(nowTime);
-								ChartHelper.timeStampsCont.add(nowTime);
-								ChartHelper.solarSeries.add
-										(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
-								ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
-								if (ChartHelper.consPowerMin < 0.0) {
-									ChartHelper.consPSeries.add
-											(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
-									ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
-									ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
-									ChartHelper.consumMPowerCont.add(0.0f);
-								} else {
-									ChartHelper.consMSeries.add
-											(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
-									ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
-									ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
-									ChartHelper.consumPPowerCont.add(0.0f);
-								}
-								/** Text view to show min and max poser values */
-								TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
-								displayTxt = "(" + String.format("%.0f",
-										Collections.max(ChartHelper.consumMPowerCont)) + "W)";
-								maxPowerText.setText(displayTxt);
-								maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
-								displayTxt = "(" + String.format("%.0f",
-										Collections.max(ChartHelper.solarPowerCont)) + "W)";
-								maxPowerText.setText(displayTxt);
-
-								// let the chart know it's data has changed
-								ChartHelper.lineChart.notifyDataSetChanged();
-								ChartHelper.lineChart.invalidate();
-							}
-
 						} catch (JSONException e) {
 							e.printStackTrace();
 							solStatus.setText(e.getMessage());
 							pbSolCom.setVisibility(View.INVISIBLE);
 							return;
 						}
-
+						result += Utilities.getCurrentTime();
 						solStatus.setText(result);
 					}
 				} else {
@@ -2505,6 +2028,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * Set all global variables used
 	 */
 	private void setGlobalVar() {
+		// Get project ID and device URLs
+		GCM_SENDER_ID = getApplicationContext().getResources().getString(R.string.GCM_SENDER_ID); // = "9x8x3x2x1x3x";
+		SOLAR_URL = getApplicationContext().getResources().getString(R.string.SOLAR_URL); // = "http://192.168.xxx.xx0";
+		SECURITY_URL_FRONT_1 = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
+		SECURITY_URL_BACK_1 = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
+		AIRCON_URL_1 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_1); // = "http://192.168.xxx.xx2";
+		AIRCON_URL_2 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_2); // = "http://192.168.xxx.xx3";
+		AIRCON_URL_3 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_3); // = "http://192.168.xxx.xx3";
+
 		// For security view:
 		secStatus = (TextView) findViewById(R.id.security_status);
 		ivAlarmStatus = (ImageView) findViewById(R.id.dot_alarm_status);
@@ -2583,33 +2115,94 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		colorRed = getResources().getColor(android.R.color.holo_red_light);
 		//noinspection deprecation
 		colorGrey = getResources().getColor(android.R.color.darker_gray);
+
+		/** Pointer to text views showing the consumed / produced energy */
+		TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
+		energyText.setVisibility(View.INVISIBLE);
+		energyText = (TextView) findViewById(R.id.tv_solar_energy);
+		energyText.setVisibility(View.INVISIBLE);
+
+		/** Button to stop/start continuous UI refresh */
+		Button btStop = (Button) findViewById(R.id.bt_stop);
+		if (showingLog) {
+			btStop.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+			btStop.setText(getResources().getString(R.string.start));
+		}
+
+		// Get index of last selected device */
+		selDevice = mPrefs.getInt(prefsSelDevice, 0);
+
+		// Set visible view flag to security
+		visibleView = mPrefs.getInt(prefsLastView, 0);
+		// Set flag for debug output
+		showDebug = mPrefs.getBoolean(prefsShowDebug, false);
 	}
 
-	/**
-	 * Initializing method
-	 * - Find all available devices
-	 * - Check if Google Cloud Messaging is registered
-	 * - Call initializing methods for all devices
-	 */
+//	/**
+//	 * Search for all devices in the address range
+//	 */
+//	private class findAllDevices extends AsyncTask<String, String, Void> {
+//
+//		@Override
+//		protected Void doInBackground(String... params) {
+//
+//			/** Array list to hold found IP addresses */
+//			ArrayList<String> hosts = new ArrayList<>();
+//
+//			String subnet = appContext.getResources().getString(R.string.MY_LOCAL_SUB);
+//			for(int i=143; i<150; i++){ // Home automation devices IPs are from ...140 to ...149
+//				try {
+//					/** IP address under test */
+//					InetAddress inetAddress = InetAddress.getByName(subnet + String.valueOf(i));
+//					if(inetAddress.isReachable(500)){
+//						hosts.add(inetAddress.getHostName());
+//						Log.d(DEBUG_LOG_TAG, inetAddress.getHostName());
+//					}
+//				} catch (IOException e) {
+//					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Exception " + e);
+//				}
+//			}
+//			for (int i=0; i<hosts.size(); i++) {
+//				// SPmonitor, Security front, Aircon 1, Aircon 2, Aircon 3, Security back
+//				if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SOLAR_URL.substring(7))) {
+//					MyHomeControl.deviceIsOn[spMonitorIndex] = true;
+//				} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_FRONT_1.substring(7))) {
+//					MyHomeControl.deviceIsOn[secFrontIndex] = true;
+//				} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_BACK_1.substring(7))) {
+//					MyHomeControl.deviceIsOn[secRearIndex] = true;
+//				} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_1.substring(7))) {
+//					MyHomeControl.deviceIsOn[aircon1Index] = true;
+//					MyHomeControl.espIP[0] = MyHomeControl.AIRCON_URL_1.substring(7);
+//				} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_2.substring(7))) {
+//					MyHomeControl.deviceIsOn[aircon2Index] = true;
+//					MyHomeControl.espIP[1] = MyHomeControl.AIRCON_URL_2.substring(7);
+//				} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_3.substring(7))) {
+//					MyHomeControl.deviceIsOn[aircon3Index] = true;
+//					MyHomeControl.espIP[2] = MyHomeControl.AIRCON_URL_3.substring(7);
+//				}
+//			}
+//			return null;
+//		}
+//	}
+//
+//	/**
+//	 * Initializing method
+//	 * - Find all available devices
+//	 * - Check if Google Cloud Messaging is registered
+//	 * - Call initializing methods for all devices
+//	 */
 	private class Initialize extends AsyncTask<String, String, Void> {
 
 		@SuppressLint("CommitPrefEdits")
 		@Override
 		protected Void doInBackground(String... params) {
 
-			handleTasks(8, "", "", "", "", null, null);
-			GCM_SENDER_ID = getApplicationContext().getResources().getString(R.string.GCM_SENDER_ID); // = "9x8x3x2x1x3x";
-			SOLAR_URL = getApplicationContext().getResources().getString(R.string.SOLAR_URL); // = "http://192.168.xxx.xx0";
-			SECURITY_URL_FRONT_1 = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
-			AIRCON_URL_1 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_1); // = "http://192.168.xxx.xx2";
-			AIRCON_URL_2 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_2); // = "http://192.168.xxx.xx3";
-			AIRCON_URL_3 = getApplicationContext().getResources().getString(R.string.AIRCON_URL_3); // = "http://192.168.xxx.xx3";
+			// Scan for available devices
+			Utilities.checkMainDevices();
 
+			handleTasks(8, "", "", "", "", null, null);
 			// Get pointer to shared preferences
 			mPrefs = getSharedPreferences(sharedPrefName,0);
-
-			// Scan for available devices
-			Utilities.findDevicesOnLAN(getApplicationContext());
 
 			// Check if device is already registered for GCM
 			gcmRegId = mPrefs.getString(PREF_GCM_REG_ID, "");
@@ -2735,13 +2328,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				locationName[0] = mPrefs.getString(prefsLocationName + "0", "");
 			}
 			// Update aircon 1 location name
-			handleTasks(4, locationName[0], "", "", "", null, null);
+			handleTasks(4, locationName[0], "1", "", "", null, null);
 			if (mPrefs.contains(prefsDeviceIcon + "0")) {
 				deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
 			}
 			// Update aircon 1 icon
 			//noinspection deprecation
-			handleTasks(7, "", "", "", "",
+			handleTasks(7, "1", "", "", "",
 					(ImageView) findViewById(R.id.im_icon_fd),
 					getResources().getDrawable(iconIDs[deviceIcon[0]]));
 		}
@@ -2823,9 +2416,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 	        1: spMonitor screen status update
 	 * 	        2: Aircon screen status update
 	 * 	        3: start communication with ESP8266
-	 * 	        4: Aircon 1 location text
-	 * 	        5: Aircon 2 location text
-	 * 	        6: Aircon 3 location text
+	 * 	        4: Aircon 1 location & timer button text
+	 * 	        5: Aircon 2 location & timer button text
+	 * 	        6: Aircon 3 location & timer button text
 	 * 	        7: Aircon location icon
 	 * 	        8: Show communication progress spinner
 	 * 	        9: Start background sync of database
@@ -2859,6 +2452,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			public void run() {
 				/** Text view to show location name */
 				TextView locationText;
+				/** Timer button */
+				Button btTimer;
+				/** Text for timer button */
+				String timerTime;
 				switch (task) {
 					case 0: // Security screen status update
 						if (showDebug) {
@@ -2880,17 +2477,32 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					case 3: // start communication with ESP8266
 						new ESPcommunication().execute(url, message, "", deviceID, airconID);
 						break;
-					case 4: // Aircon 1 location text
+					case 4: // Aircon 1 location & timer button text
 						locationText = (TextView) findViewById(R.id.txt_device_fd);
 						locationText.setText(message);
+						btTimer = (Button) findViewById(R.id.bt_timer_fd);
+						timerTime = Integer.toString(deviceTimer[0]) +
+								" " +
+								getString(R.string.bt_txt_hour);
+						btTimer.setText(timerTime);
 						break;
-					case 5: // Aircon 2 location text
+					case 5: // Aircon 2 location & timer button text
 						locationText = (TextView) findViewById(R.id.txt_device_ca);
 						locationText.setText(message);
+						btTimer = (Button) findViewById(R.id.bt_timer_ca);
+						timerTime = Integer.toString(deviceTimer[1]) +
+								" " +
+								getString(R.string.bt_txt_hour);
+						btTimer.setText(timerTime);
 						break;
-					case 6: // Aircon 3 location text
+					case 6: // Aircon 3 location & timer button text
 						locationText = (TextView) findViewById(R.id.txt_device_fd);
 						locationText.setText(message);
+						btTimer = (Button) findViewById(R.id.bt_timer_fd);
+						timerTime = Integer.toString(deviceTimer[2]) +
+								" " +
+								getString(R.string.bt_txt_hour);
+						btTimer.setText(timerTime);
 						break;
 					case 7: // Aircon location icon
 						iconImage.setImageDrawable(iconDrawable);
@@ -2907,6 +2519,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						TableLayout backYardDots = (TableLayout) findViewById(R.id.tl_alarm_back);
 						backYardDots.setVisibility(View.VISIBLE);
 						break;
+					case 11:
 				}
 			}
 		});
@@ -3096,6 +2709,527 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			actionBar.setBackground(toolBarDrawable);
 		}
 		mPrefs.edit().putInt(prefsLastView,visibleView).apply();
+	}
+
+	/**
+	 * Handle ESP communication after button click
+	 *
+	 * @param id
+	 * 		String identifier of the view
+	 * 			spm = solar panel monitor view
+	 * 			air = aircon control view
+	 * 			sec = security control view
+	 * @param url
+	 * 		String with the URL to be called
+	 * @param cmd
+	 * 		String with command to be sent
+	 */
+	private void handleESPcomm(String id, String url, String cmd) {
+		if (id.equalsIgnoreCase("sec")) {
+			pbSecCom.setVisibility(View.VISIBLE);
+		}
+		if (id.equalsIgnoreCase("spm")) {
+			pbSolCom.setVisibility(View.VISIBLE);
+		}
+		if (id.equalsIgnoreCase("air")) {
+			pbAirCom.setVisibility(View.VISIBLE);
+		}
+		new ESPcommunication().execute(url, cmd, "", id, Integer.toString(selDevice));
+		if (id.equalsIgnoreCase("air")) { // If aircon view request a status update
+			new ESPcommunication().execute(url,"/?s","",id,Integer.toString(selDevice));
+		}
+	}
+
+	/**
+	 * Handle Security view buttons
+	 *
+	 * @param v
+	 * 		View with the ID of the clicked button
+	 * @return <code>boolean</code>
+	 * 		True if button was handled
+	 * 		False if button was not from security view
+	 */
+	@SuppressWarnings("deprecation")
+	private boolean handleSecurityButtons(View v) {
+		/** Flag if button was handled */
+		boolean wasSecButton = false;
+		/** URL for communication with ESP */
+		String url = "";
+		/** Command for ESP */
+		String cmd = "";
+		switch (v.getId()) {
+			case R.id.dot_alarm_status:
+				wasSecButton = true;
+				if (hasAlarmOnFront) {
+					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
+					url = SECURITY_URL_FRONT_1;
+					cmd = "/?a=0";
+				} else {
+					ivAlarmStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
+					url = SECURITY_URL_FRONT_1;
+					cmd = "/?a=1";
+				}
+				break;
+			case R.id.dot_alarm_status_back:
+				wasSecButton = true;
+				if (hasAlarmOnBack) {
+					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_off));
+					url = SECURITY_URL_BACK_1;
+					cmd = "/?a=0";
+				} else {
+					ivAlarmStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_sec_widget_on));
+					url = SECURITY_URL_BACK_1;
+					cmd = "/?a=1";
+				}
+				break;
+			case R.id.dot_light:
+				wasSecButton = true;
+				ivLightStatus.setImageDrawable(getResources().getDrawable(R.mipmap.ic_light_on));
+				url = SECURITY_URL_FRONT_1;
+				cmd = "/?b";
+				break;
+			case R.id.dot_light_back:
+				wasSecButton = true;
+				ivLightStatusBack.setImageDrawable(getResources().getDrawable(R.mipmap.ic_light_on));
+				url = SECURITY_URL_BACK_1;
+				cmd = "/?b";
+				break;
+			case R.id.cb_sec_auto_alarm:
+				if (secAutoAlarm.isChecked()) {
+					String onTime = Integer.toString(secAutoOnStored);
+					if (secAutoOnStored < 10) {
+						onTime = "0" + onTime;
+					}
+					String offTime = Integer.toString(secAutoOffStored);
+					if (secAutoOffStored < 10) {
+						offTime = "0" + offTime;
+					}
+					url = SECURITY_URL_FRONT_1;
+					cmd = "/?a=2," + onTime + "," + offTime;
+					secAutoAlarm.setText(getResources().getString(R.string.sec_auto_alarm_on,secAutoOn,secAutoOff));
+					secChangeAlarm.setVisibility(View.VISIBLE);
+				} else {
+					url = SECURITY_URL_FRONT_1;
+					cmd = "/?a=3";
+					secAutoAlarm.setText(getResources().getString(R.string.sec_auto_alarm_off));
+					secChangeAlarm.setVisibility(View.INVISIBLE);
+				}
+				break;
+			case R.id.tv_change_alarm:
+				final Dialog d = new Dialog(MyHomeControl.this);
+				final int orgOnTime = secAutoOnStored;
+				final int orgOffTime = secAutoOffStored;
+				d.setTitle("NumberPicker");
+				d.setContentView(R.layout.alarm_settings);
+				Button cancelButton = (Button) d.findViewById(R.id.bt_sec_cancel);
+				Button okButton = (Button) d.findViewById(R.id.bt_sec_ok);
+				final NumberPicker npOnTime = (NumberPicker) d.findViewById(R.id.np_Alarm_on);
+				npOnTime.setMaxValue(23);
+				npOnTime.setMinValue(0);
+				npOnTime.setValue(secAutoOnStored);
+				npOnTime.setWrapSelectorWheel(false);
+				npOnTime.setOnValueChangedListener( new NumberPicker.OnValueChangeListener() {
+					@Override
+					public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+						secAutoOnStored = newVal;
+					}
+				});
+				final NumberPicker npOffTime = (NumberPicker) d.findViewById(R.id.np_Alarm_off);
+				npOffTime.setMaxValue(23);
+				npOffTime.setMinValue(0);
+				npOffTime.setValue(secAutoOffStored);
+				npOffTime.setWrapSelectorWheel(false);
+				npOffTime.setOnValueChangedListener( new NumberPicker.OnValueChangeListener() {
+					@Override
+					public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+						secAutoOffStored = newVal;
+					}
+				});
+				cancelButton.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						// Reset changed values
+						secAutoOnStored = orgOnTime;
+						secAutoOffStored = orgOffTime;
+						d.dismiss();
+					}
+				});
+				okButton.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						String onTime = Integer.toString(secAutoOnStored);
+						if (secAutoOnStored < 10) {
+							onTime = "0" + onTime;
+						}
+						String offTime = Integer.toString(secAutoOffStored);
+						if (secAutoOffStored < 10) {
+							offTime = "0" + offTime;
+						}
+						new ESPcommunication().execute(SECURITY_URL_FRONT_1,
+								"/?a=2," + onTime + "," + offTime,
+								"","sec",
+								"0");
+						new ESPcommunication().execute(SECURITY_URL_FRONT_1,
+								"/?s",
+								"","sec",
+								"0");
+						d.dismiss();
+					}
+				});
+				d.show();
+				break;
+		}
+		if (!cmd.equalsIgnoreCase("")) {
+			handleESPcomm("sec", url, cmd);
+		}
+		return wasSecButton;
+	}
+
+	/**
+	 * Handle Solar panel view buttons
+	 *
+	 * @param v
+	 * 		View with the ID of the clicked button
+	 * @return <code>boolean</code>
+	 * 		True if button was handled
+	 * 		False if button was not from security view
+	 */
+	@SuppressWarnings("deprecation")
+	private boolean handleSPMbuttons(View v) {
+		/** Flag if button was handled */
+		boolean wasSPMbutton = false;
+		/** Button to go to previous  log */
+		Button prevButton  = (Button) findViewById(R.id.bt_prevLog);
+		/** Button to go to next log */
+		Button nextButton  = (Button) findViewById(R.id.bt_nextLog);
+
+		switch (v.getId()) {
+			case R.id.bt_prevLog:
+				wasSPMbutton = true;
+				if (logDatesIndex == 0) {
+					if ((lastLogDatesIndex == lastLogDates.size() - 1) && !showingLast) {
+						lastLogDatesIndex++;
+					}
+					showingLast = true;
+				} else {
+					showingLast = false;
+				}
+				if (!showingLast) { // use this months database
+					if (logDatesIndex > 0) {
+						logDatesIndex--;
+						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+						stopButton.setText(getResources().getString(R.string.start));
+						ChartHelper.autoRefreshOn = false;
+						showingLog = true;
+						// Get data from data base
+						/** String list with requested date info */
+						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
+						/** Instance of data base */
+						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+
+						/** Cursor with new data from the database */
+						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+						ChartHelper.fillSeries(newDataSet);
+						ChartHelper.initChart(false);
+						newDataSet.close();
+						dataBase.close();
+
+						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+					}
+				} else { // use last months database
+					if (lastLogDatesIndex > 0) {
+						lastLogDatesIndex--;
+						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+						stopButton.setText(getResources().getString(R.string.start));
+						ChartHelper.autoRefreshOn = false;
+						showingLog = true;
+						// Get data from data base
+						/** String list with requested date info */
+						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
+						/** Instance of data base */
+						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
+
+						/** Cursor with new data from the database */
+						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+						ChartHelper.fillSeries(newDataSet);
+						ChartHelper.initChart(false);
+						newDataSet.close();
+						dataBase.close();
+
+						if (lastLogDatesIndex == 0) {
+							prevButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+						} else {
+							prevButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+						}
+						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+					}
+				}
+				break;
+			case R.id.bt_nextLog:
+				wasSPMbutton = true;
+				if (lastLogDatesIndex == lastLogDates.size() - 1) {
+					if ((logDatesIndex == 0) && showingLast) {
+						logDatesIndex--;
+					}
+					showingLast = false;
+				} else {
+					showingLast = true;
+				}
+				if (!showingLast) { // use this months database
+					if (logDatesIndex < logDates.size() - 1) {
+						logDatesIndex++;
+						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+						stopButton.setText(getResources().getString(R.string.start));
+						ChartHelper.autoRefreshOn = false;
+						showingLog = true;
+						// Get data from data base
+						/** String list with requested date info */
+						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
+						/** Instance of data base */
+						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+
+						/** Cursor with new data from the database */
+						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+						ChartHelper.fillSeries(newDataSet);
+						ChartHelper.initChart(false);
+						newDataSet.close();
+						dataBase.close();
+
+						if (logDatesIndex == logDates.size() - 1) {
+							nextButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+						} else {
+							nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+						}
+						prevButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+					}
+				} else { // use last months database
+					if (lastLogDatesIndex < lastLogDates.size() - 1) {
+						lastLogDatesIndex++;
+						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+						stopButton.setText(getResources().getString(R.string.start));
+						ChartHelper.autoRefreshOn = false;
+						showingLog = true;
+						// Get data from data base
+						/** String list with requested date info */
+						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
+						/** Instance of data base */
+						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
+
+						/** Cursor with new data from the database */
+						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+						ChartHelper.fillSeries(newDataSet);
+						ChartHelper.initChart(false);
+						newDataSet.close();
+						dataBase.close();
+
+						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
+					}
+				}
+				break;
+			case R.id.bt_stop:
+				wasSPMbutton = true;
+				if (ChartHelper.autoRefreshOn) {
+					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+					Button stopButton = (Button) findViewById(R.id.bt_stop);
+					stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+					stopButton.setText(getResources().getString(R.string.start));
+					ChartHelper.autoRefreshOn = false;
+				} else {
+					if (showingLog) {
+						showingLog = false;
+						if (Utilities.isHomeWiFi(this)) {
+							atNow = new syncSolarDB().execute(dbNamesList[0]);
+						}
+
+						/** Pointer to text views showing the consumed / produced energy */
+						TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
+						energyText.setVisibility(View.INVISIBLE);
+						energyText = (TextView) findViewById(R.id.tv_solar_energy);
+						energyText.setVisibility(View.INVISIBLE);
+
+						logDatesIndex = logDates.size() - 1;
+						nextButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+					}
+					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+					Button stopButton = (Button) findViewById(R.id.bt_stop);
+					stopButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+					stopButton.setText(getResources().getString(R.string.stop));
+					ChartHelper.autoRefreshOn = true;
+				}
+				break;
+		}
+		return wasSPMbutton;
+	}
+
+	/**
+	 * Handle Security view buttons
+	 *
+	 * @param v
+	 * 		View with the ID of the clicked button
+	 * @return <code>boolean</code>
+	 * 		True if button was handled
+	 * 		False if button was not from security view
+	 */
+	private boolean handleAirconButtons(View v) {
+		/** Flag if button was handled */
+		boolean wasAirconButton = true;
+		/** URL for communication with ESP */
+		String url = "http://" + espIP[selDevice];
+		/** Command for ESP */
+		String cmd = "";
+		/** Timer button */
+		Button btTimer;
+		/** Text for timer button */
+		String timerTime;
+		switch (v.getId()) {
+			case R.id.bt_auto_fd:
+			case R.id.bt_auto_ca:
+				if (autoOnStatus[selDevice] == 1) {
+					cmd = "/?c=" + CMD_AUTO_OFF;
+				} else {
+					cmd = "/?c=" + CMD_AUTO_ON;
+				}
+				break;
+			case R.id.bt_on_off_fd:
+			case R.id.bt_on_off_ca:
+				cmd = "/?c=" + CMD_ON_OFF;
+				break;
+			case R.id.bt_fan_high_fd:
+				if (fanStatus[selDevice] != 2) {
+					cmd = "/?c=" + CMD_FAN_HIGH;
+				}
+				break;
+			case R.id.bt_fan_med_fd:
+				if (fanStatus[selDevice] != 1) {
+					cmd = "/?c=" + CMD_FAN_MED;
+				}
+				break;
+			case R.id.bt_fan_low_fd:
+				if (fanStatus[selDevice] != 0) {
+					cmd = "/?c=" + CMD_FAN_LOW;
+				}
+				break;
+			case R.id.bt_autom_ca:
+				if (modeStatus[selDevice] != 3) {
+					cmd = "/?c=" + CMD_MODE_AUTO;
+				}
+				break;
+			case R.id.bt_cool_fd:
+			case R.id.bt_cool_ca:
+				if (modeStatus[selDevice] != 2) {
+					cmd = "/?c=" + CMD_MODE_COOL;
+				}
+				break;
+			case R.id.bt_dry_fd:
+			case R.id.bt_dry_ca:
+				if (modeStatus[selDevice] != 1) {
+					cmd = "/?c=" + CMD_MODE_DRY;
+				}
+				break;
+			case R.id.bt_fan_fd:
+			case R.id.bt_fan_ca:
+				if (modeStatus[selDevice] != 0) {
+					cmd = "/?c=" + CMD_MODE_FAN;
+				}
+				break;
+			case R.id.bt_sweep_ca:
+				cmd = "/?c=" + CMD_OTHER_SWEEP;
+				break;
+			case R.id.bt_turbo_ca:
+				cmd = "/?c=" + CMD_OTHER_TURBO;
+				break;
+			case R.id.bt_ion_ca:
+				cmd = "/?c=" + CMD_OTHER_ION;
+				break;
+			case R.id.bt_plus_fd:
+			case R.id.bt_plus_ca:
+				cmd = "/?c=" + CMD_TEMP_PLUS;
+				break;
+			case R.id.bt_minus_fd:
+			case R.id.bt_minus_ca:
+				cmd = "/?c=" + CMD_TEMP_MINUS;
+				break;
+			case R.id.bt_fanspeed_ca:
+				cmd = "/?c=" + CMD_FAN_SPEED;
+				break;
+			case R.id.im_icon_fd:
+				if (deviceIsOn[aircon2Index]) { // Is Carrier aircon online?
+					airFDView.setVisibility(View.INVISIBLE);
+					airCAView.setVisibility(View.VISIBLE);
+					selDevice = 1;
+					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
+				} else if (deviceIsOn[aircon3Index]) { // Is other aircon online?
+					// TODO switch to third aircon view
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Trying to switch to aircon 3");
+					selDevice = 2;
+					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
+				}
+				break;
+			case R.id.im_icon_ca:
+				if (deviceIsOn[aircon3Index]) { // Is other aircon online?
+					// TODO switch to third aircon view
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Trying to switch to aircon 3");
+					selDevice = 2;
+					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
+				} else if (deviceIsOn[aircon1Index]) {
+					airCAView.setVisibility(View.INVISIBLE);
+					airFDView.setVisibility(View.VISIBLE);
+					selDevice = 0;
+					mPrefs.edit().putInt(prefsSelDevice,selDevice).apply();
+				}
+				break;
+			case R.id.bt_timer_fd:
+			case R.id.bt_timer_ca:
+				if (selDevice < 2) { // Only Aircon 1 and 2 support timer for now
+					// TODO
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Setting timer to " + deviceTimer[selDevice]);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "/?t=" + Integer.toString(deviceTimer[selDevice]));
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Second command = " + "/?c="  + CMD_OTHER_TIMER);
+					new ESPcommunication().execute(url,"/?t=" + Integer.toString(deviceTimer[selDevice]),"","air",Integer.toString(selDevice));
+					cmd = "/?c=" + CMD_OTHER_TIMER;
+				}
+				break;
+			case R.id.bt_timer_minus_fd:
+			case R.id.bt_timer_minus_ca:
+				if (deviceTimer[selDevice] > 1) {
+					deviceTimer[selDevice]--;
+				}
+				btTimer = (Button) findViewById(R.id.bt_timer_fd);
+				timerTime = Integer.toString(deviceTimer[selDevice]) +
+						" " +
+						getString(R.string.bt_txt_hour);
+				btTimer.setText(timerTime);
+				break;
+			case R.id.bt_timer_plus_fd:
+			case R.id.bt_timer_plus_ca:
+				if (deviceTimer[selDevice] < 9) {
+					deviceTimer[selDevice]++;
+				}
+				btTimer = (Button) findViewById(R.id.bt_timer_fd);
+				timerTime = Integer.toString(deviceTimer[selDevice]) +
+						" " +
+						getString(R.string.bt_txt_hour);
+				btTimer.setText(timerTime);
+				break;
+			default: // End here if it was not an aircon view button
+				wasAirconButton = false;
+		}
+		if (!cmd.equalsIgnoreCase("")) {
+			handleESPcomm("air", url, cmd);
+		}
+		return wasAirconButton;
 	}
 }
 

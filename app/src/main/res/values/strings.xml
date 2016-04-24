@@ -68,7 +68,7 @@
 
 	<string name="bt_txt_device_location">Office</string>
 	<string name="bt_txt_power" translatable="false">POWER</string>
-	<string name="bt_txt_fan_bar" translatable="false">FAN</string>
+	<string name="bt_txt_fan_bar" translatable="false">FAN SPEED</string>
 	<string name="bt_txt_fan_high" translatable="false">HIGH</string>
 	<string name="bt_txt_fan_med" translatable="false">MED</string>
 	<string name="bt_txt_fan_low" translatable="false">LOW</string>
@@ -88,9 +88,9 @@
 	<string name="txt_consumption">Consumption</string>
 	<string name="txt_cool_temp">Temperature</string>
 	<string name="txt_auto_status">Status</string>
-
 	<string name="dialog_change_title">Enter location name and choose icon </string>
 	<string name="dialog_change_icon">Select icon</string>
 	<string name="dialog_selector_title">Select device to change</string>
+	<string name="bt_txt_hour">HOUR</string>
 
 </resources>
