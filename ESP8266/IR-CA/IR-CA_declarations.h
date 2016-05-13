@@ -21,8 +21,12 @@ When doing breadboard test, enable this define
 
 #ifdef BREADBOARD
 	#define DEVICE_ID "cab" // ID for Carrier Aircon
+	/** Flag for debugging enabled */
+	boolean debugOn = true;
 #else
 	#define DEVICE_ID "ca1" // ID for Carrier Aircon
+	/** Flag for debugging enabled */
+	boolean debugOn = false;
 #endif
 
 /* wifiAPinfo.h contains wifi SSID and password */
@@ -243,8 +247,10 @@ boolean debugOn = true;
 int startOfDay = 8;
 /** End of day time (hour - 1) */
 int endOfDay = 17;
-/** Time in seconds for timer function */
-int onTime = 3600; // default 1 hour
+/** Time in hours for timer function */
+uint32_t onTime = 1; // default 1 hour
+/** Up counter for timer function */
+uint32_t timerCounter = 0;
 /** Flag for OTA update running */
 boolean otaUpdate = false;
 

@@ -120,13 +120,10 @@ public class ChartHelper extends MyHomeControl {
 			}
 		}
 		/** Line data set for solar data */
-		/* Line data set for solar data */
 		LineDataSet solar = new LineDataSet(solarSeries, "Solar");
 		/** Line data set for consumption data */
-		/* Line data set for consumption data */
 		LineDataSet consP = new LineDataSet(consPSeries, "Export");
 		/** Line data set for consumption data */
-		/* Line data set for consumption data */
 		LineDataSet consM = new LineDataSet(consMSeries, "Import");
 
 		solar.setLineWidth(1.75f);
@@ -178,14 +175,8 @@ public class ChartHelper extends MyHomeControl {
 		consM.setDrawFilled(true);
 		consM.setAxisDependency(YAxis.AxisDependency.LEFT);
 
-		/** Data set with data for the 4 plots */
-//		ArrayList<LineDataSet> dataSets = new ArrayList<>();
-//		dataSets.add(solar);
-//		dataSets.add(consP);
-//		dataSets.add(consM);
 
 		/** Data object with the data set and the y values */
-//		plotData = new LineData(timeSeries, dataSets);
 		plotData = new LineData(timeSeries);
 		plotData.addDataSet(solar);
 		plotData.addDataSet(consP);
@@ -199,9 +190,11 @@ public class ChartHelper extends MyHomeControl {
 		lineChart.setData(plotData);
 
 		if (dayToShow != null) {
+			/** Calendar instance */
 			Calendar c = Calendar.getInstance();
 			@SuppressLint("SimpleDateFormat") DateFormat df = new SimpleDateFormat("yy-MM-dd");
 			try {
+				/** Date for formatting output */
 				Date myDate = df.parse(dayToShow.trim());
 				c.setTime(myDate);
 				df = new SimpleDateFormat("yyyy-MMM-dd");
@@ -243,7 +236,7 @@ public class ChartHelper extends MyHomeControl {
 		// to use for it
 		/** Instance of custom marker view handler */
 		ChartCustomMarkerView mv = new ChartCustomMarkerView(appContext);
-		lineChart.setMarkerView(mv);
+//		lineChart.setMarkerView(mv);
 
 		// set the marker to the chart
 		lineChart.setMarkerView(mv);
@@ -335,6 +328,7 @@ public class ChartHelper extends MyHomeControl {
 		}
 		/** Text view to show max consumed / produced power */
 		if (tempConsMStamps.size() != 0 && tempSolarStamps.size() != 0) {
+			/** Text view to show max consumed / produced energy */
 			TextView maxPowerText = (TextView) MyHomeControl.appView.findViewById(R.id.tv_cons_max);
 			updateTxt = "(" + String.format("%.0f", Collections.max(tempConsMStamps)) + "W)";
 			maxPowerText.setText(updateTxt);

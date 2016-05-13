@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 public class Utilities extends MyHomeControl {
@@ -562,5 +563,73 @@ public class Utilities extends MyHomeControl {
 				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 		}
+	}
+
+	/**
+	 * Encrypt/Decrypt a string with my secret key
+	 *
+	 * @param payLoad
+	 *            Message string to be encrypted/decrypted
+	 * @return <code>String</code>
+	 *            Encrypted/Decrypted string
+	 */
+	public static String cryptMessage(byte[] payLoad, String topic) {
+		byte[] result = new byte[130];
+		//String result = "";
+		String encryptBase = appContext.getString(R.string.CRYPT_STRING);
+		byte encryptIndex = 0;
+		byte index = 0;
+		String strResult = "";
+		String testResult = "";
+		Log.d(DEBUG_LOG_TAG, "Topic is " + topic);
+		for (int i=0; i<payLoad.length; i++) {
+			byte org = (byte) payLoad[i];
+			byte key = (byte) encryptBase.charAt(encryptIndex);
+			result[i] = (byte) (org ^ key);
+			strResult += (char) result[i];
+			testResult +=  payLoad[i] + ".";
+			encryptIndex++;
+			index++;
+			if (encryptIndex == encryptBase.length()) {
+				encryptIndex = 0;
+			}
+		}
+		result[index] = 0;
+		Log.d(DEBUG_LOG_TAG, "Test string " + testResult);
+		Log.d(DEBUG_LOG_TAG, "Original message " + Arrays.toString(payLoad));
+		Log.d(DEBUG_LOG_TAG, "Original message length " + payLoad.length);
+		Log.d(DEBUG_LOG_TAG, "Key " + encryptBase);
+		Log.d(DEBUG_LOG_TAG, "Result message " + strResult);
+		return new String(result);
+	}
+
+	/** Returns the consumer friendly device name */
+	public static String getDeviceName() {
+		String manufacturer = Build.MANUFACTURER;
+		String model = Build.MODEL;
+		if (model.startsWith(manufacturer)) {
+			return capitalize(model);
+		}
+		return capitalize(manufacturer) + " " + model;
+	}
+
+	private static String capitalize(String str) {
+		if (TextUtils.isEmpty(str)) {
+			return str;
+		}
+		char[] arr = str.toCharArray();
+		boolean capitalizeNext = true;
+		String phrase = "";
+		for (char c : arr) {
+			if (capitalizeNext && Character.isLetter(c)) {
+				phrase += Character.toUpperCase(c);
+				capitalizeNext = false;
+				continue;
+			} else if (Character.isWhitespace(c)) {
+				capitalizeNext = true;
+			}
+			phrase += c;
+		}
+		return phrase;
 	}
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+					android:initialLayout="@layout/aircon_widget"
+					android:minHeight="110dp"
+					android:minWidth="110dp"
+					android:previewImage="@drawable/ic_aircon"
+					android:resizeMode="horizontal|vertical"
+					android:updatePeriodMillis="0">
+</appwidget-provider>

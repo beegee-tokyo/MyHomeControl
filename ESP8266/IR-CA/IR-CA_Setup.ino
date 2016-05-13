@@ -108,8 +108,8 @@ void setup() {
 		Serial.println(debugMsg);
 		// Safe actual status
 		writeStatus();
-		ledFlasher.attach(0.1, redLedFlash); // Flash very fast if we started update
-		resetFanModeTimer.detach();
+		ledFlasher.attach(0.1, blueLedFlash); // Flash very fast if we started update
+		getPowerTimer.detach();
 		sendUpdateTimer.detach();
 		timerEndTimer.detach();
 		WiFiUDP::stopAll();

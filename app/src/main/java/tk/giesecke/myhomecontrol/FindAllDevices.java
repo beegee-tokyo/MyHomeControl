@@ -8,12 +8,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-public class FindAllDevices extends AsyncTask<String, String, Void> {
+class FindAllDevices extends AsyncTask<String, String, Void> {
 
 	/** Debug tag */
-	static final String DEBUG_LOG_TAG = "MHC-SEARCH";
+	private static final String DEBUG_LOG_TAG = "MHC-SEARCH";
 	/** Application context */
-	Context appContext;
+	private final Context appContext;
 
 	public FindAllDevices (Context context){
 		appContext = context;
@@ -24,6 +24,7 @@ public class FindAllDevices extends AsyncTask<String, String, Void> {
 		/** Array list to hold found IP addresses */
 		ArrayList<String> hosts = new ArrayList<>();
 
+		/** String with subnet to search */
 		String subnet = appContext.getResources().getString(R.string.MY_LOCAL_SUB);
 		for(int i=140; i<150; i++){ // Home automation devices IPs are from ...140 to ...149
 			try {

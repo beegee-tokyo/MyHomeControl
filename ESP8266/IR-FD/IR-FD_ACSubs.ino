@@ -37,6 +37,80 @@ void buildBuffer(unsigned int *newBuffer, byte *cmd) {
 }
 
 /**
+	handleCmd
+	Handles commands received over the webserver
+*/
+void handleCmd() {
+	// Handle the different AC commands
+	switch (irCmd) {
+		case CMD_REMOTE_0: // Should only be received in slave AC
+			if ((acMode & AC_ON) == AC_ON) { // AC is on
+				irCmd = CMD_MODE_FAN;
+				sendCmd();
+				delay(1000);
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+			}
+			irCmd = 9999;
+			break;
+		case CMD_REMOTE_1: // Should only be received in slave AC
+			if ((acMode & AC_ON) != AC_ON) {
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+				delay(1000);
+			}
+			irCmd = CMD_MODE_FAN;
+			sendCmd();
+			irCmd = 9999;
+			break;
+		case CMD_REMOTE_2: // Should only be received in slave AC
+			if ((acMode & AC_ON) != AC_ON) {
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+				delay(1000);
+			}
+			irCmd = CMD_MODE_AUTO;
+			sendCmd();
+			irCmd = 9999;
+			break;
+		case CMD_INIT_AC: // Initialize aircon
+			initAC();
+			irCmd = 9999;
+			break;
+		case CMD_RESET: // Reboot the ESP module
+			pinMode(16, OUTPUT); // Connected to RST pin
+			digitalWrite(16,LOW); // Initiate reset
+			ESP.reset(); // In case it didn't work
+			break;
+		case CMD_AUTO_ON: // Command to (re)start auto control
+			// If AC is on, switch it to FAN low speed and then switch it off
+			if ((acMode & AC_ON) == AC_ON) { // AC is on
+				// Set mode to FAN
+				irCmd = CMD_MODE_FAN;
+				sendCmd();
+				delay(1000);
+				// Set fan speed to LOW
+				irCmd = CMD_FAN_LOW;
+				sendCmd();
+				delay(1000);
+				// Switch AC off
+				irCmd = CMD_ON_OFF;
+				sendCmd();
+			}
+			irCmd = 9999;
+			break;
+		case CMD_AUTO_OFF: // Command to stop auto control
+			powerStatus = 0; // Independendant from current status it will be set to 0!
+			irCmd = 9999;
+			break;
+		default: // All other commands
+			//Serial.println("Send command triggered");
+			sendCmd();
+			irCmd = 9999;
+	}
+}
+
+/**
 	sendCmd
 	Prepares and sends IR command to aircon depending on
 	requested command irCmd
@@ -182,9 +256,11 @@ void sendCmd() {
 				irCmd = CMD_MODE_COOL;
 				sendCmd();
 				powerStatus = 0;
-				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60mx60s=3600 seconds)
-				timerEndTimer.attach(onTime, triggerTimerEnd);
-				String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + formatInt(onTime/3600) + "hours";
+				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60mx60s+1000ms=3600000 milliseconds)
+				// Because of 32bit limit (== max 71min) the timer is triggered
+				// every hour and a counter is used if timer time is 2 hours or more
+				timerEndTimer.attach_ms(3600000, triggerTimerEnd);
+				String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + onTime + "hours";
 				sendDebug(debugMsg);
 				#ifdef DEBUG_OUT 
 				Serial.println(debugMsg);
@@ -530,7 +606,7 @@ void getPowerVal(boolean doPowerCheck) {
 
 			// If deviation to old power is bigger than 50 Watt send a broadcast
 			double powerChange = consPowerOld - consPower;
-			if (abs(powerChange) > 50) {
+			if (abs(powerChange) > 100) {
 				debugMsg = "Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
 				sendDebug(debugMsg);
 				#ifdef DEBUG_OUT 

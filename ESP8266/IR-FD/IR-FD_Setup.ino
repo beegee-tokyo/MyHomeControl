@@ -1,3 +1,4 @@
+
 void setup() {
 	pinMode(IR_LED_OUT, OUTPUT); // IR LED red
 	pinMode(COM_LED, OUTPUT); // Communication LED blue
@@ -106,7 +107,7 @@ void setup() {
 		Serial.println(debugMsg);
 		// Safe actual status
 		writeStatus();
-		ledFlasher.attach(0.1, redLedFlash); // Flash very fast if we started update
+		ledFlasher.attach(0.1, blueLedFlash); // Flash very fast if we started update
 		getPowerTimer.detach();
 		sendUpdateTimer.detach();
 		timerEndTimer.detach();

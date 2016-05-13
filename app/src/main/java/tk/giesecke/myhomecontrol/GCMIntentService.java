@@ -30,10 +30,14 @@ public class GCMIntentService extends IntentService {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got GCM = " + extras.toString());
 
 			// Check if screen is locked
+			/** Keyguard manager instance */
 			KeyguardManager myKM = (KeyguardManager) getApplicationContext().getSystemService(Context.KEYGUARD_SERVICE);
+			/** Flag for locked phone */
 			boolean phoneIsLocked = myKM.inKeyguardRestrictedInputMode();
 			// Check if screen is off
+			/** Instance of power manager */
 			PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
+			/** Flag for screen off */
 			boolean screenIsOff = true;
 			if (Build.VERSION.SDK_INT >= 20) {
 				if (powerManager.isInteractive()) {
@@ -47,6 +51,7 @@ public class GCMIntentService extends IntentService {
 				}
 			}
 			// Check if we are connected to the home WiFi
+			/** Flag for local Wifi */
 			boolean notOnHomeWifi = !Utilities.isHomeWiFi(getApplicationContext());
 
 			// If we are not on home Wifi or screen is off or locked => process the message

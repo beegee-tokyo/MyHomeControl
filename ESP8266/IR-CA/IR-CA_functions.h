@@ -45,6 +45,7 @@ boolean switchSlaveAC(IPAddress ipSlave, byte reqMode);
 void checkPower();
 void chkCmdCnt();
 void resetFanMode ();
+void handleCmd();
 
 // NTP client functions
 time_t getNtpTime();

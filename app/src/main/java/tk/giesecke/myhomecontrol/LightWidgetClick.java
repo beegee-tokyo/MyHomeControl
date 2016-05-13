@@ -33,9 +33,10 @@ public class LightWidgetClick extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
+			/** Bundle received when service is called */
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
-				/* App widget id */
+				/** App widget id */
 				int mAppWidgetId = extras.getInt(
 						AppWidgetManager.EXTRA_APPWIDGET_ID,
 						AppWidgetManager.INVALID_APPWIDGET_ID);
@@ -92,8 +93,11 @@ public class LightWidgetClick extends IntentService {
 	 */
 	private class changeBackWidget extends TimerTask
 	{
+		/** Application context */
 		final Context context;
+		/** Instance of app widget manager */
 		final AppWidgetManager appWidgetManager;
+		/** ID of widget */
 		final int appWidgetId;
 
 		public changeBackWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {

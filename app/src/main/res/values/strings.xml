@@ -92,5 +92,6 @@
 	<string name="dialog_change_icon">Select icon</string>
 	<string name="dialog_selector_title">Select device to change</string>
 	<string name="bt_txt_hour">HOUR</string>
+	<string name="timer_on">TIMER ON</string>
 
 </resources>

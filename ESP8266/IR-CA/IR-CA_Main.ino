@@ -10,86 +10,9 @@ void loop() {
 	WiFiClient client = server.available();
 	if (client) {
 		replyClient(client);
-	}
-
-	// Handle the different AC commands
-	if (irCmd != 9999) { // Valid command received
-		switch (irCmd) {
-			case CMD_REMOTE_0: // Should only be received in slave AC
-				if ((acMode & AC_ON) == AC_ON) { // AC is on
-					irCmd = CMD_MODE_FAN;
-					sendCmd();
-					delay(1000);
-					irCmd = CMD_ON_OFF;
-					sendCmd();
-				}
-				irCmd = 9999;
-				break;
-			case CMD_REMOTE_1: // Should only be received in slave AC
-				if ((acMode & AC_ON) != AC_ON) {
-					irCmd = CMD_ON_OFF;
-					sendCmd();
-					delay(1000);
-				}
-				irCmd = CMD_MODE_FAN;
-				sendCmd();
-				irCmd = 9999;
-				break;
-			case CMD_REMOTE_2: // Should only be received in slave AC
-				if ((acMode & AC_ON) != AC_ON) {
-					irCmd = CMD_ON_OFF;
-					sendCmd();
-					delay(1000);
-				}
-				irCmd = CMD_MODE_AUTO;
-				sendCmd();
-				irCmd = 9999;
-				break;
-			case CMD_INIT_AC: // Initialize aircon
-				initAC();
-				irCmd = 9999;
-				break;
-			case CMD_RESET: // Reboot the ESP module
-				pinMode(16, OUTPUT); // Connected to RST pin
-				digitalWrite(16,LOW); // Initiate reset
-				ESP.reset(); // In case it didn't work
-				break;
-			case CMD_AUTO_ON: // Command to (re)start auto control
-				// If AC is on, switch it to FAN low speed and then switch it off
-				if ((acMode & AC_ON) == AC_ON) { // AC is on
-					// Set mode to FAN
-					irCmd = CMD_MODE_FAN;
-					sendCmd();
-					delay(1000);
-					// Get last fan speed
-					byte lastFanSpeed = acMode & FAN_MASK;
-					// Set fan speed to LOW
-					// If in high speed send command once to get into low speed mode
-					if (lastFanSpeed == 2) { 
-						irCmd = CMD_FAN_SPEED;
-						sendCmd();
-						delay(1000);
-					}
-					// If in medium speed send command once again to get into low speed mode
-					if (lastFanSpeed >= 1) {
-						irCmd = CMD_FAN_SPEED;
-						sendCmd();
-						delay(1000);
-					}
-					// Switch AC off
-					irCmd = CMD_ON_OFF;
-					sendCmd();
-				}
-				irCmd = 9999;
-				break;
-			case CMD_AUTO_OFF: // Command to stop auto control
-				powerStatus = 0; // Independendant from current status it will be set to 0!
-				irCmd = 9999;
-				break;
-			default: // All other commands
-				//Serial.println("Send command triggered");
-				sendCmd();
-				irCmd = 9999;
+		// Handle the received commands (if any)
+		if (irCmd != 9999) { // Valid command received
+			handleCmd();
 		}
 	}
 

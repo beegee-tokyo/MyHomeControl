@@ -16,6 +16,7 @@ public class LightWidget extends AppWidgetProvider {
 								int appWidgetId, boolean lightIsOn) {
 
 		// Construct the RemoteViews object
+		/** Instance of the widget view */
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.light_widget);
 
 		if (lightIsOn) {
@@ -25,10 +26,12 @@ public class LightWidget extends AppWidgetProvider {
 		}
 
 		// Create an intent to launch the service on widget push
+		/** Intent to start method to switch on light when widget is clicked */
 		Intent serviceIntent = new Intent(context, LightWidgetClick.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		// PendingIntent is required for the onClickPendingIntent that actually
 		// starts the service from a button click
+		/** Pending intent to start method when widget is clicked */
 		PendingIntent pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -46,16 +49,6 @@ public class LightWidget extends AppWidgetProvider {
 		for (int appWidgetId : appWidgetIds) {
 			updateAppWidget(context, appWidgetManager, appWidgetId, false);
 		}
-	}
-
-	@Override
-	public void onEnabled(Context context) {
-		// Enter relevant functionality for when the first widget is created
-	}
-
-	@Override
-	public void onDisabled(Context context) {
-		// Enter relevant functionality for when the last widget is disabled
 	}
 }
 

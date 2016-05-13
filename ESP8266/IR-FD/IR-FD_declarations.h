@@ -17,12 +17,16 @@ const char compileDate[] = __DATE__ " " __TIME__;
 /**********************************************
 When doing breadboard test, enable this define
 ***********************************************/
-#define BREADBOARD
+//#define BREADBOARD
 
 #ifdef BREADBOARD
 	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
+	/** Flag for debugging enabled */
+	boolean debugOn = true;
 #else
 	#define DEVICE_ID "fd1" // ID for FujiDenzo Aircon
+	/** Flag for debugging enabled */
+	boolean debugOn = false;
 #endif
 
 /* wifiAPinfo.h contains wifi SSID and password */
@@ -226,14 +230,14 @@ boolean timerEndTriggered = false;
 boolean inSetup = true;
 /** Flag for day time */
 boolean dayTime = false;
-/** Flag for debugging enabled */
-boolean debugOn = true;
 /** Start of day time */
 int startOfDay = 8;
 /** End of day time (hour - 1) */
 int endOfDay = 17;
-/** Time in seconds for timer function */
-int onTime = 3600; // default 1 hour
+/** Time in hours for timer function */
+uint32_t onTime = 1; // default 1 hour
+/** Up counter for timer function */
+uint32_t timerCounter = 0;
 /** Flag for OTA update running */
 boolean otaUpdate = false;
 

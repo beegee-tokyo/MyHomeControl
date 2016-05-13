@@ -11,7 +11,7 @@
 	app:layout_behavior="@string/appbar_scrolling_view_behavior"
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	android:id="@+id/view_solar"
-	android:visibility="visible"
+	android:visibility="invisible"
 	android:background="@android:color/black"
 	tools:ignore="ButtonStyle,Overdraw">
 

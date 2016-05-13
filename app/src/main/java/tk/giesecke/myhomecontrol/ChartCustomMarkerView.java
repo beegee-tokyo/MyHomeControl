@@ -125,9 +125,19 @@ public class ChartCustomMarkerView extends MarkerView {
 		canvas.translate(-posx, -posy);
 	}
 
+	/**
+	 * Get device display width in pixel
+	 *
+	 * @param context
+	 *          Application context
+	 * @return <code>int</code>
+	 *          display width in pixel
+	 */
 	@SuppressWarnings("deprecation")
 	private static int getDeviceWidth(Context context){
+		/** Window manager instance */
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+		/** Display instance */
 		Display display = wm.getDefaultDisplay();
 		return display.getWidth();
 	}

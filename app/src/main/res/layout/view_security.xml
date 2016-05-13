@@ -12,7 +12,7 @@
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	tools:showIn="@layout/activity_my_home_control"
 	android:id="@+id/view_security"
-	android:visibility="invisible">
+	android:visibility="visible">
 
 	<TableLayout
 		android:layout_width="match_parent"
@@ -27,7 +27,8 @@
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/sec_front"
 				android:id="@+id/tv_status_front"
-				android:gravity="center_horizontal"/>
+				android:layout_weight="1"
+				/>
 
 		</TableRow>
 
@@ -75,7 +76,8 @@
 					android:src="@mipmap/ic_dot_red"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"
-					android:alpha="0"/>
+					android:alpha="0"
+					android:visibility="visible"/>
 
 			</RelativeLayout>
 
@@ -131,7 +133,8 @@
 		android:layout_height="wrap_content"
 		android:id="@+id/tl_alarm_back"
 		android:layout_below="@+id/cb_sec_auto_alarm"
-		android:visibility="gone">
+		android:visibility="visible"
+		android:gravity="center_horizontal">
 
 		<TableRow>
 
@@ -141,8 +144,8 @@
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/sec_rear"
 				android:id="@+id/tv_status_back"
-				android:gravity="center_horizontal"
-				android:layout_weight="1"/>
+				android:layout_weight="1"
+				/>
 
 		</TableRow>
 
@@ -154,7 +157,7 @@
 				android:layout_width="150dp"
 				android:layout_height="150dp"
 				android:id="@+id/dot_alarm_status_back"
-				android:src="@mipmap/ic_dot"
+				android:src="@mipmap/ic_sec_widget_off"
 				android:contentDescription="@string/dot_txt_alarm_status"
 				android:layout_weight="1"
 				android:onClick="onClick"
@@ -164,13 +167,13 @@
 				android:layout_width="150dp"
 				android:layout_height="150dp"
 				android:id="@+id/dot_light_back"
-				android:src="@mipmap/ic_dot"
+				android:src="@mipmap/ic_light_off"
 				android:contentDescription="@string/dot_txt_light"
 				android:layout_weight="1"/>
 
 			<RelativeLayout
-				android:layout_width="match_parent"
-				android:layout_height="match_parent"
+				android:layout_width="150dp"
+				android:layout_height="150dp"
 				android:layout_weight="1">
 
 				<ImageView

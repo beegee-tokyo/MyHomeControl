@@ -63,7 +63,7 @@ public class SPwidget extends AppWidgetProvider {
 		// Create an Intent to launch MainActivity
 		/** Intent to start app if widget is pushed */
 		Intent intent1 = new Intent(context, MyHomeControl.class);
-		intent1.putExtra("appWidgetId", appWidgetId);
+		intent1.putExtra("view", 1);
 		// Creating a pending intent, which will be invoked when the user
 		// clicks on the widget
 		/** Pending intent to start app if widget is pushed */

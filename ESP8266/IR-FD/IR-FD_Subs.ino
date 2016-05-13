@@ -22,10 +22,14 @@ void triggerSendUpdate() {
 	triggerTimerEnd
 	called by Ticker timerEndTimer
 	sets flag timerEndTriggered to true for handling in loop()
-	will initiate switching off the aircon after 1 hour
+	will initiate switching off the aircon after programmed hours
 */
 void triggerTimerEnd() {
-	timerEndTriggered = true;
+	timerCounter++;
+	if (timerCounter == onTime) {
+		timerEndTriggered = true;
+		timerCounter = 0;
+	}
 }
 
 /**
@@ -247,6 +251,7 @@ void parseCmd(JsonObject& root) {
 			writeStatus();
 			break;
 		case CMD_OTHER_TIMER: // Timer on/off
+			root["result"] = "success";
 			root["cmd"] = CMD_OTHER_TIMER;
 			break;
 		case CMD_RESET: // Command to reset device

@@ -44,6 +44,7 @@ void initAC();
 boolean switchSlaveAC(IPAddress ipSlave, byte reqMode);
 void checkPower();
 void chkCmdCnt();
+void handleCmd();
 
 // NTP client functions
 time_t getNtpTime();

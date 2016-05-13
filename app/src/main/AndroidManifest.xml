@@ -149,6 +149,27 @@
 			android:name=".LightWidgetClick"
 			android:exported="false">
 		</service>
+
+		<receiver android:name=".AirconWidget">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/aircon_widget_info"/>
+		</receiver>
+
+		<service
+			android:name=".AirconWidgetClick"
+			android:exported="false">
+		</service>
+
+
+		<service
+			android:name=".MQTTService"
+			android:exported="false">
+		</service>
 	</application>
 
 </manifest>

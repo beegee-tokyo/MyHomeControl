@@ -150,6 +150,10 @@ public class UDPlistener extends Service {
 							|| broadCastDevice.startsWith("sb")) { // Broadcast from security device
 						alarmNotif(jsonResult, intentContext);
 					}
+					if (broadCastDevice.startsWith("fd")
+							|| broadCastDevice.startsWith("ca")) { // Broadcast from aircon device
+						updateAirWidgets(jsonResult, intentContext);
+					}
 				} catch (JSONException ignore) {
 					return;
 				}
@@ -284,7 +288,7 @@ public class UDPlistener extends Service {
 			notificationManager.notify(2, alarmNotification);
 		}
 		// Update security widget
-		updateWidgets(notifContext,(hasAlarmInt == 1));
+		updateSecWidgets(notifContext, (hasAlarmInt == 1));
 	}
 
 	/**
@@ -335,7 +339,7 @@ public class UDPlistener extends Service {
 	}
 
 	@SuppressLint("CommitPrefEdits")
-	private static void updateWidgets(Context updateContext, boolean hasAlarm) {
+	private static void updateSecWidgets(Context updateContext, boolean hasAlarm) {
 		/** Pointer to shared preferences */
 		SharedPreferences mPrefs = updateContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 		if (hasAlarm) {
@@ -355,6 +359,38 @@ public class UDPlistener extends Service {
 		for (int appWidgetId : appWidgetIds) {
 			SecurityWidget.updateAppWidget(updateContext,appWidgetManager,appWidgetId, false);
 		}
+	}
 
+	@SuppressLint("CommitPrefEdits")
+	private static void updateAirWidgets(JSONObject jsonValues, Context notifContext) {
+
+		int hasTimerOn;
+		try {
+			hasTimerOn = jsonValues.getInt("timer");
+		} catch (JSONException e) {
+			hasTimerOn = 0;
+		}
+
+		/** Pointer to shared preferences */
+		SharedPreferences mPrefs = notifContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
+		if (hasTimerOn == 1) {
+			mPrefs.edit().putBoolean("acTimerOn", true).commit();
+		} else {
+			mPrefs.edit().putBoolean("acTimerOn", false).commit();
+		}
+		int timerTime = mPrefs.getInt("acTimerTime", 1);
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Aircon Widget");
+		/** App widget manager for all widgets of this app */
+		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(notifContext);
+		/** Component name of this widget */
+		ComponentName thisAppWidget = new ComponentName(notifContext.getPackageName(),
+				AirconWidget.class.getName());
+		/** List of all active widgets */
+		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+
+		for (int appWidgetId : appWidgetIds) {
+			AirconWidget.updateAppWidget(notifContext,appWidgetManager,appWidgetId, timerTime,
+					(hasTimerOn != 0));
+		}
 	}
 }

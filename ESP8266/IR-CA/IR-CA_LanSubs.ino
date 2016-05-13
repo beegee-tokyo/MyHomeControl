@@ -224,11 +224,11 @@ void replyClient(WiFiClient httpClient) {
 	} else if (req.substring(0, 4) == "/?t=") {
 		if (isDigit(req.charAt(4))) {
 			statResponse = req.substring(4, 5);
-			onTime = statResponse.toInt()*3600;
+			onTime = statResponse.toInt();
 			#ifdef DEBUG_OUT 
 			Serial.print("Changed timer to ");
 			Serial.print(onTime);
-			Serial.println(" seconds");
+			Serial.println(" hour");
 			#endif
 			root["result"] = "success";
 			root["onTime"] = onTime;

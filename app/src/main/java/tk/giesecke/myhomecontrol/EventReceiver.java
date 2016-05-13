@@ -51,6 +51,9 @@ public class EventReceiver extends BroadcastReceiver {
 
 	/**
 	 * Update status of security widget
+	 *
+	 * @param context
+	 *          Application context
 	 */
 	private void securityUpdate(Context context) {
 		// Check if we are on home WiFi network
@@ -103,5 +106,4 @@ public class EventReceiver extends BroadcastReceiver {
 			}
 		}
 	}
-
 }
