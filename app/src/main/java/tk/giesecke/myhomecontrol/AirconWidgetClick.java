@@ -42,11 +42,13 @@ public class AirconWidgetClick extends IntentService {
 			if (intent.getAction().equals("m")){
 				if (timerTime > 1) {
 					timerTime--;
+					espComm("/?t=" + Integer.toString(timerTime));
 				}
 			}
 			if (intent.getAction().equals("p")){
 				if (timerTime < 9) {
 					timerTime++;
+					espComm("/?t=" + Integer.toString(timerTime));
 				}
 			}
 			if (intent.getAction().equals("s")){
@@ -86,7 +88,7 @@ public class AirconWidgetClick extends IntentService {
 	}
 
 	@SuppressLint("CommitPrefEdits")
-	boolean espComm(String cmd) {
+	private boolean espComm(String cmd) {
 		/** A HTTP client to access the ESP device */
 		// Set timeout to 5 minutes in case we have a lot of data to load
 		OkHttpClient client = new OkHttpClient.Builder()

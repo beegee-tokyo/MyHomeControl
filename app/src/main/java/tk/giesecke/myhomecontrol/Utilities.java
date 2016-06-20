@@ -2,10 +2,7 @@ package tk.giesecke.myhomecontrol;
 
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.RingtoneManager;
@@ -80,51 +77,6 @@ public class Utilities extends MyHomeControl {
 			}
 		} catch (IOException e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Exception " + e);
-		}
-	}
-
-	/**
-	 * Start or stop timer for updates
-	 * If connection is same LAN as spMonitor device then update is every 60 seconds
-	 * else the update is every 5 minutes
-	 *
-	 * @param context
-	 *            application context
-	 * @param isStart
-	 *            flag if timer should be started or stopped
-	 */
-	public static void startStopUpdates(Context context, boolean isStart) {
-
-		/** Pending intent for broadcast message to update notifications */
-		PendingIntent pendingIntent;
-		/** Alarm manager for scheduled updates */
-		AlarmManager alarmManager;
-
-		/** Update interval 1 minute */
-		int alarmTime = 60000;
-
-		// Stop the update
-		pendingIntent = PendingIntent.getService(context, 5001,
-				new Intent(context, SolarUpdateService.class),PendingIntent.FLAG_CANCEL_CURRENT);
-
-		/** Alarm manager for scheduled updates */
-		alarmManager = (AlarmManager) context.getSystemService
-				(Context.ALARM_SERVICE);
-		alarmManager.cancel(pendingIntent);
-
-		if (isStart) {
-			if (!isHomeWiFi(context)) {
-				/** Change update interval to 5 minutes if we are not on Wifi */
-				alarmTime = 300000;
-			}
-			/** Pending intent for notification updates */
-			pendingIntent = PendingIntent.getService(context, 5001,
-					new Intent(context, SolarUpdateService.class),PendingIntent.FLAG_UPDATE_CURRENT);
-			/** Alarm manager for daily sync */
-			AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-			am.setRepeating(AlarmManager.RTC_WAKEUP,
-					System.currentTimeMillis() + 10000,
-					alarmTime, pendingIntent);
 		}
 	}
 
@@ -573,7 +525,7 @@ public class Utilities extends MyHomeControl {
 	 * @return <code>String</code>
 	 *            Encrypted/Decrypted string
 	 */
-	public static String cryptMessage(byte[] payLoad, String topic) {
+	public static String cryptMessage(byte[] payLoad) {
 		byte[] result = new byte[130];
 		//String result = "";
 		String encryptBase = appContext.getString(R.string.CRYPT_STRING);
@@ -581,9 +533,9 @@ public class Utilities extends MyHomeControl {
 		byte index = 0;
 		String strResult = "";
 		String testResult = "";
-		Log.d(DEBUG_LOG_TAG, "Topic is " + topic);
+		Log.d(DEBUG_LOG_TAG, "Topic is " + "ctrl");
 		for (int i=0; i<payLoad.length; i++) {
-			byte org = (byte) payLoad[i];
+			byte org = payLoad[i];
 			byte key = (byte) encryptBase.charAt(encryptIndex);
 			result[i] = (byte) (org ^ key);
 			strResult += (char) result[i];
@@ -595,12 +547,18 @@ public class Utilities extends MyHomeControl {
 			}
 		}
 		result[index] = 0;
+
+		StringBuilder str = new StringBuilder();
+		for(int i = 0; i < index; i++)
+			str.append(String.format("%02x", result[i]));
+		testResult = str.toString();
+
 		Log.d(DEBUG_LOG_TAG, "Test string " + testResult);
 		Log.d(DEBUG_LOG_TAG, "Original message " + Arrays.toString(payLoad));
 		Log.d(DEBUG_LOG_TAG, "Original message length " + payLoad.length);
 		Log.d(DEBUG_LOG_TAG, "Key " + encryptBase);
 		Log.d(DEBUG_LOG_TAG, "Result message " + strResult);
-		return new String(result);
+		return testResult;
 	}
 
 	/** Returns the consumer friendly device name */

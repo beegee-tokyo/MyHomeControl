@@ -1,16 +1,10 @@
 package tk.giesecke.myhomecontrol;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.IBinder;
@@ -39,11 +33,11 @@ public class UDPlistener extends Service {
 	public static final String BROADCAST_RECEIVED = "BC_RECEIVED";
 
 	/** Flag if listener is restarted after a broadcast was received */
-	private final Boolean shouldRestartSocketListen=true;
+	private Boolean shouldRestartSocketListen=true;
 	/** Socket for broadcast datagram */
 	private DatagramSocket socket;
-	/** Context of this intent */
-	private static Context intentContext;
+//	/** Context of this intent */
+//	private static Context intentContext;
 	/** Multicast lock to keep WiFi awake until broadcast is received */
 	private WifiManager.MulticastLock lock = null;
 
@@ -57,7 +51,7 @@ public class UDPlistener extends Service {
 
 	@Override
 	public IBinder onBind(Intent intent) {
-		throw new UnsupportedOperationException("Not yet implemented");
+		return null;
 	}
 
 	@Override
@@ -74,7 +68,7 @@ public class UDPlistener extends Service {
 	public void onCreate() {
 		super.onCreate();
 
-		intentContext = getApplicationContext();
+//		intentContext = getApplicationContext();
 		// Enable access to internet
 		if (android.os.Build.VERSION.SDK_INT > 9) {
 			/** ThreadPolicy to get permission to access internet */
@@ -99,10 +93,24 @@ public class UDPlistener extends Service {
 
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start listening");
 		// Start listener for UDP broadcast messages
+		shouldRestartSocketListen = true;
 		startListenForUDPBroadcast();
 	}
 
+	@Override
+	public void onDestroy() {
+		stopListen();
+	}
+
 	// UDP stuff starts here
+	/**
+	 * Stop listening and close socket
+	 * */
+	private void stopListen() {
+		shouldRestartSocketListen = false;
+		socket.close();
+	}
+
 	/**
 	 * Wait for UDP broadcasts
 	 *
@@ -119,6 +127,10 @@ public class UDPlistener extends Service {
 				socket = new DatagramSocket(port, broadcastIP);
 			} catch (SocketException e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Cannot open socket " + e.getMessage());
+				socket.disconnect();
+				socket.close();
+				socket = null;
+				return;
 			}
 		}
 		/** Datagram packet for incoming data */
@@ -137,6 +149,7 @@ public class UDPlistener extends Service {
 
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 
+		Context context = getApplicationContext();
 		// Check if response is a JSON array
 		if (Utilities.isJSONValid(message)) {
 			/** Json object for received data */
@@ -146,13 +159,38 @@ public class UDPlistener extends Service {
 				try {
 					/** Device ID from UDP broadcast message */
 					String broadCastDevice = jsonResult.getString("device");
-					if (broadCastDevice.startsWith("sf")
-							|| broadCastDevice.startsWith("sb")) { // Broadcast from security device
-						alarmNotif(jsonResult, intentContext);
+					if (broadCastDevice.startsWith("sf")) { // Broadcast from front security front yard
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update front yard security widgets");									/** Flag for alarm on or off */
+
+						boolean alarmIsActive = (jsonResult.getInt("alarm_on") == 1);
+						boolean alarmIsOn = (jsonResult.getInt("alarm") == 1);
+
+						// Activate/deactivate alarm sound and update widget
+						MQTTService.securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
 					}
-					if (broadCastDevice.startsWith("fd")
-							|| broadCastDevice.startsWith("ca")) { // Broadcast from aircon device
-						updateAirWidgets(jsonResult, intentContext);
+
+					if (broadCastDevice.startsWith("sp")) { // Broadcast from solar panel monitor
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update solar panel widgets");
+
+						/** Value of solar production */
+						float solarPower = jsonResult.getInt("s");
+						/** Value of house consumption */
+						float consPower = jsonResult.getInt("c");
+
+						// Activate/deactivate alarm sound and update widget
+						MQTTService.solarAlarmAndWidgetUpdate(solarPower, consPower, context);
+					}
+					if (broadCastDevice.startsWith("fd")) { // Broadcast from office aircon
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
+
+						/** Flag for alarm switched on or off */
+						boolean timerOn = (jsonResult.getInt("timer") == 1);
+						/** Timer time */
+						int timerTime = jsonResult.getInt("onTime");
+
+						// Update widget
+						MQTTService.airconWidgetUpdate(timerOn, timerTime, context);
+
 					}
 				} catch (JSONException ignore) {
 					return;
@@ -190,106 +228,107 @@ public class UDPlistener extends Service {
 		UDPBroadcastThread.start();
 	}
 
-	// send broadcast from activity to all receivers listening to the action "ACTION_STRING_ACTIVITY"
+	// send broadcast from activity to all receivers listening to the action "BROADCAST_RECEIVED"
 	private void sendMyBroadcast(String msgReceived) {
 		/** Intent for activity internal broadcast message */
 		Intent broadCastIntent = new Intent();
 		broadCastIntent.setAction(BROADCAST_RECEIVED);
+		broadCastIntent.putExtra("from", "UDP");
 		broadCastIntent.putExtra("message", msgReceived);
 		sendBroadcast(broadCastIntent);
 	}
 
-	/**
-	 * Prepare notification from local broadcast or GCM broadcast
-	 *
-	 * @param jsonValues
-	 *            JSON object with values
-	 */
-	public static void alarmNotif(JSONObject jsonValues, Context notifContext) {
-		/** Flag for active alarm */
-		int hasAlarmInt;
-		/** Flag for alarm on/off */
-		int hasAlarmActive;
-		/** String with device ID */
-		String deviceIDString;
-		try {
-			deviceIDString = jsonValues.getString("device");
-		} catch (JSONException e) {
-			deviceIDString = "unknown";
-		}
-
-		try {
-			hasAlarmInt = jsonValues.getInt("alarm");
-		} catch (JSONException e) {
-			hasAlarmInt = 0;
-		}
-		try {
-			hasAlarmActive = jsonValues.getInt("alarm_on");
-		} catch (JSONException e) {
-			hasAlarmActive = 0;
-		}
-
-		// Show notification only if it is an alarm
-		if (hasAlarmInt == 1 && hasAlarmActive == 1) {
-			/** String for notification */
-			String notifText;
-			/** Icon for notification */
-			int notifIcon;
-			/** Background color for notification icon in SDK Lollipop and newer */
-			int notifColor;
-
-			notifIcon = R.drawable.detection;
-			notifText = "Intruder! in " + notifContext.getResources().getString(R.string.sec_front_device_1);
-			if (deviceIDString.equalsIgnoreCase("sb1")) {
-				notifText = "Intruder! in " + notifContext.getResources().getString(R.string.sec_back_device_1);
-			}
-
-			//noinspection deprecation
-			notifColor = notifContext.getResources().getColor(android.R.color.holo_red_light);
-
-			/** Pointer to notification builder for export/import arrow */
-			NotificationCompat.Builder myNotifBuilder;
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-				myNotifBuilder = new NotificationCompat.Builder(notifContext)
-						.setContentTitle(notifContext.getString(R.string.app_name))
-						.setContentIntent(PendingIntent.getActivity(notifContext, 0, new Intent(notifContext, MyHomeControl.class), 0))
-						.setAutoCancel(false)
-						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-						.setVisibility(Notification.VISIBILITY_PUBLIC)
-						.setWhen(System.currentTimeMillis());
-			} else {
-				myNotifBuilder = new NotificationCompat.Builder(notifContext)
-						.setContentTitle(notifContext.getString(R.string.app_name))
-						.setContentIntent(PendingIntent.getActivity(notifContext, 0, new Intent(notifContext, MyHomeControl.class), 0))
-						.setAutoCancel(false)
-						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-						.setWhen(System.currentTimeMillis());
-			}
-
-			/** Pointer to notification manager for export/import arrow */
-			NotificationManager notificationManager = (NotificationManager) notifContext.getSystemService(Context.NOTIFICATION_SERVICE);
-
-			/** Access to shared preferences of app widget */
-			String selUri = intentContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0)
-					.getString(MyHomeControl.prefsSecurityAlarm, "");/** Uri of selected alarm */
-			myNotifBuilder.setSound(Uri.parse(selUri));
-
-			myNotifBuilder.setSmallIcon(notifIcon)
-					.setContentText(notifText)
-					.setContentText(notifText)
-					.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
-					.setTicker(notifText);
-			if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-				myNotifBuilder.setColor(notifColor);
-			}
-
-			/** Pointer to notification */
-			Notification alarmNotification = myNotifBuilder.build();
-			notificationManager.notify(2, alarmNotification);
-		}
-		// Update security widget
-		updateSecWidgets(notifContext, (hasAlarmInt == 1));
-	}
+//	/**
+//	 * Prepare notification from local broadcast or GCM broadcast
+//	 *
+//	 * @param jsonValues
+//	 *            JSON object with values
+//	 */
+//	public static void alarmNotif(JSONObject jsonValues, Context notifContext) {
+//		/** Flag for active alarm */
+//		int hasAlarmInt;
+//		/** Flag for alarm on/off */
+//		int hasAlarmActive;
+//		/** String with device ID */
+//		String deviceIDString;
+//		try {
+//			deviceIDString = jsonValues.getString("device");
+//		} catch (JSONException e) {
+//			deviceIDString = "unknown";
+//		}
+//
+//		try {
+//			hasAlarmInt = jsonValues.getInt("alarm");
+//		} catch (JSONException e) {
+//			hasAlarmInt = 0;
+//		}
+//		try {
+//			hasAlarmActive = jsonValues.getInt("alarm_on");
+//		} catch (JSONException e) {
+//			hasAlarmActive = 0;
+//		}
+//
+//		// Show notification only if it is an alarm
+//		if (hasAlarmInt == 1 && hasAlarmActive == 1) {
+//			/** String for notification */
+//			String notifText;
+//			/** Icon for notification */
+//			int notifIcon;
+//			/** Background color for notification icon in SDK Lollipop and newer */
+//			int notifColor;
+//
+//			notifIcon = R.drawable.detection;
+//			notifText = "Intruder! in " + notifContext.getResources().getString(R.string.sec_front_device_1);
+//			if (deviceIDString.equalsIgnoreCase("sb1")) {
+//				notifText = "Intruder! in " + notifContext.getResources().getString(R.string.sec_back_device_1);
+//			}
+//
+//			//noinspection deprecation
+//			notifColor = notifContext.getResources().getColor(android.R.color.holo_red_light);
+//
+//			/** Pointer to notification builder for export/import arrow */
+//			NotificationCompat.Builder myNotifBuilder;
+//			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+//				myNotifBuilder = new NotificationCompat.Builder(notifContext)
+//						.setContentTitle(notifContext.getString(R.string.app_name))
+//						.setContentIntent(PendingIntent.getActivity(notifContext, 0, new Intent(notifContext, MyHomeControl.class), 0))
+//						.setAutoCancel(false)
+//						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//						.setVisibility(Notification.VISIBILITY_PUBLIC)
+//						.setWhen(System.currentTimeMillis());
+//			} else {
+//				myNotifBuilder = new NotificationCompat.Builder(notifContext)
+//						.setContentTitle(notifContext.getString(R.string.app_name))
+//						.setContentIntent(PendingIntent.getActivity(notifContext, 0, new Intent(notifContext, MyHomeControl.class), 0))
+//						.setAutoCancel(false)
+//						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//						.setWhen(System.currentTimeMillis());
+//			}
+//
+//			/** Pointer to notification manager for export/import arrow */
+//			NotificationManager notificationManager = (NotificationManager) notifContext.getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//			/** Access to shared preferences of app widget */
+//			String selUri = intentContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0)
+//					.getString(MyHomeControl.prefsSecurityAlarm, "");/** Uri of selected alarm */
+//			myNotifBuilder.setSound(Uri.parse(selUri));
+//
+//			myNotifBuilder.setSmallIcon(notifIcon)
+//					.setContentText(notifText)
+//					.setContentText(notifText)
+//					.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
+//					.setTicker(notifText);
+//			if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//				myNotifBuilder.setColor(notifColor);
+//			}
+//
+//			/** Pointer to notification */
+//			Notification alarmNotification = myNotifBuilder.build();
+//			notificationManager.notify(2, alarmNotification);
+//		}
+//		// Update security widget
+//		updateSecWidgets(notifContext, (hasAlarmInt == 1));
+//	}
 
 	/**
 	 * Display notification that UDP listener is active
@@ -338,59 +377,26 @@ public class UDPlistener extends Service {
 		return myNotifBuilder.build();
 	}
 
-	@SuppressLint("CommitPrefEdits")
-	private static void updateSecWidgets(Context updateContext, boolean hasAlarm) {
-		/** Pointer to shared preferences */
-		SharedPreferences mPrefs = updateContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
-		if (hasAlarm) {
-			mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
-		} else {
-			mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
-		}
-		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Security Widget");
-		/** App widget manager for all widgets of this app */
-		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(updateContext);
-		/** Component name of this widget */
-		ComponentName thisAppWidget = new ComponentName(updateContext.getPackageName(),
-				SecurityWidget.class.getName());
-		/** List of all active widgets */
-		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
-
-		for (int appWidgetId : appWidgetIds) {
-			SecurityWidget.updateAppWidget(updateContext,appWidgetManager,appWidgetId, false);
-		}
-	}
-
-	@SuppressLint("CommitPrefEdits")
-	private static void updateAirWidgets(JSONObject jsonValues, Context notifContext) {
-
-		int hasTimerOn;
-		try {
-			hasTimerOn = jsonValues.getInt("timer");
-		} catch (JSONException e) {
-			hasTimerOn = 0;
-		}
-
-		/** Pointer to shared preferences */
-		SharedPreferences mPrefs = notifContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
-		if (hasTimerOn == 1) {
-			mPrefs.edit().putBoolean("acTimerOn", true).commit();
-		} else {
-			mPrefs.edit().putBoolean("acTimerOn", false).commit();
-		}
-		int timerTime = mPrefs.getInt("acTimerTime", 1);
-		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Aircon Widget");
-		/** App widget manager for all widgets of this app */
-		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(notifContext);
-		/** Component name of this widget */
-		ComponentName thisAppWidget = new ComponentName(notifContext.getPackageName(),
-				AirconWidget.class.getName());
-		/** List of all active widgets */
-		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
-
-		for (int appWidgetId : appWidgetIds) {
-			AirconWidget.updateAppWidget(notifContext,appWidgetManager,appWidgetId, timerTime,
-					(hasTimerOn != 0));
-		}
-	}
+//	@SuppressLint("CommitPrefEdits")
+//	private static void updateSecWidgets(Context updateContext, boolean hasAlarm) {
+//		/** Pointer to shared preferences */
+//		SharedPreferences mPrefs = updateContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
+//		if (hasAlarm) {
+//			mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
+//		} else {
+//			mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
+//		}
+//		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Security Widget");
+//		/** App widget manager for all widgets of this app */
+//		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(updateContext);
+//		/** Component name of this widget */
+//		ComponentName thisAppWidget = new ComponentName(updateContext.getPackageName(),
+//				SecurityWidget.class.getName());
+//		/** List of all active widgets */
+//		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+//
+//		for (int appWidgetId : appWidgetIds) {
+//			SecurityWidget.updateAppWidget(updateContext,appWidgetManager,appWidgetId, false);
+//		}
+//	}
 }

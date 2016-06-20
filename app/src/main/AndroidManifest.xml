@@ -13,13 +13,13 @@
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 	<!-- For receiving GCM messages -->
-	<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+	<!-- <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/> -->
 	<!-- For protecting GCM messages so that only your app can receive them -->
-	<permission
+	<!-- <permission
 		android:name="tk.giesecke.security.permission.C2D_MESSAGE"
-		android:protectionLevel="signature"/>
+		android:protectionLevel="signature"/> -->
 
-	<uses-permission android:name="tk.giesecke.security.permission.C2D_MESSAGE"/>
+	<!-- <uses-permission android:name="tk.giesecke.security.permission.C2D_MESSAGE"/> -->
 
 	<application
 		android:allowBackup="false"
@@ -91,17 +91,17 @@
 			android:name=".StartBackgroundServices"
 			android:exported="false">
 		</service>
-		<service
+		<!-- <service
 			android:name=".SolarUpdateService"
 			android:exported="false">
-		</service>
+		</service> -->
 		<service
 			android:name=".SolarSyncDBService"
 			android:exported="false">
 		</service>
 
 		<!-- For receiving GCM message and registration success -->
-		<receiver
+		<!-- <receiver
 			android:name=".GCMBroadcastReceiver"
 			android:permission="com.google.android.c2dm.permission.SEND">
 			<intent-filter>
@@ -110,14 +110,14 @@
 
 				<category android:name="tk.giesecke.security"/>
 			</intent-filter>
-		</receiver>
+		</receiver> -->
 
-		<service android:name=".GCMIntentService"/>
+		<!-- <service android:name=".GCMIntentService"/> -->
 
 		<!-- make sure to add google-play-services_lib from  project properties->android->library -->
-		<meta-data
+		<!-- <meta-data
 			android:name="com.google.android.gms.version"
-			android:value="@integer/google_play_services_version"/>
+			android:value="@integer/google_play_services_version"/> -->
 
 		<receiver android:name=".SPwidget">
 			<intent-filter>

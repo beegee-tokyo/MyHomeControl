@@ -111,7 +111,7 @@ void sendAlarm(boolean doGCM) {
 	/* Json object with the alarm message */
 	JsonObject& root = jsonBuffer.createObject();
 
-Serial.println("Create status");
+	Serial.println("Create status");
 	// Create status
 	createStatus(root, true);
 
@@ -128,7 +128,14 @@ Serial.println("Create status");
 		connectWiFi();
 		return;
 	}
-	root.printTo(udpClientServer);
+	String broadCast;
+	root.printTo(broadCast);
+	udpClientServer.print(broadCast);
+	udpClientServer.endPacket();
+	udpClientServer.stop();
+
+	udpClientServer.beginPacket(monitorIP,5000);
+	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
 

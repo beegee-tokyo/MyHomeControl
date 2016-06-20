@@ -1,11 +1,8 @@
-// This example uses an Adafruit Huzzah ESP8266
-// to connect to shiftr.io.
-//
-// You can check on your device after a successful
-// connection here: https://shiftr.io/try.
-//
-// by Joël Gähwiler
-// https://github.com/256dpi/arduino-mqtt
+// BeeGee home control monitor
+// Uses an Adafruit Huzzah ESP8266
+// to connect to shiftr.io and
+// displays the measured values and
+// system status on a 128x128 display.
 
 #include "declarations.h"
 #include "functions.h"
@@ -15,7 +12,7 @@ void setup() {
 	// Initialize display
 	ucg.begin(UCG_FONT_MODE_TRANSPARENT);
 	ucg.setFont(ucg_font_helvB08_tf);
-	ucg.setRotate180();
+	// ucg.setRotate180();
 	ucg.clearScreen();
 	ucg.setColor(0, 255, 0);
 	ucg.drawBox(0, 0, 128, 128);
@@ -31,10 +28,14 @@ void setup() {
 
 	pinMode(COM_LED, OUTPUT); // Communication LED blue
 	pinMode(ACT_LED, OUTPUT); // Communication LED red
+	pinMode(SPEAKER, OUTPUT); // Loudspeaker/piezo signal
 	digitalWrite(COM_LED, HIGH); // Turn off blue LED
 	digitalWrite(ACT_LED, HIGH); // Turn off red LED
+	digitalWrite(SPEAKER, LOW); // Speaker off
 	Serial.begin(115200);
 	Serial.println();
+	
+	// Connect to WiFi
 	connectWiFi();
 	if (WiFi.status() == WL_CONNECTED) {
 		ucg_print_ln("Connected to ", false);
@@ -52,6 +53,38 @@ void setup() {
 		ucg_print_ln("Not connected", false);
 	}
 	
+	sendDebug("Reboot");
+	
+	// Initialize file system.
+	if (!SPIFFS.begin())
+	{
+		Serial.println("Failed to mount file system");
+		return;
+	}
+	/** Pointer to file */
+	File statusFile = SPIFFS.open("/auto.tga", "r");
+	if (!statusFile)
+	{
+		Serial.println("Failed to open auto.tga.");
+		Serial.println("Try to format the SPIFFS");
+		if (SPIFFS.format()){
+			Serial.println("SPIFFS formatted");
+		} else {
+			Serial.println("SPIFFS format failed");
+		}
+	}
+
+	// Start UDP listener
+	udpListener.begin(5000);
+
+	// Set initial time
+	setTime(getNtpTime());
+
+	// Initialize NTP client
+	setSyncProvider(getNtpTime);
+	setSyncInterval(3600); // Sync every hour
+
+	// Connect to MQTT broker
 	mqttClient.begin(mqttBroker, mqttReceiver);
 
 	Serial.print("\nConnecting to MQTT broker");
@@ -86,16 +119,8 @@ void setup() {
 	Serial.print("\" and pw: \"");
 	Serial.print(host);
 	Serial.println("\"");
+	
 	ftpSrv.begin(host, host);	 //username, password for ftp.	set ports in ESP8266FtpServer.h	(default 21, 50009 for PASV)
-
-	/* Configure the Adafruit TSL2561 light sensor */
-	/* Set SDA and SCL pin numbers */
-	tsl.setI2C(sdaPin, sclPin);
-	/* Initialise the sensor */
-	if (tsl.begin()) {
-		/* Setup the sensor gain and integration time */
-		configureSensor();
-	}
 
 	// Initialize temperature sensor
 	dht.begin();
@@ -114,9 +139,10 @@ void setup() {
 
 	ArduinoOTA.onStart([]() {
 		Serial.println("OTA start");
+		udpListener.stop();
 		ucg.clearScreen();
 		ucg.setFont(ucg_font_helvB18_tf);
-		ucg.setRotate180();
+		// ucg.setRotate180();
 		ucg.setColor(255, 0, 0);
 		ucg.drawBox(0, 0, 128, 128);
 		ucg.setColor(0, 0, 0);
@@ -144,7 +170,7 @@ void setup() {
 		if (progress == total) {
 			ucg.clearScreen();
 			ucg.setFont(ucg_font_helvB18_tf);
-			ucg.setRotate180();
+			// ucg.setRotate180();
 			ucg.setColor(0, 255, 0, 0);
 			ucg.setColor(1, 0, 255, 0);
 			ucg.setColor(2, 0, 0, 255);
@@ -159,7 +185,7 @@ void setup() {
 	ArduinoOTA.onError([](ota_error_t error) {
 		ucg.clearScreen();
 		ucg.setFont(ucg_font_helvB18_tf);
-		ucg.setRotate180();
+		// ucg.setRotate180();
 		ucg.setColor(255, 128, 0);
 		ucg.drawBox(0, 0, 128, 128);
 		ucg.setColor(0, 0, 0);
@@ -177,9 +203,14 @@ void setup() {
 		}
 		ucg_print_center("Failed", 0, 103);
 	});
+	
 	// Start OTA server.
 	ArduinoOTA.setHostname(host);
 	ArduinoOTA.begin();
+	
+	melodyPoint = 0; // Reset melody pointer to 0
+	soundTimer.attach_ms(melodyTuneTime, playSound);
+
 }
 
 void loop() {
@@ -189,12 +220,17 @@ void loop() {
 	// Handle OTA updates
 	ArduinoOTA.handle();
 
+	// Check if broadcast arrived
+	udpMsgLength = udpListener.parsePacket();
+	if (udpMsgLength != 0) {
+		getUDPbroadcast(udpMsgLength);
+	}
+
 	/** Handle MQTT subscribed */
 	mqttClient.loop();
 	delay(10); // <- fixes some issues with WiFi stability
 
 	if(!mqttClient.connected()) {
-		showMQTTerrorScreen();
 		mqttClient.begin(mqttBroker, mqttReceiver);
 
 		Serial.print("\nConnecting to MQTT broker");
@@ -203,13 +239,20 @@ void loop() {
 			delay(500);
 			Serial.print(".");
 			connectTimeout++;
-			if (connectTimeout > 120) { //Wait for 60 seconds (120 x 500 milliseconds) to reconnect
+			if (connectTimeout > 240) { //Wait for 2 minutes (240 x 500 milliseconds) then reset WiFi connection
 				Serial.print("\nCan't connect to MQTT broker");
+				udpListener.stop();
 				// Try to reset WiFi connection
 				connectWiFi();
+				udpListener.begin(5000);
 			}
 			// Handle OTA updates
 			ArduinoOTA.handle();
+			// Check if broadcast arrived
+			udpMsgLength = udpListener.parsePacket();
+			if (udpMsgLength != 0) {
+				getUDPbroadcast(udpMsgLength);
+			}
 		}
 		// Reconnected ==> refresh screen
 		delay(10); // <- fixes some issues with WiFi stability
@@ -219,19 +262,19 @@ void loop() {
 	// Handle FTP access
 	ftpSrv.handleFTP();
 	
+	// Handle new temperature & humidity update request
+	if (dhtUpdated) {
+		dhtUpdated = false;
+		getTemperature();
+		// getLight();
+		updateWeather(false);
+	}
+
 	// Handle new data update request
 	if (statusUpdated) {
 		statusUpdated = false;
 		getHomeInfo(false);
 		delay(10); // <- fixes some issues with WiFi stability
 		sendToMQTT();
-	}
-
-	// Handle new temperature & humidity update request
-	if (dhtUpdated) {
-		dhtUpdated = false;
-		getTemperature();
-		getLight();
-		updateWeather();
 	}
 }

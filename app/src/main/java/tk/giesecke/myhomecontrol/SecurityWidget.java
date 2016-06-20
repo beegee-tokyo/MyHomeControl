@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.widget.RemoteViews;
 
 /**
@@ -15,15 +14,11 @@ public class SecurityWidget extends AppWidgetProvider {
 
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-		// There may be multiple widgets active, so update all of them
-		for (int appWidgetId : appWidgetIds) {
-			updateAppWidget(context, appWidgetManager, appWidgetId, false);
-		}
 	}
 
 	@Override
 	public void onEnabled(Context context) {
-		// Enter relevant functionality for when the first widget is created
+		// Enter relevant functionality for when the first widget is enabled
 	}
 
 	@Override
@@ -40,30 +35,25 @@ public class SecurityWidget extends AppWidgetProvider {
 	 *            Instance of the appWidgetManager
 	 * @param appWidgetId
 	 *            ID of the widget to be updated
-	 * @param isChanging
-	 *            Flag if status is changing between alarm on and alarm off
+	 * @param alarmIsActive
+	 *            Flag if alarm is on or off
 	 */
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-								int appWidgetId, boolean isChanging) {
+								int appWidgetId, boolean alarmIsActive) {
 
 		// Construct the RemoteViews object
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.security_widget);
 
-		/** Pointer to shared preferences */
-		SharedPreferences mPrefs = context.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
-		if (isChanging) {
-			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_temp);
+		if (alarmIsActive) {
+			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_on);
 		} else {
-			if (mPrefs.getBoolean(MyHomeControl.prefsSecurityAlarmOn, false)) {
-				views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_on);
-			} else {
-				views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_off);
-			}
+			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_off);
 		}
 
 		// Create an intent to launch the service on widget push
 		Intent serviceIntent = new Intent(context, SecurityWidgetClick.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+		serviceIntent.putExtra("AlarmStatus", alarmIsActive);
 		// PendingIntent is required for the onClickPendingIntent that actually
 		// starts the service from a button click
 		PendingIntent pendingServiceIntent =

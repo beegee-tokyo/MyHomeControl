@@ -1,5 +1,10 @@
 
 void setup() {
+	boolean debugWasOn = false;
+	if (debugOn == true) {
+		debugWasOn = true;
+	}
+	debugOn = true; // During startup
 	pinMode(IR_LED_OUT, OUTPUT); // IR LED red
 	pinMode(COM_LED, OUTPUT); // Communication LED blue
 	pinMode(ACT_LED, OUTPUT); // Communication LED red
@@ -21,6 +26,8 @@ void setup() {
 	// Try to connect to WiFi
 	connectWiFi();
 
+	sendDebug("Reboot");
+	
 	Serial.println("");
 	Serial.print("Connected to ");
 	Serial.println(ssid);
@@ -38,10 +45,14 @@ void setup() {
 		// Try to get last status from status.txt
 		if (!readStatus()) {
 			foundStatus = false;
+			sendDebug("Status file not found");
 		}
+	} else {
+		sendDebug("Filesystem failure");
 	}
 	if (!foundStatus) // Could not get last status
 	{
+		sendDebug("Status file not found");
 		/* Asume aircon off, timer off, power control enabled, */
 		/* aircon mode fan, fan speed low, temperature set to 25 deg Celsius */
 		acMode = acMode | AUTO_ON | TIM_OFF | AC_OFF | MODE_FAN | FAN_LOW;
@@ -49,20 +60,31 @@ void setup() {
 		acTemp = acTemp + 25; // set temperature bits to 25
 	}
 
-	// If device was in auto power mode before reset set powerStatus to 0
-	if ((acMode & AUTO_OFF) == AUTO_OFF) {
+	/* Send boot info debug message */
+	sendStatusToDebug();
+
+	/** Set saved AC temperature setting */
+	savedAcTemp = acTemp & TEMP_MASK;
+
+	// If device was not in auto power mode before reset set powerStatus to 0
+	if ((acMode & AUTO_MASK) == AUTO_OFF) {
 		powerStatus = 0;
 		writeStatus();
 	}
 	
-	// If device was in timer mode before reset reset the flag
-	// As we do not know why the device restarted we do not know the status of the aircon
-	if ((acMode & TIM_ON) == TIM_ON) {
-		acMode = acMode & TIM_CLR;
-		acMode = acMode | TIM_OFF;
+	// If device was in timer mode and AC was on => stop the timer mode and switch off the AC
+	// TODO save the remaining 
+	if ((acMode & TIM_MASK) == TIM_ON) {
+		if ((acMode & AC_ON) == AC_ON) { // AC is on
+			sendDebug("Stop AC and timer");
+			irCmd = CMD_OTHER_TIMER;
+			sendCmd();
+		}
 	}
 
 	// Set initial time
+	setTime(getNtpTime());
+	// Try second time to get initial time (Just to make sure we got it)
 	setTime(getNtpTime());
 
 	// Initialize NTP client
@@ -75,15 +97,6 @@ void setup() {
 	}else {
 		dayTime = true;
 	}
-
-	// Send reboot log to debug
-	String debugMsg = "Restart: Status " + String(powerStatus) + " C:" + String(consPower, 0) + " S:" + String(solarPower, 0);
-	if (dayTime) {
-		debugMsg += " ,daytime is true (hour = " + String(hour()) + ")";
-	} else {
-		debugMsg += " ,daytime is false (hour = " + String(hour()) + ")";
-	}
-	sendDebug(debugMsg);
 
 	// Get first values from spMonitor
 	getPowerVal(false);
@@ -120,5 +133,8 @@ void setup() {
 	// Start OTA server.
 	ArduinoOTA.setHostname(DEVICE_ID);
 	ArduinoOTA.begin();
+	if (!debugWasOn) {
+		debugOn = false; // During startup
+	}
 }
 

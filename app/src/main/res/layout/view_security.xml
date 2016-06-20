@@ -133,7 +133,7 @@
 		android:layout_height="wrap_content"
 		android:id="@+id/tl_alarm_back"
 		android:layout_below="@+id/cb_sec_auto_alarm"
-		android:visibility="visible"
+		android:visibility="invisible"
 		android:gravity="center_horizontal">
 
 		<TableRow>

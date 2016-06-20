@@ -4,9 +4,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.Dialog;
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,7 +26,7 @@ import android.os.StrictMode;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
+//import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -51,9 +49,9 @@ import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
+//import com.google.android.gms.common.ConnectionResult;
+//import com.google.android.gms.common.GooglePlayServicesUtil;
+//import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -69,8 +67,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -97,8 +93,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private boolean showDebug = false;
 	/** The view of the main UI */
 	static View appView;
-	/** Timer for updating content of main UI */
-	private Timer autoUpdate;
 
 	/** Shared preferences value for last shown view */
 	private final String prefsLastView = "lastView";
@@ -108,7 +102,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Shared preferences value security alarm sound */
 	public static final String prefsSecurityAlarm = "secAlarm";
 	/** Shared preferences value security alarm sound */
-	public static final String prefsSecurityAlarmOn = "secAlarmOn";
+	static final String prefsSecurityAlarmOn = "secAlarmOn";
 
 	/** Shared preferences value for solar alarm sound */
 	public static final String prefsSolarWarning = "solarAlarm";
@@ -433,22 +427,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Communication progress bar for aircon */
 	private ProgressBar pbAirCom;
 
-	// For Google Cloud Messaging
-	/** Name of stored registration id in shared preferences */
-	private static final String PREF_GCM_REG_ID = "PREF_GCM_REG_ID";
-	/** Status values for GCM registration process */
-	private static final int ACTION_PLAY_SERVICES_DIALOG = 100;
-	private static final int MSG_REGISTER_WITH_GCM = 101;
-	private static final int MSG_REGISTER_WEB_SERVER = 102;
-	private static final int MSG_REGISTER_WEB_SERVER_SUCCESS = 103;
-	private static final int MSG_REGISTER_WEB_SERVER_FAILURE = 104;
-	/** Registration ID received from GCM server */
-	private String gcmRegId;
-	/** Access to Google Cloud Messaging */
-	private GoogleCloudMessaging gcm = null;
-
-	/** GCM project ID */
-	private static String GCM_SENDER_ID;
+//	// For Google Cloud Messaging
+//	/** Name of stored registration id in shared preferences */
+//	private static final String PREF_GCM_REG_ID = "PREF_GCM_REG_ID";
+//	/** Status values for GCM registration process */
+//	private static final int ACTION_PLAY_SERVICES_DIALOG = 100;
+//	private static final int MSG_REGISTER_WITH_GCM = 101;
+//	private static final int MSG_REGISTER_WEB_SERVER = 102;
+//	private static final int MSG_REGISTER_WEB_SERVER_SUCCESS = 103;
+//	private static final int MSG_REGISTER_WEB_SERVER_FAILURE = 104;
+//	/** Registration ID received from GCM server */
+//	private String gcmRegId;
+//	/** Access to Google Cloud Messaging */
+//	private GoogleCloudMessaging gcm = null;
+//
+//	/** GCM project ID */
+//	private static String GCM_SENDER_ID;
 
 	@Override
 	@SuppressWarnings("deprecation")
@@ -503,22 +497,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 
 		// Register the receiver for messages from UDP & GCM listener
-		// Create an intent filter to listen to the broadcast sent with the action "ACTION_STRING_ACTIVITY"
+		// Create an intent filter to listen to the broadcast sent with the action "BROADCAST_RECEIVED"
 		/** Intent filter for app internal broadcast receiver */
 		IntentFilter intentFilter = new IntentFilter(UDPlistener.BROADCAST_RECEIVED);
 		//Map the intent filter to the receiver
 		registerReceiver(activityReceiver, intentFilter);
 	}
 
-	@Override
-	protected void onNewIntent(Intent intent)
-	{
-		super.onNewIntent(intent);
-
-		// set the string passed from the service to the original intent
-		setIntent(intent);
-
-	}
+//	@Override
+//	protected void onNewIntent(Intent intent)
+//	{
+//		super.onNewIntent(intent);
+//
+//		// set the string passed from the service to the original intent
+//		setIntent(intent);
+//
+//	}
 
 	/**
 	 * Called when activity is getting visible
@@ -580,46 +574,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperNow = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME);
 		dbHelperLast = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME_LAST);
 
-		if (Utilities.isHomeWiFi(this)) {
-			// Start display update every 1 minutes
-			autoUpdate = new Timer();
-			autoUpdate.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					runOnUiThread(new Runnable() {
-						public void run() {
-							//comView.setVisibility(View.VISIBLE);
-							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "UI update triggered");
-							// Update solar UI
-							new ESPcommunication()
-									.execute(SOLAR_URL,
-											"/data/get",
-											"",
-											"spm",
-											"0");
-							pbSolCom.setVisibility(View.VISIBLE);
-						}
-					});
-				}
-			}, 60000, 60000); // delay for first update = 1 minute, then updates every 1 minute
-		} else {
-			Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
-			// Start display update every 10 minutes
-			autoUpdate = new Timer();
-			autoUpdate.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					runOnUiThread(new Runnable() {
-						public void run() {
-							pbSolCom.setVisibility(View.VISIBLE);
-							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Solar UI triggered");
-							new ESPcommunication()
-									.execute(SOLAR_URL, "/data/get", "", "spm", "0");
-						}
-					});
-				}
-			}, 60000, 10 * 60 * 1000); // delay for first update = 1 minute, then updates every 10 minute
-		}
 		if (!isMyServiceRunning(UDPlistener.class)) {
 			// Start background services
 			startService(new Intent(this, StartBackgroundServices.class));
@@ -631,12 +585,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				new FindAllDevices(getApplicationContext()).execute();
 			}
 		}, 10000);
-
-		// TODO QuickTest for MQTT
-		if (!isMyServiceRunning(MQTTService.class)) {
-			// Start background services
-			startService(new Intent(this, MQTTService.class));
-		}
 	}
 
 	/**
@@ -645,18 +593,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// Update security widgets
-		/** App widget manager for all widgets of this app */
-		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(appContext);
-		/** Component name of this widget */
-		ComponentName thisAppWidget = new ComponentName(appContext.getPackageName(),
-				SecurityWidget.class.getName());
-		/** List of all active widgets */
-		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
-
-		for (int appWidgetId : appWidgetIds) {
-			SecurityWidget.updateAppWidget(appContext,appWidgetManager,appWidgetId, false);
-		}
 
 		// Check if async tasks with database access are still running
 		if(atNow != null && atNow.getStatus() == AsyncTask.Status.RUNNING)
@@ -668,11 +604,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperNow.close();
 		dbHelperLast.close();
 
-		// Stop auto updates of solar panel data
-		try {
-			autoUpdate.cancel();
-		} catch (Exception ignore) {
-		}
 		animator.end();
 		ivAlarmOn.setAlpha(0f);
 		animatorBack.end();
@@ -811,44 +742,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				lvAlarmList.setSelection(uriIndex);
 				break;
 			case R.id.action_security:
-				if (Utilities.isHomeWiFi(this)) {
-					pbSecCom.setVisibility(View.VISIBLE);
-					// Update of security values
-					new ESPcommunication().execute(SECURITY_URL_FRONT_1, "/?s", "", "sec", Integer.toString(selDevice));
-				} else {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
-				}
-
 				// Show security UI
 				switchUI(0);
 				break;
 			case R.id.action_solar:
-				pbSolCom.setVisibility(View.VISIBLE);
-				// Update of solar panel values
-				new ESPcommunication().execute(SOLAR_URL, "/data/get", "", "spm", Integer.toString(selDevice));
-
 				// Show solar panel UI
 				switchUI(1);
 				break;
 			case R.id.action_aircon:
-				if (Utilities.isHomeWiFi(this)) {
-					// Update of security values
-					pbAirCom.setVisibility(View.VISIBLE);
-					switch (selDevice) {
-						case 0:
-							new ESPcommunication().execute(AIRCON_URL_1,"/?s","","air",Integer.toString(selDevice));
-							break;
-						case 1:
-							new ESPcommunication().execute(AIRCON_URL_2,"/?s","","air",Integer.toString(selDevice));
-							break;
-						case 2:
-							new ESPcommunication().execute(AIRCON_URL_3,"/?s","","air",Integer.toString(selDevice));
-							break;
-					}
-				} else {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
-				}
-
 				// Show aircon UI
 				switchUI(2);
 				break;
@@ -859,22 +760,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 				}
 				break;
-			case R.id.action_register:
-				if (Utilities.isHomeWiFi(this)) {
-					// Check if device is already registered for GCM
-					gcmRegId = mPrefs.getString(PREF_GCM_REG_ID, "");
-
-					if (TextUtils.isEmpty(gcmRegId)) {
-						// No GCM id yet, start registration
-						handleMessage(MSG_REGISTER_WITH_GCM);
-					} else {
-						// Have already GCM id, just resend ID to the ESP8266 devices
-						handleMessage(MSG_REGISTER_WEB_SERVER);
-					}
-				} else {
-					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
-				}
-				break;
+//			case R.id.action_register:
+//				if (Utilities.isHomeWiFi(this)) {
+//					// Check if device is already registered for GCM
+//					gcmRegId = mPrefs.getString(PREF_GCM_REG_ID, "");
+//
+//					if (TextUtils.isEmpty(gcmRegId)) {
+//						// No GCM id yet, start registration
+//						handleMessage(MSG_REGISTER_WITH_GCM);
+//					} else {
+//						// Have already GCM id, just resend ID to the ESP8266 devices
+//						handleMessage(MSG_REGISTER_WEB_SERVER);
+//					}
+//				} else {
+//					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
+//				}
+//				break;
 			case R.id.action_debug:
 				showDebug = !showDebug;
 				mPrefs.edit().putBoolean(prefsShowDebug,showDebug).apply();
@@ -1025,7 +926,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									.setCancelable(false)
 									.setPositiveButton("OK",
 											new DialogInterface.OnClickListener() {
-												@SuppressWarnings("deprecation")
+												@SuppressWarnings({"deprecation", "ConstantConditions"})
 												public void onClick(DialogInterface dialog, int id) {
 													locationName[dlgDeviceIndex] = userInput.getText().toString();
 													deviceIcon[dlgDeviceIndex] = dlgIconIndex;
@@ -1108,7 +1009,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	/**
-	 * Broadcast receiver for notifications received over UDP or GCM
+	 * Broadcast receiver for notifications received over UDP or MQTT or GCM
 	 */
 	private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
 
@@ -1116,49 +1017,115 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		public void onReceive(Context context, Intent intent) {
 			/** Message received over UDP or GCM or from */
 			String message = intent.getStringExtra("message");
+			String sender = intent.getStringExtra("from");
 
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received broadcast from " + sender);
 			/** Return values for onPostExecute */
 			CommResultWrapper result = new CommResultWrapper();
 
 			// Check if response is a JSON array
 			if (Utilities.isJSONValid(message)) {
 				result.comResult = message;
+				pbSecCom.setVisibility(View.INVISIBLE);
+				pbSolCom.setVisibility(View.INVISIBLE);
+				pbAirCom.setVisibility(View.INVISIBLE);
 				JSONObject jsonResult;
 				try {
 					jsonResult = new JSONObject(message);
-					try {
-						if (jsonResult.has("device")) { // Message from security or aircon
-							String broadCastDevice = jsonResult.getString("device");
+					String broadCastDevice;
+					if (sender.equalsIgnoreCase("MQTT")) {
+						broadCastDevice = jsonResult.getString("de");
+					} else if (sender.equalsIgnoreCase("UDP")) {
+						broadCastDevice = jsonResult.getString("device");
+					} else { // Must be GCM which we will ignore in the future
+						return;
+					}
 							if (broadCastDevice.startsWith("sf")) { // Broadcast from security device
+								if (sender.equalsIgnoreCase("MQTT")) {
+									// TODO standardize JSON between status, UDP and MQTT to avoid the below conversion
+									// {"device":"sf1","alarm":0,"alarm_on":0,"auto":1,"auto_on":22,"auto_off":8,"light_on":0}
+									jsonResult.put("device",jsonResult.get("de"));
+									jsonResult.put("alarm",jsonResult.get("al"));
+									jsonResult.put("alarm_on",jsonResult.get("ao"));
+									jsonResult.put("auto",jsonResult.get("au"));
+									jsonResult.put("auto_on",jsonResult.get("an"));
+									jsonResult.put("auto_off",jsonResult.get("af"));
+									jsonResult.put("light_on",jsonResult.get("lo"));
+									jsonResult.remove("de");
+									jsonResult.remove("al");
+									jsonResult.remove("ao");
+									jsonResult.remove("au");
+									jsonResult.remove("an");
+									jsonResult.remove("af");
+									jsonResult.remove("lo");
+								}
 								result.comCmd = "/?s";
-								pbSecCom.setVisibility(View.VISIBLE);
 								securityViewUpdate(result);
-								pbSecCom.setVisibility(View.INVISIBLE);
 							} else if (broadCastDevice.startsWith("fd")) { // Broadcast from aircon device 0
-								// TODO update aircon view
+								if (sender.equalsIgnoreCase("MQTT")) {
+									// TODO standardize JSON between status, UDP and MQTT to avoid the below conversion
+									// {"device":"sf1","alarm":0,"alarm_on":0,"auto":1,"auto_on":22,"auto_off":8,"light_on":0}
+									jsonResult.put("device",jsonResult.get("de"));
+									jsonResult.put("power",jsonResult.get("po"));
+									jsonResult.put("mode",jsonResult.get("mo"));
+									jsonResult.put("speed",jsonResult.get("sp"));
+									jsonResult.put("temp",jsonResult.get("te"));
+									jsonResult.put("cons",jsonResult.get("co"));
+									jsonResult.put("status",jsonResult.get("st"));
+									jsonResult.put("auto",jsonResult.get("au"));
+									jsonResult.remove("de");
+									jsonResult.remove("po");
+									jsonResult.remove("mo");
+									jsonResult.remove("sp");
+									jsonResult.remove("te");
+									jsonResult.remove("co");
+									jsonResult.remove("st");
+									jsonResult.remove("au");
+								}
 								result.comCmd = "/?s";
 								result.deviceIndex = 0;
-								pbAirCom.setVisibility(View.VISIBLE);
 								airconViewUpdate(result);
-								pbAirCom.setVisibility(View.INVISIBLE);
 							} else if (broadCastDevice.startsWith("ca")) { // Broadcast from aircon device 1
-								// TODO update aircon view
+								if (sender.equalsIgnoreCase("MQTT")) {
+									// TODO standardize JSON between status, UDP and MQTT to avoid the below conversion
+									// {"device":"sf1","alarm":0,"alarm_on":0,"auto":1,"auto_on":22,"auto_off":8,"light_on":0}
+									jsonResult.put("device",jsonResult.get("de"));
+									jsonResult.put("power",jsonResult.get("po"));
+									jsonResult.put("mode",jsonResult.get("mo"));
+									jsonResult.put("speed",jsonResult.get("sp"));
+									jsonResult.put("temp",jsonResult.get("te"));
+									jsonResult.put("cons",jsonResult.get("co"));
+									jsonResult.put("status",jsonResult.get("st"));
+									jsonResult.put("auto",jsonResult.get("au"));
+									jsonResult.remove("de");
+									jsonResult.remove("po");
+									jsonResult.remove("mo");
+									jsonResult.remove("sp");
+									jsonResult.remove("te");
+									jsonResult.remove("co");
+									jsonResult.remove("st");
+									jsonResult.remove("au");
+								}
 								result.comCmd = "/?s";
 								result.deviceIndex = 1;
-								pbAirCom.setVisibility(View.VISIBLE);
 								airconViewUpdate(result);
-								pbAirCom.setVisibility(View.INVISIBLE);
+							} else if (broadCastDevice.startsWith("sp")) { // Broadcast from solar panel
+								if (sender.equalsIgnoreCase("MQTT")) {
+									// TODO standardize JSON between status, UDP and MQTT to avoid the below conversion
+									// {"device":"sf1","alarm":0,"alarm_on":0,"auto":1,"auto_on":22,"auto_off":8,"light_on":0}
+									jsonResult.put("device",jsonResult.get("de"));
+									jsonResult.remove("de");
+								}
+								result.comCmd = "/?s";
+								result.deviceIndex = 1;
+								solarViewUpdate(message, true);
 							}
-						} else { // Message from spMonitor update service
-							pbSolCom.setVisibility(View.VISIBLE);
-							solarViewUpdate(message);
-							pbSolCom.setVisibility(View.INVISIBLE);
-						}
-					} catch (JSONException ignore) {
-					}
 				} catch (JSONException e) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());
 				}
+				pbSecCom.setVisibility(View.INVISIBLE);
+				pbSolCom.setVisibility(View.INVISIBLE);
+				pbAirCom.setVisibility(View.INVISIBLE);
 			}
 		}
 	};
@@ -1186,7 +1153,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		protected CommResultWrapper doInBackground(String... params) {
 
 			// TODO Implement this MQTT sending in final code as own AsyncTask
-			doPublish("CMD", params[3] + "-" + params[1]);
+//			if (!Utilities.isHomeWiFi(getApplicationContext())) {
+				String mqttTopic = "{\"de\":\"ctrl\","; // Device name "ctrl"
+				mqttTopic += "\"ta\":\"" + params[3] + "\","; // Target device for command
+				mqttTopic += "\"cm\":\"" + params[1] + "\","; // The command
+
+				String testMsg = params[1] + params[3];
+				String cryptMsg = Utilities.cryptMessage(testMsg.getBytes());
+
+				mqttTopic += "\"te\":\"" + cryptMsg + "\"}";
+				doPublish(mqttTopic);
+//			}
 
 			/** A HTTP client to access the ESP device */
 			// Set timeout to 5 minutes in case we have a lot of data to load
@@ -1228,15 +1205,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					Response response = client.newCall(request).execute();
 					if (response != null) {
 						result.comResult = response.body().string();
-						if (result.callID.equalsIgnoreCase("reg")) {
-							int status = response.code();
-							if (status == 200) {
-								// Request success
-								handleMessage(MSG_REGISTER_WEB_SERVER_SUCCESS);
-							} else {
-								handleMessage(MSG_REGISTER_WEB_SERVER_FAILURE);
-							}
-						}
+//						if (result.callID.equalsIgnoreCase("reg")) {
+//							int status = response.code();
+//							if (status == 200) {
+//								// Request success
+//								handleMessage(MSG_REGISTER_WEB_SERVER_SUCCESS);
+//							} else {
+//								handleMessage(MSG_REGISTER_WEB_SERVER_FAILURE);
+//							}
+//						}
 					}
 				} catch (IOException e) {
 					result.comResult = e.getMessage();
@@ -1277,14 +1254,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					break;
 				case "spm": // Caller is solar monitor view
 					if (!dataBaseIsEmpty) {
-						solarViewUpdate(result.comResult);
+						solarViewUpdate(result.comResult, false);
 					}
 					break;
 			}
 		}
 	}
 
-	public void doPublish(String topic, String payload){
+	private void doPublish(String payload){
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "doPublish()");
 		if (MQTTService.mqttClient == null) { // If service is not (yet) active, don't publish
 			return;
@@ -1298,7 +1275,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			byte[] encodedPayload;
 			encodedPayload = payload.getBytes("UTF-8");
 			MqttMessage message = new MqttMessage(encodedPayload);
-			token = MQTTService.mqttClient.publish(topic, message);
+			token = MQTTService.mqttClient.publish("CMD", message);
 			token.waitForCompletion(5000);
 		} catch (MqttSecurityException | UnsupportedEncodingException e) {
 			e.printStackTrace();
@@ -1340,15 +1317,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					JSONObject jsonResult;
 					try {
 						jsonResult = new JSONObject(result.comResult);
-						try {
-							tempString = jsonResult.getString("device");
-							if (!tempString.startsWith("sf")) { // Broadcast not from security
-								return;
-							}
-						} catch (Exception ignore) {
-						}
-
-						if (result.comCmd.equalsIgnoreCase("/?s")) { // Status request
+						if (result.comCmd.equalsIgnoreCase("/?s")) { // Status request or UDP broadcast
 							/** String to hold complete status in viewable form */
 							String message;
 							// Get device status and light status and add it to viewable status
@@ -1395,7 +1364,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							} catch (JSONException e) {
 								secStatus.setText(getString(R.string.err_unknown));
 							}
-
 						}
 					} catch (JSONException e) {
 						if (BuildConfig.DEBUG)
@@ -1403,18 +1371,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					}
 				}
 				pbSecCom.setVisibility(View.INVISIBLE);
-				// Update security widgets
-				/** App widget manager for all widgets of this app */
-				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(appContext);
-				/** Component name of this widget */
-				ComponentName thisAppWidget = new ComponentName(appContext.getPackageName(),
-						SecurityWidget.class.getName());
-				/** List of all active widgets */
-				int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
-
-				for (int appWidgetId : appWidgetIds) {
-					SecurityWidget.updateAppWidget(appContext, appWidgetManager, appWidgetId, false);
-				}
 			}
 		});
 	}
@@ -1510,7 +1466,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	private static void updateAirStatus(int deviceIndex) {
 		/** String for the average consumption value */
-		String consText = String.format("%.0f", consStatus) + "W";
+		@SuppressLint("DefaultLocale") String consText = String.format("%.0f", consStatus) + "W";
 		/** String for the temperature setting value */
 		String tempText = Integer.toString(coolStatus[deviceIndex]) + "C";
 		/** String for the auto on/off status */
@@ -1829,9 +1785,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * @param value
 	 *        result sent by spMonitor
 	 */
-	private void solarViewUpdate(final String value) {
+	private void solarViewUpdate(final String value, final boolean isBroadCast) {
 		runOnUiThread(new Runnable() {
-			@SuppressWarnings("deprecation")
+			@SuppressLint("DefaultLocale")
+			@SuppressWarnings({"deprecation", "ConstantConditions"})
 			@Override
 			public void run() {
 				/** Pointer to text views to be updated */
@@ -1851,6 +1808,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							isFromLocal = false;
 						} catch (JSONException ignore) {
 							isFromLocal = true;
+						}
+						if (isBroadCast) {
+							isFromLocal = false;
+							try {
+								jsonValues = new JSONObject(value);
+							} catch (JSONException ignore) {
+								return;
+							}
 						}
 						try {
 							if (isFromLocal) {
@@ -1949,10 +1914,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							if (jsonValues.has("cp")) {
 								result += "W cp=";
 								try {
-									result += jsonValues.getString("cp ");
+									result += jsonValues.getString("cp");
 								} catch (Exception excError) {
-									result += "--- ";
+									result += "---";
 								}
+								result += " ";
 							} else {
 								result += " ";
 							}
@@ -2139,10 +2105,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/**
 	 * Set all global variables used
 	 */
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private void setGlobalVar() {
 		// Get project ID and device URLs
-		GCM_SENDER_ID = getApplicationContext().getResources().getString(R.string.GCM_SENDER_ID); // = "9x8x3x2x1x3x";
+// GCM functionality off for the moment
+//		GCM_SENDER_ID = getApplicationContext().getResources().getString(R.string.GCM_SENDER_ID); // = "9x8x3x2x1x3x";
 		SOLAR_URL = getApplicationContext().getResources().getString(R.string.SOLAR_URL); // = "http://192.168.xxx.xx0";
 		SECURITY_URL_FRONT_1 = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
 		SECURITY_URL_BACK_1 = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
@@ -2278,113 +2245,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// Get pointer to shared preferences
 			mPrefs = getSharedPreferences(sharedPrefName,0);
 
-			// Check if device is already registered for GCM
-			gcmRegId = mPrefs.getString(PREF_GCM_REG_ID, "");
+//			// Check if device is already registered for GCM
+//			gcmRegId = mPrefs.getString(PREF_GCM_REG_ID, "");
 
-			if (TextUtils.isEmpty(gcmRegId)) {
-				handleMessage(MSG_REGISTER_WITH_GCM);
-			} else {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Already registered with GCM - " + gcmRegId);
-			}
+//			if (TextUtils.isEmpty(gcmRegId)) {
+//				handleMessage(MSG_REGISTER_WITH_GCM);
+//			} else {
+//				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Already registered with GCM - " + gcmRegId);
+//			}
 
 			initAircons();
 			initSecurity();
 			initSPM();
 
 			return null;
-		}
-	}
-
-	/**
-	 * Initializing method for solar panel monitor
-	 * Check local databases and request update if necessary
-	 * Send status update request
-	 */
-	private void initSPM() {
-		if (deviceIsOn[spMonitorIndex]) { // spMonitor
-			// Get initial status from spMonitor device
-			// Get today's day for the online database name
-			dbNamesList = Utilities.getDateStrings();
-
-			// In case the database is not yet existing, open it once
-			/** Instance of data base */
-			SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
-			dataBase.beginTransaction();
-			dataBase.endTransaction();
-			dataBase.close();
-			/** Instance of data base */
-			dataBase = dbHelperLast.getReadableDatabase();
-			dataBase.beginTransaction();
-			dataBase.endTransaction();
-			dataBase.close();
-
-			// Check if database is empty. If yes, sync only the database for this month
-			dataBase = dbHelperNow.getReadableDatabase();
-			/** Cursor with data from database */
-			Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
-			if (chCursor != null) {
-				if (chCursor.getCount() != 0) { // local database is not empty, no need can sync all data
-					dataBaseIsEmpty = false;
-				} else { // local database is empty, need to sync all data including last month
-					needLastMonth = true;
-				}
-			}
-			if (chCursor != null) {
-				chCursor.close();
-			}
-			dataBase.close();
-
-			// Start background sync of the database
-			handleTasks(9, dbNamesList[0], "", "", "", null, null);
-
-			if (!dataBaseIsEmpty) { // Sync second database only if first one is not empty
-				// Check if we have already synced the last month
-				/** Instance of data base */
-				dataBase = dbHelperLast.getReadableDatabase();
-				/** Cursor with data from database */
-				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
-				if (dbCursor != null) {
-					if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
-						needLastMonth = true;
-					} else { // fill last log file array
-						lastLogDates.clear();
-						/** List with years in the database */
-						ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
-						for (int year = 0; year < yearsAvail.size(); year++) {
-							/** List with months of year in the database */
-							ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
-									0, yearsAvail.get(year));
-							for (int month = 0; month < monthsAvail.size(); month++) {
-								/** List with days of month of year in the database */
-								ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
-										monthsAvail.get(month),
-										yearsAvail.get(year));
-								for (int day = 0; day < daysAvail.size(); day++) {
-									lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
-											.substring(String.valueOf(yearsAvail.get(year)).length()) +
-											"-" + ("00" + String.valueOf(monthsAvail.get(month)))
-											.substring(String.valueOf(monthsAvail.get(month)).length()) +
-											"-" + ("00" + String.valueOf(daysAvail.get(day)))
-											.substring(String.valueOf(daysAvail.get(day)).length()));
-								}
-							}
-						}
-						lastLogDatesIndex = lastLogDates.size() - 1;
-					}
-				}
-				if (dbCursor != null) {
-					dbCursor.close();
-				}
-				dataBase.close();
-			}
-
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of spMonitor");
-		} else {
-			dataBaseIsEmpty = false;
-			// Show message not on home WiFi
-			handleTasks(1, getResources().getString(R.string.err_spMonitor), "", "", "", null, null);
-			// Update of solar panel values
-			handleTasks(3, "/data/get", SOLAR_URL, "spm", Integer.toString(selDevice), null, null);
 		}
 	}
 
@@ -2482,7 +2356,100 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	/**
-	 * Handle UI tasks of async task initialize
+	 * Initializing method for solar panel monitor
+	 * Check local databases and request update if necessary
+	 * Send status update request
+	 */
+	private void initSPM() {
+		if (deviceIsOn[spMonitorIndex]) { // spMonitor
+			// Get initial status from spMonitor device
+			// Get today's day for the online database name
+			dbNamesList = Utilities.getDateStrings();
+
+			// In case the database is not yet existing, open it once
+			/** Instance of data base */
+			SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
+			dataBase.beginTransaction();
+			dataBase.endTransaction();
+			dataBase.close();
+			/** Instance of data base */
+			dataBase = dbHelperLast.getReadableDatabase();
+			dataBase.beginTransaction();
+			dataBase.endTransaction();
+			dataBase.close();
+
+			// Check if database is empty. If yes, sync only the database for this month
+			dataBase = dbHelperNow.getReadableDatabase();
+			/** Cursor with data from database */
+			Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
+			if (chCursor != null) {
+				if (chCursor.getCount() != 0) { // local database is not empty, no need can sync all data
+					dataBaseIsEmpty = false;
+				} else { // local database is empty, need to sync all data including last month
+					needLastMonth = true;
+				}
+			}
+			if (chCursor != null) {
+				chCursor.close();
+			}
+			dataBase.close();
+
+			// Start background sync of the database
+			handleTasks(9, dbNamesList[0], "", "", "", null, null);
+
+			if (!dataBaseIsEmpty) { // Sync second database only if first one is not empty
+				// Check if we have already synced the last month
+				/** Instance of data base */
+				dataBase = dbHelperLast.getReadableDatabase();
+				/** Cursor with data from database */
+				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
+				if (dbCursor != null) {
+					if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
+						needLastMonth = true;
+					} else { // fill last log file array
+						lastLogDates.clear();
+						/** List with years in the database */
+						ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
+						for (int year = 0; year < yearsAvail.size(); year++) {
+							/** List with months of year in the database */
+							ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
+									0, yearsAvail.get(year));
+							for (int month = 0; month < monthsAvail.size(); month++) {
+								/** List with days of month of year in the database */
+								ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
+										monthsAvail.get(month),
+										yearsAvail.get(year));
+								for (int day = 0; day < daysAvail.size(); day++) {
+									lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
+											.substring(String.valueOf(yearsAvail.get(year)).length()) +
+											"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+											.substring(String.valueOf(monthsAvail.get(month)).length()) +
+											"-" + ("00" + String.valueOf(daysAvail.get(day)))
+											.substring(String.valueOf(daysAvail.get(day)).length()));
+								}
+							}
+						}
+						lastLogDatesIndex = lastLogDates.size() - 1;
+					}
+				}
+				if (dbCursor != null) {
+					dbCursor.close();
+				}
+				dataBase.close();
+			}
+
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Get status of spMonitor");
+		} else {
+			dataBaseIsEmpty = false;
+			// Show message not on home WiFi
+			handleTasks(1, getResources().getString(R.string.err_spMonitor), "", "", "", null, null);
+			// Update of solar panel values
+			handleTasks(3, "/data/get", SOLAR_URL, "spm", Integer.toString(selDevice), null, null);
+		}
+	}
+
+	/**
+	 * Handle UI tasks of async task initialize()
 	 *
 	 * @param task
 	 * 		task to take care of
@@ -2521,7 +2488,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							 final ImageView iconImage,
 							 final Drawable iconDrawable) {
 		runOnUiThread(new Runnable() {
-			@SuppressWarnings("deprecation")
+			@SuppressWarnings({"deprecation", "ConstantConditions"})
 			@Override
 			public void run() {
 				/** Text view to show location name */
@@ -2599,104 +2566,104 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 	}
 
-	/**
-	 * Check if Google Play Service is installed on the device
-	 * @return <code>boolean</code>
-	 *              true if Google Play Service is installed
-	 *              false if not
-	 */
-	@SuppressWarnings("deprecation")
-	private boolean isGooglePlayInstalled() {
-		int resultCode = GooglePlayServicesUtil
-				.isGooglePlayServicesAvailable(this);
-		if (resultCode != ConnectionResult.SUCCESS) {
-			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-				GooglePlayServicesUtil.getErrorDialog(resultCode, this,
-						ACTION_PLAY_SERVICES_DIALOG).show();
-			} else {
-				Log.d(DEBUG_LOG_TAG, "Google Play Service is not installed");
-				// Todo show dialog with information about missing Google Play Service
-				finish();
-			}
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Handle GCM registration messages
-	 *
-	 * @param msg
-	 * 		result from GCM communication
-	 */
-	private void handleMessage(final int msg) {
-		runOnUiThread(new Runnable() {
-			@SuppressWarnings("deprecation")
-			@Override
-			public void run() {
-				switch (msg) {
-					case MSG_REGISTER_WITH_GCM:
-						new GCMRegistrationTask().execute();
-						break;
-					case MSG_REGISTER_WEB_SERVER:
-						if (deviceIsOn[secFrontIndex]) {
-							new ESPcommunication().execute(SECURITY_URL_FRONT_1,"/?regid=" + gcmRegId,"","reg","0");
-						}
-						if (deviceIsOn[aircon1Index]) {
-							new ESPcommunication().execute(AIRCON_URL_1,"/?regid=" + gcmRegId,"","reg","0");
-						}
-						if (deviceIsOn[aircon2Index]) {
-							new ESPcommunication().execute(AIRCON_URL_2,"/?regid=" + gcmRegId,"","reg","0");
-						}
-						if (deviceIsOn[aircon3Index]) {
-							new ESPcommunication().execute(AIRCON_URL_3,"/?regid=" + gcmRegId,"","reg","0");
-						}
-						if (deviceIsOn[secRearIndex]) {
-							new ESPcommunication().execute(SECURITY_URL_BACK_1,"/?regid=" + gcmRegId,"","reg","0");
-						}
-						break;
-					case MSG_REGISTER_WEB_SERVER_SUCCESS:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with web server");
-						break;
-					case MSG_REGISTER_WEB_SERVER_FAILURE:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with web server failed");
-						break;
-				}
-			}
-		});
-	}
-
-	/**
-	 * Get GCM registration ID from GCM server
-	 */
-	private class GCMRegistrationTask extends AsyncTask<Void, Void, String> {
-
-		@SuppressWarnings("deprecation")
-		@Override
-		protected String doInBackground(Void... params) {
-			if (gcm == null && isGooglePlayInstalled()) {
-				gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
-			}
-			try {
-				if (gcm != null) {
-					gcmRegId = gcm.register(GCM_SENDER_ID);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			return gcmRegId;
-		}
-
-		@Override
-		protected void onPostExecute(String result) {
-			if (result != null) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with GCM " + result);
-				mPrefs.edit().putString(PREF_GCM_REG_ID, result).apply();
-				handleMessage(MSG_REGISTER_WEB_SERVER);
-			}
-		}
-	}
+//	/**
+//	 * Check if Google Play Service is installed on the device
+//	 * @return <code>boolean</code>
+//	 *              true if Google Play Service is installed
+//	 *              false if not
+//	 */
+//	@SuppressWarnings("deprecation")
+//	private boolean isGooglePlayInstalled() {
+//		int resultCode = GooglePlayServicesUtil
+//				.isGooglePlayServicesAvailable(this);
+//		if (resultCode != ConnectionResult.SUCCESS) {
+//			if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
+//				GooglePlayServicesUtil.getErrorDialog(resultCode, this,
+//						ACTION_PLAY_SERVICES_DIALOG).show();
+//			} else {
+//				Log.d(DEBUG_LOG_TAG, "Google Play Service is not installed");
+//				// Todo show dialog with information about missing Google Play Service
+//				finish();
+//			}
+//			return false;
+//		}
+//		return true;
+//	}
+//
+//	/**
+//	 * Handle GCM registration messages
+//	 *
+//	 * @param msg
+//	 * 		result from GCM communication
+//	 */
+//	private void handleMessage(final int msg) {
+//		runOnUiThread(new Runnable() {
+//			@SuppressWarnings("deprecation")
+//			@Override
+//			public void run() {
+//				switch (msg) {
+//					case MSG_REGISTER_WITH_GCM:
+//						new GCMRegistrationTask().execute();
+//						break;
+//					case MSG_REGISTER_WEB_SERVER:
+//						if (deviceIsOn[secFrontIndex]) {
+//							new ESPcommunication().execute(SECURITY_URL_FRONT_1,"/?regid=" + gcmRegId,"","reg","0");
+//						}
+//						if (deviceIsOn[aircon1Index]) {
+//							new ESPcommunication().execute(AIRCON_URL_1,"/?regid=" + gcmRegId,"","reg","0");
+//						}
+//						if (deviceIsOn[aircon2Index]) {
+//							new ESPcommunication().execute(AIRCON_URL_2,"/?regid=" + gcmRegId,"","reg","0");
+//						}
+//						if (deviceIsOn[aircon3Index]) {
+//							new ESPcommunication().execute(AIRCON_URL_3,"/?regid=" + gcmRegId,"","reg","0");
+//						}
+//						if (deviceIsOn[secRearIndex]) {
+//							new ESPcommunication().execute(SECURITY_URL_BACK_1,"/?regid=" + gcmRegId,"","reg","0");
+//						}
+//						break;
+//					case MSG_REGISTER_WEB_SERVER_SUCCESS:
+//						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with web server");
+//						break;
+//					case MSG_REGISTER_WEB_SERVER_FAILURE:
+//						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with web server failed");
+//						break;
+//				}
+//			}
+//		});
+//	}
+//
+//	/**
+//	 * Get GCM registration ID from GCM server
+//	 */
+//	private class GCMRegistrationTask extends AsyncTask<Void, Void, String> {
+//
+//		@SuppressWarnings("deprecation")
+//		@Override
+//		protected String doInBackground(Void... params) {
+//			if (gcm == null && isGooglePlayInstalled()) {
+//				gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
+//			}
+//			try {
+//				if (gcm != null) {
+//					gcmRegId = gcm.register(GCM_SENDER_ID);
+//				}
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//
+//			return gcmRegId;
+//		}
+//
+//		@Override
+//		protected void onPostExecute(String result) {
+//			if (result != null) {
+//				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "registered with GCM " + result);
+//				mPrefs.edit().putString(PREF_GCM_REG_ID, result).apply();
+//				handleMessage(MSG_REGISTER_WEB_SERVER);
+//			}
+//		}
+//	}
 
 	/**
 	 * Switch to requested UI
@@ -2706,7 +2673,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 *            1 = Solar panel UI
 	 *            2 = Aircon control UI
 	 */
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private void switchUI(int uiSelected) {
 
 		/** Pointer to action bar */
@@ -2809,9 +2776,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			pbAirCom.setVisibility(View.VISIBLE);
 		}
 		new ESPcommunication().execute(url, cmd, "", id, Integer.toString(selDevice));
-		if (id.equalsIgnoreCase("air")) { // If aircon view request a status update
-			new ESPcommunication().execute(url,"/?s","",id,Integer.toString(selDevice));
-		}
 	}
 
 	/**
@@ -2967,7 +2931,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		True if button was handled
 	 * 		False if button was not from security view
 	 */
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private boolean handleSPMbuttons(View v) {
 		/** Flag if button was handled */
 		boolean wasSPMbutton = true;
@@ -3155,6 +3119,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		True if button was handled
 	 * 		False if button was not from security view
 	 */
+	@SuppressWarnings("ConstantConditions")
 	private boolean handleAirconButtons(View v) {
 		/** Flag if button was handled */
 		boolean wasAirconButton = true;
@@ -3279,6 +3244,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[selDevice] == 0) {
 					if (deviceTimer[selDevice] > 1) {
 						deviceTimer[selDevice]--;
+						cmd = "/?t=" + Integer.toString(deviceTimer[selDevice]);
 					}
 					btTimer = (Button) findViewById(R.id.bt_timer_fd);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
@@ -3292,6 +3258,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[selDevice] == 0) {
 					if (deviceTimer[selDevice] < 9) {
 						deviceTimer[selDevice]++;
+						cmd = "/?t=" + Integer.toString(deviceTimer[selDevice]);
 					}
 					btTimer = (Button) findViewById(R.id.bt_timer_fd);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +

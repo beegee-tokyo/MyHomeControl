@@ -36,12 +36,15 @@ public class StartBackgroundServices extends Service {
 		// Start service to listen to UDP broadcast messages
 		intentContext.startService(new Intent(intentContext, UDPlistener.class));
 
-		// Start frequent updates for solar panel widgets and notifications
-		Utilities.startStopUpdates(intentContext,true);
+		// Start service to listen to MQTT messages
+		intentContext.startService(new Intent(intentContext, MQTTService.class));
+
+//		// Start frequent updates for solar panel widgets and notifications
+//		Utilities.startStopUpdates(intentContext,true);
 
 		/** Pending intent for sync every 2 hours */
 		PendingIntent pi = PendingIntent.getService(intentContext, 5002,
-				new Intent(intentContext, SolarSyncDBService.class),PendingIntent.FLAG_UPDATE_CURRENT);
+				new Intent(intentContext, SolarSyncDBService.class), PendingIntent.FLAG_UPDATE_CURRENT);
 		/** Alarm manager for sync every 2 hours */
 		AlarmManager am = (AlarmManager) intentContext.getSystemService(Context.ALARM_SERVICE);
 		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000,

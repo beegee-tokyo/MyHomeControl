@@ -49,6 +49,8 @@ public class LightWidgetClick extends IntentService {
 				/** App widget manager for all widgets of this app */
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 
+				// TODO if we are not on home wifi send command over MQTT instead of WiFi
+
 				/** A HTTP client to access the ESP device */
 				// Set timeout to 5 minutes in case we have a lot of data to load
 				OkHttpClient client = new OkHttpClient.Builder()

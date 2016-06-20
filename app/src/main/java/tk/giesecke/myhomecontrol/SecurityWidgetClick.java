@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -39,28 +38,25 @@ public class SecurityWidgetClick extends IntentService {
 						AppWidgetManager.EXTRA_APPWIDGET_ID,
 						AppWidgetManager.INVALID_APPWIDGET_ID);
 
+				boolean alarmIsActive = extras.getBoolean("AlarmStatus");
+
 				// If they gave us an intent without the widget id, just bail.
 				if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
 					return;
 				}
 
-				/** App widget manager for all widgets of this app */
-				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-
-				SecurityWidget.updateAppWidget(this,appWidgetManager, mAppWidgetId, true);
-
-				/** Pointer to shared preferences */
-				SharedPreferences mPrefs = getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 				/** Command string */
 				String cmd;
-				if (mPrefs.getBoolean(MyHomeControl.prefsSecurityAlarmOn, false)) {
-					cmd = "/?a=0";
+				if (alarmIsActive) {
+					cmd = "/?a=0"; // Disable alarm
 				} else {
-					cmd = "/?a=1";
+					cmd = "/?a=1"; // Enable alarm
 				}
 
+				// TODO if we are not on home wifi send command over MQTT instead of WiFi
+
 				/** A HTTP client to access the ESP device */
-				// Set timeout to 5 minutes in case we have a lot of data to load
+				// Set timeout to 300ms/10ms
 				OkHttpClient client = new OkHttpClient.Builder()
 						.connectTimeout(300, TimeUnit.SECONDS)
 						.writeTimeout(10, TimeUnit.SECONDS)
@@ -79,18 +75,12 @@ public class SecurityWidgetClick extends IntentService {
 
 				if (request != null) {
 					try {
-						/** Response from ESP device */
+						/** Send request to ESP device */
 						Response response = client.newCall(request).execute();
 						if (response != null) {
 							int status = response.code();
 							if (status == 200) {
-								// Request success
-								if (cmd.equalsIgnoreCase("/?a=0")) {
-									mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
-								} else {
-									mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
-								}
-								SecurityWidget.updateAppWidget(this, appWidgetManager, mAppWidgetId, false);
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Switched alarm");
 							}
 						}
 					} catch (IOException e) {

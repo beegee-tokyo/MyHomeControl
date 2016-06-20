@@ -1,5 +1,6 @@
 package tk.giesecke.myhomecontrol;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.view.Display;
@@ -43,6 +44,7 @@ public class ChartCustomMarkerView extends MarkerView {
 
 	// callbacks every time the MarkerView is redrawn, can be used to update the
 	// content (user-interface)
+	@SuppressLint("DefaultLocale")
 	@Override
 	public void refreshContent(Entry e, Highlight highlight) {
 		/** Index for the series at the touched data point */

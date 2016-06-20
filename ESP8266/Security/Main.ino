@@ -20,11 +20,9 @@ void loop() {
 	*	- the relay is switched on (if flag switchLights is true)
 	*	- alarm sound is played (if flag switchLights is true)
 	*	- msgText is set to detection message
-	*	- flag pirTriggered is set true for handling in loop()
 	*	if detection is finished
 	*	- the detection led stops flashing
 	*	- msgText is set to no detection message
-	*	- flag pirTriggered is set true for handling in loop()
 	*/
 
 	if (pirTriggered) {

@@ -249,6 +249,9 @@ void parseCmd(JsonObject& root) {
 			root["result"] = "success";
 			root["cmd"] = CMD_AUTO_OFF;
 			writeStatus();
+			powerStatus = 0; // Independendant from current status it will be set to 0!
+			irCmd = 9999; // No further actions necessary
+			sendBroadCast(); // Send broadcast about the change
 			break;
 		case CMD_OTHER_TIMER: // Timer on/off
 			root["result"] = "success";
@@ -334,5 +337,72 @@ void parseCmd(JsonObject& root) {
 			}
 			break;
 	}
+}
+
+/** 
+	sendStatusToDebug
+	collects last status as string and sends it as debug message
+*/
+void sendStatusToDebug() {
+	String debugMsg = "";
+	// Display status of aircon
+	debugMsg = "Power ";
+	if ((acMode & AC_MASK) == AC_ON) {
+		debugMsg += "on";
+	} else {
+		debugMsg += "off";
+	}
+	debugMsg += ", Mode ";
+	byte testMode = acMode & MODE_MASK;
+	if (testMode == MODE_FAN) {
+		debugMsg += "Fan";
+	} else if (testMode == MODE_DRY) {
+		debugMsg += "Dry";
+	} else if (testMode == MODE_COOL) {
+		debugMsg += "Cool";
+	} else if (testMode == MODE_AUTO) {
+		debugMsg += "Auto";
+	}
+	debugMsg += ", Speed ";
+	testMode = acMode & FAN_MASK;
+	if (testMode == FAN_LOW) {
+		debugMsg += "low";
+	} else if (testMode == FAN_MED) {
+		debugMsg += "med";
+	} else if (testMode == FAN_HIGH) {
+		debugMsg += "high";
+	}
+	testMode = acTemp & TEMP_MASK;
+	debugMsg += ", Temp " + String(testMode);
+
+	// Display power consumption and production values
+	/** Calculate average power consumption of the last 10 minutes */
+	consPower = 0;
+	for (int i = 0; i < 10; i++) {
+		consPower += avgConsPower[i];
+	}
+	consPower = consPower / 10;
+	debugMsg += ", Cons " + String(consPower);
+
+	// Display power cycle status
+	debugMsg += ", Status " + String(powerStatus);
+
+	// Display status of auto control by power consumption
+	debugMsg += ", AutoMode ";
+	if ((acMode & AUTO_ON) == AUTO_ON) {
+		debugMsg += "on";
+	} else {
+		debugMsg += "off";
+	}
+	
+	// Display timer status of aircon
+	debugMsg += ", Timer ";
+	if ((acMode & TIM_ON) == TIM_ON) {
+		debugMsg += "on";
+	} else {
+		debugMsg += "off";
+	}
+
+	sendDebug(debugMsg);
 }
 

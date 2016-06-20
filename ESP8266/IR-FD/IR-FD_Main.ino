@@ -77,7 +77,7 @@ void loop() {
 	// If time is later than "endOfDay" or earlier than "startOfDay" we stop automatic function and switch off the aircon
 	if (hour() > endOfDay || hour() < startOfDay) {
 		if (dayTime) {
-			if ((acMode & TIM_OFF) == TIM_OFF) { // If timer is active wait for the end of the timer
+			if ((acMode & TIM_MASK) == TIM_OFF) { // If timer is not active switch off the aircon if still on
 				// If AC is on, switch it to FAN low speed and then switch it off
 				if ((acMode & AC_ON) == AC_ON) { // AC is on
 					// Set mode to FAN

@@ -106,7 +106,7 @@
                	$consRecords = array();
                	$lightRecords = array();
 				// Define your SQL statement to get time stamps
-                $query = "SELECT * FROM s WHERE d LIKE '" . $daySelected . "%' ORDER BY d";
+                $query = "SELECT * FROM s WHERE d LIKE '" . $daySelected . "%'";
 				$sth = $dbh->query($query);
 				$index = 0;
 				while($row = $sth->fetch(PDO::FETCH_ASSOC)) {

@@ -1,15 +1,15 @@
 // Function definitions
 
-// GCM functions
-boolean writeRegIds();
-boolean getRegisteredDevices();
-boolean addRegisteredDevice(String newDeviceID);
-boolean delRegisteredDevice();
-boolean delRegisteredDevice(String delRegId);
-boolean delRegisteredDevice(int delRegIndex);
-boolean gcmSendOut(String data);
-boolean gcmSendMsg(JsonArray& pushMessageIds, JsonArray& pushMessages);
-boolean gcmSendMsg(JsonObject& pushMessages);
+// // GCM functions
+// boolean writeRegIds();
+// boolean getRegisteredDevices();
+// boolean addRegisteredDevice(String newDeviceID);
+// boolean delRegisteredDevice();
+// boolean delRegisteredDevice(String delRegId);
+// boolean delRegisteredDevice(int delRegIndex);
+// boolean gcmSendOut(String data);
+// boolean gcmSendMsg(JsonArray& pushMessageIds, JsonArray& pushMessages);
+// boolean gcmSendMsg(JsonObject& pushMessages);
 
 // Timer interrupt functions
 void triggerGetPower();
@@ -45,6 +45,7 @@ boolean switchSlaveAC(IPAddress ipSlave, byte reqMode);
 void checkPower();
 void chkCmdCnt();
 void handleCmd();
+void restoreTempSetting();
 
 // NTP client functions
 time_t getNtpTime();
@@ -52,3 +53,4 @@ void sendNTPpacket();
 
 // For debug over TCP
 void sendDebug(String debugMsg);
+void sendStatusToDebug();

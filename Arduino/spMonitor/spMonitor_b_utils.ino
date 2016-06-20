@@ -107,6 +107,11 @@ void saveData () {
   dataString += "}\" &";
   dataSave.runShellCommand ( dataString );
 
+  wdt_reset();
+  /* Broadcast current data on the local network */
+  dataString = "python /mnt/sda1/udp.py &";
+  dataSave.runShellCommand ( dataString );
+
   /* Send current data to mySQL database */
   dataString = "curl \"http://sp.giesecke.tk/i.php?d=";
   dataString += timeString + "&s=";

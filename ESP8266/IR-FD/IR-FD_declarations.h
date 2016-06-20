@@ -23,10 +23,15 @@ When doing breadboard test, enable this define
 	#define DEVICE_ID "fdb" // ID for FujiDenzo Aircon
 	/** Flag for debugging enabled */
 	boolean debugOn = true;
+	#define SIMULATION
+	double simConsValues[33] = {-100,-100,-100,225,225,225,-325,-325,-325,425,425,425,-100,-100,-100,425,425,425,325,325,325,-325,-325,-325,425,425,425,325,325,325,225,225,225};
+	int simValueIndex = 0;
+	byte simLastTemp[2] = {16,30};
+	int simTempIndex = 0;
 #else
 	#define DEVICE_ID "fd1" // ID for FujiDenzo Aircon
 	/** Flag for debugging enabled */
-	boolean debugOn = false;
+	boolean debugOn = true;
 #endif
 
 /* wifiAPinfo.h contains wifi SSID and password */
@@ -38,7 +43,7 @@ When doing breadboard test, enable this define
 #include "wifiAPinfo.h"
 
 /* gcmInfo.h contains the API key for Google cloud messaging */
-#include "gcmInfo.h"
+// #include "gcmInfo.h"
 
 /** WiFiClient class to create TCP communication */
 WiFiClient tcpClient;
@@ -54,7 +59,7 @@ FtpServer  ftpSrv;
 
 /** IP address of this module */
 #ifdef BREADBOARD
-	IPAddress ipAddr(192, 168, 0, 149);
+	IPAddress ipAddr(192, 168, 0, 160);
 #else
 	IPAddress ipAddr(192, 168, 0, 142);
 #endif
@@ -66,6 +71,8 @@ IPAddress ipGateWay(192, 168, 0, 1);
 IPAddress ipSubNet(255, 255, 255, 0);
 /** IP address of spMonitor module */
 IPAddress ipSPM(192, 168, 0, 140);
+/** IP address of the monitor display */
+IPAddress monitorIP (192,	168, 0, 149);
 /** Network address mask for UDP multicast messaging */
 IPAddress multiIP (192,	168, 0, 255);
 /** Network address mask for TCP debug */
@@ -130,6 +137,7 @@ String inString = "";
 		ff = fan speed:		00 low
 							01 medium
 							10 high
+		----------------------------------------------
 		T = turbo enabled:	0 turbo off
 							1 turbo on
 		i = ion enabled: 	0 ion off
@@ -248,6 +256,16 @@ IRsend My_Sender(IR_LED_OUT);
  * If consumption is negative => production higher than consumption => switch on aircon
  * If consumption is positive => production lower than consumption => switch off aircon
  * Tresholds:
+ *		off                         => status 0
+ *      off and  +75W  => fan mode  => status 1
+ *      fan and  +300W => cool mode => status 3
+ *		fan and  -200W => off       => status 0
+ *      cool and -400W => dry mode  => status 2
+ *      dry and  -200W => fan mode  => status 1
+ * After a change the average consumption is cleared and it takes at least 10 minutes before next change is possible
+ *	######################################
+ *  Below text is old version
+ *  ######################################
  *                      1 aircon values
  *						producing 75W => Switch on aircon in fan mode  = status 1
  *						producing 375W => Switch aircon to cool mode 25 deg C = status 2
@@ -275,6 +293,8 @@ double avgConsPower[10] = {0,0,0,0,0,0,0,0,0,0};
 double avgSolarPower[10] = {0,0,0,0,0,0,0,0,0,0};
 /** Pointer to element in avgConsPower[] */
 byte avgConsIndex = 0;
+/** Last temperature set by user before switching to DRY mode */
+byte savedAcTemp = 0;
 
 /** Counter for "I am alive" red LED blinking in loop() */
 long liveCnt = 0;

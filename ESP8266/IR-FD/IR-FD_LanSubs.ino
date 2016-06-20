@@ -11,6 +11,7 @@ void connectWiFi() {
 	WiFi.config(ipAddr, ipGateWay, ipSubNet);
 	WiFi.begin(ssid, password);
 	Serial.print("Waiting for WiFi connection ");
+	sendDebug("Waiting for WiFi connection ");
 	int connectTimeout = 0;
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
@@ -27,6 +28,7 @@ void connectWiFi() {
 			WiFi.mode(WIFI_STA);
 			WiFi.config(ipAddr, ipGateWay, ipSubNet);
 			WiFi.begin(ssid, password);
+			sendDebug("Reset WiFi connection ");
 		}
 	}
 	digitalWrite(COM_LED, HIGH); // Turn off LED
@@ -37,16 +39,20 @@ void connectWiFi() {
 	called if there is a change in the WiFi connection
 */
 void WiFiEvent(WiFiEvent_t event) {
-	Serial.printf("[WiFi-event] event: %d\n", event);
 
 	switch (event) {
+		#ifdef DEBUG_OUT
 		case WIFI_EVENT_STAMODE_CONNECTED:
 			Serial.println("WiFi connected");
 			break;
+		#endif
 		case WIFI_EVENT_STAMODE_DISCONNECTED:
+			#ifdef DEBUG_OUT
 			Serial.println("WiFi lost connection");
+			#endif
 			connectWiFi();
 			break;
+		#ifdef DEBUG_OUT
 		case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
 			Serial.println("WiFi authentication mode changed");
 			break;
@@ -61,6 +67,7 @@ void WiFiEvent(WiFiEvent_t event) {
 		case WIFI_EVENT_MAX:
 			Serial.println("WiFi MAX event");
 			break;
+		#endif
 	}
 }
 
@@ -134,6 +141,9 @@ void sendBroadCast() {
 		root["timer"] = 0;
 	}
 
+	// Display last timer on time
+	root["onTime"] = onTime;
+	
 	// Display device id
 	root["device"] = DEVICE_ID;
 	
@@ -151,9 +161,13 @@ void sendBroadCast() {
 	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
+	udpClientServer.beginPacket(monitorIP,5000);
+	udpClientServer.print(broadCast);
+	udpClientServer.endPacket();
+	udpClientServer.stop();
 
 	// Send over Google Cloud Messaging
-	gcmSendMsg(root);
+	// gcmSendMsg(root);
 
 	digitalWrite(COM_LED, HIGH);
 }
@@ -232,6 +246,7 @@ void replyClient(WiFiClient httpClient) {
 			#endif
 			root["result"] = "success";
 			root["onTime"] = onTime;
+			writeStatus();
 		} else {
 			root["result"] = "fail";
 			root["reason"] = "Invalid time";
@@ -255,12 +270,6 @@ void replyClient(WiFiClient httpClient) {
 		} else if (testMode == MODE_AUTO) {
 			root["mode"] = 3;
 		}
-		// Display timer status of aircon
-		if ((acMode & TIM_ON) == TIM_ON) {
-			root["timer"] = 1;
-		} else {
-			root["timer"] = 0;
-		}
 		testMode = acMode & FAN_MASK;
 		if (testMode == FAN_LOW) {
 			root["speed"] = 0;
@@ -272,6 +281,14 @@ void replyClient(WiFiClient httpClient) {
 		testMode = acTemp & TEMP_MASK;
 		root["temp"] = testMode;
 
+		// Display timer status of aircon
+		if ((acMode & TIM_ON) == TIM_ON) {
+			root["timer"] = 1;
+		} else {
+			root["timer"] = 0;
+		}
+		root["onTime"] = onTime;
+		
 		// Display power consumption and production values
 		/** Calculate average power consumption of the last 10 minutes */
 		consPower = 0;
@@ -292,104 +309,112 @@ void replyClient(WiFiClient httpClient) {
 			root["auto"] = 0;
 		}
 		root["build"] = compileDate;
-		// Registration of new device
-	} else if (req.substring(0, 8) == "/?regid=") {
-		/** String to hold the received registration ID */
-		String regID = req.substring(8,req.length());
-		#ifdef DEBUG_OUT
-		Serial.println("RegID: "+regID);
-		Serial.println("Length: "+String(regID.length()));
-		#endif
-		// Check if length of ID is correct
-		if (regID.length() != 140) {
-			#ifdef DEBUG_OUT 
-			Serial.println("Length of ID is wrong");
-			#endif
-			root["result"] = "invalid";
-			root["reason"] = "Length of ID is wrong";
-		} else {
-			// Try to save ID 
-			if (!addRegisteredDevice(regID)) {
-				#ifdef DEBUG_OUT 
-				Serial.println("Failed to save ID");
-				#endif
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			} else {
-				#ifdef DEBUG_OUT 
-				Serial.println("Successful saved ID");
-				#endif
-				root["result"] = "success";
-				getRegisteredDevices();
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-				root["num"] = regDevNum;
-			}
+		root["daytime"] = dayTime;
+		String nowTime = String(hour()) + ":";
+		if (minute() < 10) {
+			nowTime += "0";
 		}
-		// Delete one or all registered device
-	} else if (req.substring(0, 3) == "/?d"){
-		/** String for the sub command */
-		String delReq = req.substring(3,4);
-		if (delReq == "a") { // Delete all registered devices
-			if (delRegisteredDevice()) {
-				root["result"] = "success";
-			} else {
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			}
-		} else if (delReq == "i") {
-			/** String to hold the ID that should be deleted */
-			String delRegId = req.substring(5,146);
-			delRegId.trim();
-			if (delRegisteredDevice(delRegId)) {
-				root["result"] = "success";
-			} else {
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			}
-		} else if (delReq == "x") {
-			/** Index of the registration ID that should be deleted */
-			int delRegIndex = req.substring(5,req.length()).toInt();
-			if ((delRegIndex < 0) || (delRegIndex > MAX_DEVICE_NUM-1)) {
-				root["result"] = "invalid";
-				root["reason"] = "Index out of range";
-			} else {
-				if (delRegisteredDevice(delRegIndex)) {
-					root["result"] = "success";
-				} else {
-					root["result"] = "failed";
-					root["reason"] = failReason;
-				}
-			}
-		}
-		// Send list of registered devices
-		if (getRegisteredDevices()) {
-			if (regDevNum != 0) { // Any devices already registered?
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-			}
-			root["num"] = regDevNum;
-		}
-		// Send list of registered devices
-	} else if (req.substring(0, 3) == "/?l"){
-		if (getRegisteredDevices()) {
-			if (regDevNum != 0) { // Any devices already registered?
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-			}
-			root["num"] = regDevNum;
-			root["result"] = "success";
-		} else {
-			root["result"] = "failed";
-			root["reason"] = failReason;
-		}
-		// toggle debugging
+		nowTime += String(minute());
+		root["time"] = nowTime;
+		// // Registration of new device
+	// } else if (req.substring(0, 8) == "/?regid=") {
+		// /** String to hold the received registration ID */
+		// String regID = req.substring(8,req.length());
+		// #ifdef DEBUG_OUT
+		// Serial.println("RegID: "+regID);
+		// Serial.println("Length: "+String(regID.length()));
+		// #endif
+		// // Check if length of ID is correct
+		// if (regID.length() != 140) {
+			// #ifdef DEBUG_OUT 
+			// Serial.println("Length of ID is wrong");
+			// #endif
+			// root["result"] = "invalid";
+			// root["reason"] = "Length of ID is wrong";
+		// } else {
+			// // Try to save ID 
+			// if (!addRegisteredDevice(regID)) {
+				// #ifdef DEBUG_OUT 
+				// Serial.println("Failed to save ID");
+				// #endif
+				// root["result"] = "failed";
+				// root["reason"] = failReason;
+			// } else {
+				// #ifdef DEBUG_OUT 
+				// Serial.println("Successful saved ID");
+				// #endif
+				// root["result"] = "success";
+				// getRegisteredDevices();
+				// for (int i=0; i<regDevNum; i++) {
+					// root[String(i)] = regAndroidIds[i];
+				// }
+				// root["num"] = regDevNum;
+			// }
+		// }
+		// // Delete one or all registered device
+	// } else if (req.substring(0, 3) == "/?d"){
+		// /** String for the sub command */
+		// String delReq = req.substring(3,4);
+		// if (delReq == "a") { // Delete all registered devices
+			// if (delRegisteredDevice()) {
+				// root["result"] = "success";
+			// } else {
+				// root["result"] = "failed";
+				// root["reason"] = failReason;
+			// }
+		// } else if (delReq == "i") {
+			// /** String to hold the ID that should be deleted */
+			// String delRegId = req.substring(5,146);
+			// delRegId.trim();
+			// if (delRegisteredDevice(delRegId)) {
+				// root["result"] = "success";
+			// } else {
+				// root["result"] = "failed";
+				// root["reason"] = failReason;
+			// }
+		// } else if (delReq == "x") {
+			// /** Index of the registration ID that should be deleted */
+			// int delRegIndex = req.substring(5,req.length()).toInt();
+			// if ((delRegIndex < 0) || (delRegIndex > MAX_DEVICE_NUM-1)) {
+				// root["result"] = "invalid";
+				// root["reason"] = "Index out of range";
+			// } else {
+				// if (delRegisteredDevice(delRegIndex)) {
+					// root["result"] = "success";
+				// } else {
+					// root["result"] = "failed";
+					// root["reason"] = failReason;
+				// }
+			// }
+		// }
+		// // Send list of registered devices
+		// if (getRegisteredDevices()) {
+			// if (regDevNum != 0) { // Any devices already registered?
+				// for (int i=0; i<regDevNum; i++) {
+					// root[String(i)] = regAndroidIds[i];
+				// }
+			// }
+			// root["num"] = regDevNum;
+		// }
+		// // Send list of registered devices
+	// } else if (req.substring(0, 3) == "/?l"){
+		// if (getRegisteredDevices()) {
+			// if (regDevNum != 0) { // Any devices already registered?
+				// for (int i=0; i<regDevNum; i++) {
+					// root[String(i)] = regAndroidIds[i];
+				// }
+			// }
+			// root["num"] = regDevNum;
+			// root["result"] = "success";
+		// } else {
+			// root["result"] = "failed";
+			// root["reason"] = failReason;
+		// }
+		// // toggle debugging
 	} else if (req.substring(0, 3) == "/?b"){
 		debugOn = !debugOn;
 		root["result"] = "success";
+		root["status"] = debugOn;
 		// initialization request received
 	} else if (req.substring(0, 3) == "/?r") {
 		irCmd = CMD_INIT_AC;

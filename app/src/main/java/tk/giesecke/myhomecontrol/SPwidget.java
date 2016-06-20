@@ -38,7 +38,7 @@ public class SPwidget extends AppWidgetProvider {
 	 *            Power imported/exported by the house
 	 */
 	@SuppressWarnings("deprecation")
-	@SuppressLint("InlinedApi")
+	@SuppressLint({"InlinedApi", "DefaultLocale"})
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
 								int appWidgetId,
 								Float solarPowerMin,

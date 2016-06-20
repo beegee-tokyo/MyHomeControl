@@ -261,6 +261,7 @@ public class ChartHelper extends MyHomeControl {
 	 *        cursor[6] = consumed power
 	 *        cursor[7] = light value
 	 */
+	@SuppressLint("DefaultLocale")
 	public static void fillSeries(Cursor data) {
 
 		data.moveToFirst();

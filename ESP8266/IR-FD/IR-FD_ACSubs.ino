@@ -78,6 +78,7 @@ void handleCmd() {
 			irCmd = 9999;
 			break;
 		case CMD_RESET: // Reboot the ESP module
+			sendDebug("Request to reset the module");
 			pinMode(16, OUTPUT); // Connected to RST pin
 			digitalWrite(16,LOW); // Initiate reset
 			ESP.reset(); // In case it didn't work
@@ -99,15 +100,11 @@ void handleCmd() {
 			}
 			irCmd = 9999;
 			break;
-		case CMD_AUTO_OFF: // Command to stop auto control
-			powerStatus = 0; // Independendant from current status it will be set to 0!
-			irCmd = 9999;
-			break;
 		default: // All other commands
 			//Serial.println("Send command triggered");
 			sendCmd();
-			irCmd = 9999;
 	}
+	sendBroadCast(); // Inform about the change
 }
 
 /**
@@ -145,6 +142,9 @@ void sendCmd() {
 				acMode = acMode & MODE_CLR; // set mode bits to 0
 				acMode = acMode | MODE_DRY; // set mode bits to DRY mode
 				isValidCmd = true;
+				savedAcTemp = acTemp & TEMP_MASK;
+				acTemp = acTemp & TEMP_CLR; // Dry mode resets AC temperature to 25
+				acTemp += 25;
 			}
 			buildBuffer(&sendBuffer[0], &DRY[0]);
 			break;
@@ -153,6 +153,8 @@ void sendCmd() {
 				acMode = acMode & MODE_CLR; // set mode bits to 0
 				acMode = acMode | MODE_FAN; // set mode bits to FAN mode
 				isValidCmd = true;
+				acTemp = acTemp & TEMP_CLR;
+				acTemp = acTemp + savedAcTemp;
 			}
 			buildBuffer(&sendBuffer[0], &FAN[0]);
 			break;
@@ -186,7 +188,9 @@ void sendCmd() {
 					lastTemp = acTemp & TEMP_MASK;
 					if (lastTemp < MAX_TEMP) {
 						lastTemp++;
-						acTemp = lastTemp;
+						acTemp = acTemp & TEMP_CLR;
+						acTemp += lastTemp;
+						savedAcTemp = acTemp;
 						isValidCmd = true;
 					}
 				}
@@ -199,7 +203,9 @@ void sendCmd() {
 					lastTemp = acTemp & TEMP_MASK;
 					if (lastTemp > MIN_TEMP) {
 						lastTemp--;
-						acTemp = lastTemp;
+						acTemp = acTemp & TEMP_CLR;
+						acTemp += lastTemp;
+						savedAcTemp = acTemp;
 						isValidCmd = true;
 					}
 				}
@@ -272,6 +278,9 @@ void sendCmd() {
 	if (isValidCmd) {
 		writeStatus();
 		sendCode(0, &sendBuffer[0], 67);
+		if (irCmd == CMD_MODE_COOL) {
+			restoreTempSetting();
+		}
 	}
 
 	// Reset irCmd
@@ -415,10 +424,21 @@ void checkPower() {
 	boolean mustWriteStatus = false;
 	/** Calculate average power consumption of the last 10 minutes */
 	consPower = 0;
+	/** String for debug message */
+	String debugMsg = "";
+#ifdef SIMULATION
+	for (int i = 0; i < 3; i++) {
+		consPower += avgConsPower[i];
+	}
+	consPower = consPower / 3;
+	Serial.println("average consPower = " + String(consPower));
+#else
 	for (int i = 0; i < 10; i++) {
 		consPower += avgConsPower[i];
 	}
 	consPower = consPower / 10;
+#endif
+	
 	/** Calculate average solar production of the last 10 minutes */
 	solarPower = 0;
 	for (int i = 0; i < 10; i++) {
@@ -441,7 +461,7 @@ void checkPower() {
 				mustBroadcast = true;
 				mustWriteStatus = true;
 				avgConsIndex = 0; // reset average calculation
-				String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, switch aircon off, status to 0";
+				debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, switch aircon off, status to 0";
 				sendDebug(debugMsg);
 				#ifdef DEBUG_OUT 
 				Serial.println(debugMsg);
@@ -451,7 +471,7 @@ void checkPower() {
 				mustBroadcast = true;
 				mustWriteStatus = true;
 				avgConsIndex = 0; // reset average calculation
-				String debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, aircon was already off, switch status to 0";
+				debugMsg = "Status was " + String(powerStatus) + ", Solar power == 0, aircon was already off, switch status to 0";
 				sendDebug(debugMsg);
 				#ifdef DEBUG_OUT 
 				Serial.println(debugMsg);
@@ -461,64 +481,93 @@ void checkPower() {
 	} else {
 		/** Check current status */
 		switch (powerStatus) {
-			case 0: // aircon is off, no overproduction
-				// aircon should be off, but maybe user switched it on manually
-				if ((acMode & AC_ON) != AC_ON) {
-					if (consPower < -75) { // over production exceeds 75W
+			case 0: // aircon is off
+				// at -300 switch directly to cool mode
+				// at -75 switch to fan mode
+				if (consPower < -300) { // production exceeds 300W
+					powerStatus = 3;
+					debugMsg = "Status was 0, consumption < -300W, switch aircon to cool mode, status to 3";
+				} else if (consPower < -75) { // production exceeds 75W
+					powerStatus = 1;
+					debugMsg = "Status was 0, consumption < -75W, switch aircon to fan mode, status to 1";
+				}
+				if (powerStatus != 0) {
+					if ((acMode & AC_ON) != AC_ON) { // Aircon might be already on (manually)
 						irCmd = CMD_ON_OFF; // Switch on aircon in FAN mode
 						sendCmd();
 						delay(1000);
-						irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-						sendCmd();
-						powerStatus = 1;
-						mustBroadcast = true;
-						mustWriteStatus = true;
-						avgConsIndex = 0; // reset average calculation
-						String debugMsg = "Status was 0, consumption < -75W, switch aircon to fan mode, status to 1";
-						sendDebug(debugMsg);
-						#ifdef DEBUG_OUT 
-						Serial.println(debugMsg);
-						#endif
 					}
+					if (powerStatus == 3) {
+						irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
+					} else {
+						irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
+					}
+					sendCmd(); 
+					mustBroadcast = true;
+					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
 				}
 				break;
-			case 1: // aircon is in fan mode, over production was > 75W
-				if (consPower < -300) { // over production exceeds 375W
+			case 1: // aircon is in fan mode
+				// at +200 switch off aircon
+				// at -300 switch to cool mode
+				if (consPower > 200) { // consuming more than 200W
+					irCmd = CMD_ON_OFF; // Switch off aircon
+					powerStatus = 0;
+					debugMsg = "Status was 1, consumption > 200W, switch aircon off, status to 0";
+				} else if (consPower < -300) { // production exceeds 300W
 					irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
+					powerStatus = 3;
+					debugMsg = "Status was 1, consumption < -300W, switch aircon to cool mode, status to 3";
+				}
+				if (powerStatus != 1) {
+					sendCmd(); 
+					mustBroadcast = true;
+					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
+				}
+				break;
+			case 2: // aircon is in dry mode
+				// at +300 switch to fan mode
+				// at -75 switch to cool mode
+				if (consPower > 300) { // consuming more than 300W
+					irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
+					powerStatus = 1;
+					debugMsg = "Status was 2, consumption > 300W, switch aircon to fan mode, status to 1";
+				} else if (consPower < -75) { // over production more than 75W
+					irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
+					powerStatus = 3;
+					debugMsg = "Status was 2, consumption < -75W, switch aircon to cool mode, status to 3";
+				}
+				if (powerStatus != 2) { // If changed send command to air con
+					sendCmd();
+					mustBroadcast = true;
+					mustWriteStatus = true;
+					avgConsIndex = 0; // reset average calculation
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
+				}
+				break;
+			case 3: // aircon is in cool mode
+				// at +400 switch to dry mode
+				if (consPower > 400) { // consuming more than 400W
+					irCmd = CMD_MODE_DRY; // Switch aircon to DRY mode
 					sendCmd();
 					powerStatus = 2;
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
-					String debugMsg = "Status was 1, consumption < -300W, switch aircon to cool mode, status to 2";
-					sendDebug(debugMsg);
-					#ifdef DEBUG_OUT 
-					Serial.println(debugMsg);
-					#endif
-				}
-				if (consPower > 200) { // consuming more than 200W
-					irCmd = CMD_ON_OFF; // Switch off aircon
-					sendCmd();
-					powerStatus = 0;
-					mustBroadcast = true;
-					mustWriteStatus = true;
-					avgConsIndex = 0; // reset average calculation
-					String debugMsg = "Status was 1, consumption > 200W, switch aircon off, status to 0";
-					sendDebug(debugMsg);
-					#ifdef DEBUG_OUT 
-					Serial.println(debugMsg);
-					#endif
-				}
-				break;
-			case 2: // aircon is in cool mode, over production was > 375W
-				if (consPower > 400) { // consuming more than 400W
-					irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-					sendCmd();
-					powerStatus = 1;
-					mustBroadcast = true;
-					mustWriteStatus = true;
-					avgConsIndex = 0; // reset average calculation
-					String debugMsg = "Status was 2, consumption > 400W, switch aircon to fan mode, status to 1";
+					debugMsg = "Status was 3, consumption > 400W, switch aircon to dry mode, status to 2";
 					sendDebug(debugMsg);
 					#ifdef DEBUG_OUT 
 					Serial.println(debugMsg);
@@ -585,17 +634,63 @@ void getPowerVal(boolean doPowerCheck) {
 	// Switch between status depending on consumption
 	if (root.containsKey("value")) {
 		String debugMsg;
+#ifdef SIMULATION
+		consPower = simConsValues[simValueIndex];
+		solarPower = 700.0;
+		simValueIndex++;
+		if (simValueIndex == 33) {
+			simValueIndex = 0;
+		}
+		#ifdef DEBUG_OUT 
+		Serial.println("consPower = " + String(consPower));
+		#endif
+		
+		if (avgConsIndex < 3) {
+			avgConsPower[avgConsIndex] = consPower;
+			avgSolarPower[avgConsIndex] = solarPower;
+			avgConsIndex++;
+			if (avgConsIndex != 3) {
+				debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
+				sendDebug(debugMsg);
+				Serial.println(debugMsg);
+			} else {
+				checkPower();
+				Serial.println("New power status = " + String(powerStatus));
+			}
+		} else {
+			for (int i = 0; i < 2; i++) { // Shift values in array
+				avgConsPower[i] = avgConsPower[i + 1];
+				avgSolarPower[i] = avgSolarPower[i + 1];
+			}
+			avgConsPower[2] = consPower;
+			avgSolarPower[2] = solarPower;
+
+			checkPower();
+			Serial.println("New power status = " + String(powerStatus));
+		}
+#else
 		consPower = root["value"]["C"];
 		solarPower = root["value"]["S"];
 		if (avgConsIndex < 10) {
 			avgConsPower[avgConsIndex] = consPower;
 			avgSolarPower[avgConsIndex] = solarPower;
 			avgConsIndex++;
-			debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
-			sendDebug(debugMsg);
-			#ifdef DEBUG_OUT 
-			Serial.println(debugMsg);
-			#endif
+			if (avgConsIndex != 10) {
+				debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
+				sendDebug(debugMsg);
+				#ifdef DEBUG_OUT 
+				Serial.println(debugMsg);
+				#endif
+			} else {
+				if (doPowerCheck && (acMode & AUTO_MASK) == AUTO_ON && dayTime && (acMode & TIM_MASK) == TIM_OFF) {
+					checkPower();
+					debugMsg = "Status " + String(powerStatus) + ", still collecting data, counter = " + String(avgConsIndex);
+					sendDebug(debugMsg);
+					#ifdef DEBUG_OUT 
+					Serial.println(debugMsg);
+					#endif
+				}
+			}
 		} else {
 			for (int i = 0; i < 9; i++) { // Shift values in array
 				avgConsPower[i] = avgConsPower[i + 1];
@@ -612,12 +707,78 @@ void getPowerVal(boolean doPowerCheck) {
 				#ifdef DEBUG_OUT 
 				Serial.println(debugMsg);
 				#endif
+				sendBroadCast();
 				consPowerOld = consPower;
 			}
-			if (doPowerCheck && (acMode & AUTO_ON) == AUTO_ON && dayTime && (acMode & TIM_ON) == TIM_OFF) {
+			if (doPowerCheck && (acMode & AUTO_MASK) == AUTO_ON && dayTime && (acMode & TIM_MASK) == TIM_OFF) {
+				debugMsg = "Do checkPower now";
+				sendDebug(debugMsg);
 				checkPower();
 			}
 		}
+#endif
 	}
 }
 
+/**
+	Restore temperature setting after DRY mode
+*/
+void restoreTempSetting() {
+	/** Debug message */
+	String debugMsg;
+	/** Command for temperature restore */
+	int tempCmd;
+
+#ifdef SIMULATION
+	savedAcTemp = simLastTemp[simTempIndex];
+	simTempIndex++;
+	if (simTempIndex == 2) {
+		simTempIndex = 0;
+	}
+#endif
+	debugMsg = "Current temperature setting = " + String(acTemp & TEMP_MASK);
+	sendDebug(debugMsg);
+#ifdef SIMULATION
+	Serial.println(debugMsg);
+#endif
+	debugMsg = "Saved temperature setting = " + String(savedAcTemp);
+	sendDebug(debugMsg);
+#ifdef SIMULATION
+	Serial.println(debugMsg);
+#endif
+	if ((acTemp & TEMP_MASK) != savedAcTemp) { // Coming from DRY mode?
+		byte tempChange;
+		if ((acTemp & TEMP_MASK) > savedAcTemp) {
+			tempChange =  (acTemp & TEMP_MASK) - savedAcTemp;
+			tempCmd = CMD_TEMP_MINUS;
+			debugMsg = "Temp restore with CMD_TEMP_MINUS - Difference = " + String(tempChange);
+			sendDebug(debugMsg);
+#ifdef SIMULATION
+			Serial.println(debugMsg);
+#endif
+		} else {
+			tempChange =  savedAcTemp - (acTemp & TEMP_MASK);
+			tempCmd = CMD_TEMP_PLUS;
+			debugMsg = "Temp restore with CMD_TEMP_PLUS - Difference = " + String(tempChange);
+			sendDebug(debugMsg);
+#ifdef SIMULATION
+			Serial.println("Temp restore with CMD_TEMP_PLUS");
+#endif
+		}
+		for (int i=0; i<tempChange; i++) { // Reset old temperature
+			irCmd = tempCmd;
+			sendCmd();
+			delay(500);
+#ifdef SIMULATION
+			Serial.println("Temp restore by " + String(i+1) + "deg");
+#endif
+		}
+#ifdef SIMULATION
+		acTemp = acTemp & TEMP_CLR;
+		acTemp = acTemp + 16;
+#else
+		acTemp = acTemp & TEMP_CLR;
+		acTemp = acTemp + savedAcTemp;
+#endif
+	}
+}
