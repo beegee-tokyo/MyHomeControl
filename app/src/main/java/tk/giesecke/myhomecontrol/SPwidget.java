@@ -60,12 +60,9 @@ public class SPwidget extends AppWidgetProvider {
 			views = new RemoteViews(context.getPackageName(), R.layout.sp_widget);
 		}
 
-		// Create an Intent to launch MainActivity
 		/** Intent to start app if widget is pushed */
 		Intent intent1 = new Intent(context, MyHomeControl.class);
 		intent1.putExtra("view", 1);
-		// Creating a pending intent, which will be invoked when the user
-		// clicks on the widget
 		/** Pending intent to start app if widget is pushed */
 		PendingIntent pendingIntent1 = PendingIntent.getActivity(context, 0,
 				intent1, PendingIntent.FLAG_UPDATE_CURRENT);

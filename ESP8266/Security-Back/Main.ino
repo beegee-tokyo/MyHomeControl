@@ -20,11 +20,9 @@ void loop() {
 	*	- the relay is switched on (if flag switchLights is true)
 	*	- alarm sound is played (if flag switchLights is true)
 	*	- msgText is set to detection message
-	*	- flag pirTriggered is set true for handling in loop()
 	*	if detection is finished
 	*	- the detection led stops flashing
 	*	- msgText is set to no detection message
-	*	- flag pirTriggered is set true for handling in loop()
 	*/
 
 	if (pirTriggered) {
@@ -49,7 +47,8 @@ void loop() {
 			ledFlasher.detach(); // Stop fast flashing if we have no detection
 			digitalWrite(alarmLED, HIGH); // Turn off LED
 			alarmTimer.detach();
-			analogWrite(speakerPin, LOW); // Switch off speaker
+			analogWrite(speakerPin, 0);
+			digitalWrite(speakerPin, LOW); // Switch off speaker
 			digitalWrite(alarmLED, HIGH);
 			if (alarmOn) { // If alarm is active, continue to flash slowly
 				ledFlasher.attach(0.4, redLedFlash);
@@ -68,27 +67,32 @@ void loop() {
 	if (weatherUpdateTriggered) {
 		weatherUpdateTriggered = false;
 		getTemperature();
-		getLight();
-		 // Check light only if relay is off and light is switched off
+//		getLight();
+		// Check light only if relay is off and light is switched off
 		// if (digitalRead(relayPort) == LOW) {
-			// if (lightValue < 100) { // TODO check the correct value!
+			// if (lightValue < 500) { // TODO check the correct value!
 				// switchLights = true;
-// Serial.print("Light value = ");
-// Serial.println(lightValue);
 			// } else {
 				// switchLights = false;
-// Serial.print("Light value = ");
-// Serial.println(lightValue);
 			// }
 		// }
 	}
 
+	// wdt_reset();
+	// // Handle new client request on HTTP server if available
+	// WiFiClient client = server.available();
+	// if (client) {
+		// digitalWrite(comLED, LOW);
+		// replyClient(client);
+		// digitalWrite(comLED, HIGH);
+	// }
+
 	wdt_reset();
-	// Handle new client request on HTTP server if available
-	WiFiClient client = server.available();
-	if (client) {
+	// Handle new request on tcp socket server if available
+	WiFiClient tcpClient = tcpServer.available();
+	if (tcpClient) {
 		digitalWrite(comLED, LOW);
-		replyClient(client);
+		socketServer(tcpClient);
 		digitalWrite(comLED, HIGH);
 	}
 
@@ -117,8 +121,12 @@ void loop() {
 	wdt_reset();
 	if (heartBeatTriggered) {
 		heartBeatTriggered = false;
+		// Stop the tcp socket server
+		tcpServer.stop();
 		// Give a "I am alive" signal
 		sendAlarm(true);
+		// Restart the tcp socket server to listen on port 6000
+		tcpServer.begin();
 	}
 }
 

@@ -1,19 +1,8 @@
 //Function definitions
 
-// GCM functions
-boolean writeRegIds();
-boolean getRegisteredDevices();
-boolean addRegisteredDevice(String newDeviceID);
-boolean delRegisteredDevice();
-boolean delRegisteredDevice(String delRegId);
-boolean delRegisteredDevice(int delRegIndex);
-boolean gcmSendOut(String data);
-boolean gcmSendMsg(JsonArray& pushMessageIds, JsonArray& pushMessages);
-boolean gcmSendMsg(JsonObject& pushMessages);
-
 // TSL2561 (light sensor) functions
-void configureSensor ();
-void getLight ();
+//void configureSensor ();
+//void getLight ();
 
 // DHT11 functions
 void getTemperature();
@@ -46,8 +35,10 @@ void WiFiEvent(WiFiEvent_t event);
 int32_t getRSSI();
 
 // Communication functions
-void sendAlarm(boolean doGCM);
+void sendAlarm(boolean makeShort);
 void replyClient(WiFiClient httpClient);
+void socketServer(WiFiClient tcpClient);
+void sendDebug(String debugMsg);
 
 // NTP client functions
 time_t getNtpTime();

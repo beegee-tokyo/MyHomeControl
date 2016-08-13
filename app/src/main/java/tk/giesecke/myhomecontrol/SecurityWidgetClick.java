@@ -7,12 +7,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -48,43 +47,47 @@ public class SecurityWidgetClick extends IntentService {
 				/** Command string */
 				String cmd;
 				if (alarmIsActive) {
-					cmd = "/?a=0"; // Disable alarm
+					cmd = "a=0"; // Disable alarm
 				} else {
-					cmd = "/?a=1"; // Enable alarm
+					cmd = "a=1"; // Enable alarm
 				}
 
-				// TODO if we are not on home wifi send command over MQTT instead of WiFi
+				// If we are not on home WiFi, send command to MQTT broker
+				if (!Utilities.isHomeWiFi(getApplicationContext())) {
+					String mqttTopic = "{\"ip\":\"sf1\","; // Device IP address
+					mqttTopic += "\"cm\":\"" + cmd + "\"}"; // The command
 
-				/** A HTTP client to access the ESP device */
-				// Set timeout to 300ms/10ms
-				OkHttpClient client = new OkHttpClient.Builder()
-						.connectTimeout(300, TimeUnit.SECONDS)
-						.writeTimeout(10, TimeUnit.SECONDS)
-						.readTimeout(300, TimeUnit.SECONDS)
-						.build();
+					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
+					mqttTopic = "{\"ip\":\"sb1\","; // Device IP address
+					mqttTopic += "\"cm\":\"" + cmd + "\"}"; // The command
 
-				/** URL to be called */
-				String urlString = MyHomeControl.SECURITY_URL_FRONT_1 + cmd; // URL to call
-
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP = " + urlString);
-
-				/** Request to ESP device */
-				Request request = new Request.Builder()
-						.url(urlString)
-						.build();
-
-				if (request != null) {
+					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
+				} else {
 					try {
-						/** Send request to ESP device */
-						Response response = client.newCall(request).execute();
-						if (response != null) {
-							int status = response.code();
-							if (status == 200) {
-								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Switched alarm");
-							}
-						}
-					} catch (IOException e) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP failed = " + e.getMessage());
+						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+						Socket tcpSocket = new Socket(tcpServer, 6000);
+
+						tcpSocket.setSoTimeout(1000);
+						PrintWriter out = new PrintWriter(new BufferedWriter(
+								new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+						out.println(cmd);
+						tcpSocket.close();
+					} catch (Exception e) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
+								+ " " + MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+					}
+					try {
+						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_BACK_1.substring(7));
+						Socket tcpSocket = new Socket(tcpServer, 6000);
+
+						tcpSocket.setSoTimeout(1000);
+						PrintWriter out = new PrintWriter(new BufferedWriter(
+								new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+						out.println(cmd);
+						tcpSocket.close();
+					} catch (Exception e) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
+								+ " " + MyHomeControl.SECURITY_URL_BACK_1.substring(7));
 					}
 				}
 			}

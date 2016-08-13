@@ -25,7 +25,7 @@ public class StartBackgroundServices extends Service {
 		/** Context of application */
 		Context intentContext = getApplicationContext();
 
-		/** IntentFilter to receive screen on/off broadcast msgs */
+		/** IntentFilter to receive screen on/off & connectivity broadcast msgs */
 		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
 		filter.addAction(Intent.ACTION_SCREEN_OFF);
 		filter.addAction(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
@@ -33,14 +33,8 @@ public class StartBackgroundServices extends Service {
 		BroadcastReceiver mReceiver = new EventReceiver();
 		registerReceiver(mReceiver, filter);
 
-		// Start service to listen to UDP broadcast messages
-		intentContext.startService(new Intent(intentContext, UDPlistener.class));
-
-		// Start service to listen to MQTT messages
-		intentContext.startService(new Intent(intentContext, MQTTService.class));
-
-//		// Start frequent updates for solar panel widgets and notifications
-//		Utilities.startStopUpdates(intentContext,true);
+		// Start service to listen to UDP & MQTT broadcast messages
+		intentContext.startService(new Intent(intentContext, MessageListener.class));
 
 		/** Pending intent for sync every 2 hours */
 		PendingIntent pi = PendingIntent.getService(intentContext, 5002,

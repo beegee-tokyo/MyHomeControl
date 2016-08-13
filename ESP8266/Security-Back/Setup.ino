@@ -29,39 +29,24 @@ void setup() {
 	Serial.print("IP address: ");
 	Serial.println(WiFi.localIP());
 
-	/** Byte array for the local MAC address */
-	byte mac[6];
-	WiFi.macAddress(mac);
-	localMac = String(mac[0], HEX) + ":";
-	localMac += String(mac[1], HEX) + ":";
-	localMac += String(mac[2], HEX) + ":";
-	localMac += String(mac[3], HEX) + ":";
-	localMac += String(mac[4], HEX) + ":";
-	localMac += String(mac[5], HEX);
-
-	Serial.print("MAC address: ");
-	Serial.println(localMac);
-
 	Serial.print("Build: ");
 	Serial.println(compileDate);
 
-	Serial.print("Sketch size: ");
-	Serial.print (ESP.getSketchSize());
-	Serial.print(" - Free size: ");
-	Serial.println(ESP.getFreeSketchSpace());
+	Serial.print("Device: ");
+	Serial.println(DEVICE_ID);
 	Serial.println("====================");
 
 	/* Configure the Adafruit TSL2561 light sensor */
 	/* Set SDA and SCL pin numbers */
-	tsl.setI2C(sdaPin, sclPin);
+//	tsl.setI2C(sdaPin, sclPin);
 	/* Initialise the sensor */
-	if ( tsl.begin() ) {
-		/* Setup the sensor gain and integration time */
-		configureSensor();
-	}
-
+//	if ( tsl.begin() ) {
+//		/* Setup the sensor gain and integration time */
+//		configureSensor();
+//	}
+	
 	// Get initial light
-	getLight();
+//	getLight();
 	getTemperature();
 	// Start update of light value every 10 seconds
 	getWeatherTimer.attach(10, triggerGetWeather);
@@ -111,8 +96,11 @@ void setup() {
 	inSetup = false;
 
 	// Start the web server to serve incoming requests
-	server.begin();
+//	server.begin();
 
+	// Start the tcp socket server to listen on port 6000
+	tcpServer.begin();
+	
 	if (alarmOn) {
 		ledFlasher.attach(1, redLedFlash);
 	} else {

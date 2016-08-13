@@ -1,0 +1,271 @@
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	app:layout_behavior="@string/appbar_scrolling_view_behavior"
+	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
+	tools:showIn="@layout/activity_my_home_control"
+	android:id="@+id/view_security"
+	android:visibility="visible">
+
+	<TableLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/tl_alarm_front">
+
+		<TableRow>
+
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/sec_front"
+				android:id="@+id/tv_status_front"
+				/>
+
+		</TableRow>
+
+		<TableRow
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<ImageView
+				android:layout_width="100dp"
+				android:layout_height="100dp"
+				android:id="@+id/dot_alarm_status"
+				android:src="@mipmap/ic_sec_widget_off"
+				android:contentDescription="@string/dot_txt_alarm_status"
+				android:onClick="onClick"
+				android:clickable="true"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_alarm_status"
+				android:id="@+id/tv_alarm_status"
+				android:gravity="center_horizontal"
+				android:layout_gravity="center"/>
+
+			<RelativeLayout
+				android:layout_width="150dp"
+				android:layout_height="150dp"
+				android:visibility="gone">
+
+				<ImageView
+					android:layout_width="100dp"
+					android:layout_height="100dp"
+					android:id="@+id/dot_alarm_off"
+					android:src="@mipmap/ic_dot"
+					android:contentDescription="@string/dot_txt_alarm"
+					android:layout_centerInParent="true"/>
+
+				<ImageView
+					android:layout_width="100dp"
+					android:layout_height="100dp"
+					android:id="@+id/dot_alarm_on"
+					android:src="@mipmap/ic_dot_red"
+					android:contentDescription="@string/dot_txt_alarm"
+					android:layout_centerInParent="true"
+					android:alpha="0"
+					android:visibility="visible"/>
+
+			</RelativeLayout>
+
+		</TableRow>
+
+		<TableRow
+			android:layout_width="match_parent"
+			android:layout_height="match_parent">
+
+			<ImageView
+				android:layout_width="100dp"
+				android:layout_height="100dp"
+				android:id="@+id/dot_light"
+				android:src="@mipmap/ic_light_off"
+				android:contentDescription="@string/dot_txt_light"
+				android:clickable="true"
+				android:onClick="onClick"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_light"
+				android:id="@+id/tv_light"
+				android:gravity="center_horizontal"
+				android:layout_gravity="center"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_alarm"
+				android:id="@+id/tv_alarm"
+				android:gravity="center_horizontal"
+				android:visibility="gone"/>
+
+		</TableRow>
+
+	</TableLayout>
+
+	<CheckBox
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/sec_auto_alarm_off"
+		android:id="@+id/cb_sec_auto_alarm"
+		android:layout_gravity="center_horizontal"
+		android:checked="false"
+		android:onClick="onClick"
+		android:layout_below="@+id/tl_alarm_front"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceSmall"
+		android:text="@string/tv_set_alarm_txt"
+		android:id="@+id/tv_change_alarm"
+		android:layout_alignBaseline="@+id/cb_sec_auto_alarm"
+		android:layout_toRightOf="@+id/cb_sec_auto_alarm"
+		android:layout_toEndOf="@+id/cb_sec_auto_alarm"
+		android:layout_marginLeft="10dp"
+		android:layout_marginRight="10dp"
+		android:textColor="@android:color/holo_blue_dark"
+		android:onClick="onClick"
+		android:clickable="true"/>
+
+	<TableLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/tl_alarm_back"
+		android:visibility="visible"
+		android:gravity="center_horizontal"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentEnd="true"
+		android:layout_alignParentTop="true">
+
+		<TableRow>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/sec_back"
+				android:id="@+id/tv_status_back"
+				android:layout_weight="1"
+				/>
+
+		</TableRow>
+
+		<TableRow
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<ImageView
+				android:layout_width="100dp"
+				android:layout_height="100dp"
+				android:id="@+id/dot_alarm_status_back"
+				android:src="@mipmap/ic_sec_widget_off"
+				android:contentDescription="@string/dot_txt_alarm_status"
+				android:layout_weight="1"
+				android:onClick="onClick"
+				android:clickable="true"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_alarm_status"
+				android:id="@+id/tv_alarm_status_back"
+				android:gravity="center_horizontal"
+				android:layout_weight="1"
+				android:visibility="gone"/>
+
+			<RelativeLayout
+				android:layout_width="150dp"
+				android:layout_height="150dp"
+				android:layout_weight="1"
+				android:visibility="gone">
+
+				<ImageView
+					android:layout_width="100dp"
+					android:layout_height="100dp"
+					android:id="@+id/dot_alarm_off_back"
+					android:src="@mipmap/ic_dot"
+					android:contentDescription="@string/dot_txt_alarm"
+					android:layout_centerInParent="true"/>
+
+				<ImageView
+					android:layout_width="200dp"
+					android:layout_height="200dp"
+					android:id="@+id/dot_alarm_on_back"
+					android:src="@mipmap/ic_dot_red"
+					android:contentDescription="@string/dot_txt_alarm"
+					android:layout_centerInParent="true"
+					android:alpha="0"/>
+
+			</RelativeLayout>
+
+		</TableRow>
+
+		<TableRow
+			android:layout_width="match_parent"
+			android:layout_height="match_parent">
+
+			<ImageView
+				android:layout_width="100dp"
+				android:layout_height="100dp"
+				android:id="@+id/dot_light_back"
+				android:src="@mipmap/ic_light_off"
+				android:contentDescription="@string/dot_txt_light"
+				android:layout_weight="1"
+				android:onClick="onClick"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_light"
+				android:id="@+id/tv_light_back"
+				android:gravity="center_horizontal"
+				android:layout_weight="1"
+				android:visibility="gone"/>
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceLarge"
+				android:text="@string/dot_txt_alarm"
+				android:id="@+id/tv_alarm_back"
+				android:gravity="center_horizontal"
+				android:layout_weight="1"
+				android:visibility="gone"/>
+
+		</TableRow>
+
+	</TableLayout>
+
+	<TextView
+		android:id="@+id/security_status"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_toRightOf="@+id/tv_change_alarm"
+		android:layout_toEndOf="@+id/tv_change_alarm"
+		android:layout_alignBaseline="@+id/cb_sec_auto_alarm"/>
+
+	<ProgressBar
+		android:id="@+id/pb_security"
+		style="?android:attr/progressBarStyleSmall"
+		android:layout_width="300dp"
+		android:layout_height="300dp"
+		android:layout_centerInParent="true"
+		android:background="@android:color/transparent"
+		android:visibility="invisible"/>
+
+</RelativeLayout>

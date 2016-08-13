@@ -37,8 +37,8 @@
 			android:layout_height="wrap_content">
 
 			<ImageView
-				android:layout_width="150dp"
-				android:layout_height="150dp"
+				android:layout_width="120dp"
+				android:layout_height="120dp"
 				android:id="@+id/dot_alarm_status"
 				android:src="@mipmap/ic_sec_widget_off"
 				android:contentDescription="@string/dot_txt_alarm_status"
@@ -47,8 +47,8 @@
 				android:clickable="true"/>
 
 			<ImageView
-				android:layout_width="150dp"
-				android:layout_height="150dp"
+				android:layout_width="120dp"
+				android:layout_height="120dp"
 				android:id="@+id/dot_light"
 				android:src="@mipmap/ic_light_off"
 				android:contentDescription="@string/dot_txt_light"
@@ -59,19 +59,20 @@
 			<RelativeLayout
 				android:layout_width="150dp"
 				android:layout_height="150dp"
-				android:layout_weight="1">
+				android:layout_weight="1"
+				android:visibility="gone">
 
 				<ImageView
-					android:layout_width="150dp"
-					android:layout_height="150dp"
+					android:layout_width="120dp"
+					android:layout_height="120dp"
 					android:id="@+id/dot_alarm_off"
 					android:src="@mipmap/ic_dot"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"/>
 
 				<ImageView
-					android:layout_width="150dp"
-					android:layout_height="150dp"
+					android:layout_width="120dp"
+					android:layout_height="120dp"
 					android:id="@+id/dot_alarm_on"
 					android:src="@mipmap/ic_dot_red"
 					android:contentDescription="@string/dot_txt_alarm"
@@ -112,7 +113,8 @@
 				android:text="@string/dot_txt_alarm"
 				android:id="@+id/tv_alarm"
 				android:gravity="center_horizontal"
-				android:layout_weight="1"/>
+				android:layout_weight="1"
+				android:visibility="gone"/>
 
 		</TableRow>
 
@@ -126,13 +128,28 @@
 		android:layout_gravity="center_horizontal"
 		android:checked="false"
 		android:onClick="onClick"
-		android:layout_below="@+id/tl_alarm_front"/>
+		android:layout_below="@+id/tl_alarm_back"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:textAppearance="?android:attr/textAppearanceSmall"
+		android:text="@string/tv_set_alarm_txt"
+		android:id="@+id/tv_change_alarm"
+		android:layout_alignBaseline="@+id/cb_sec_auto_alarm"
+		android:layout_toRightOf="@+id/cb_sec_auto_alarm"
+		android:layout_toEndOf="@+id/cb_sec_auto_alarm"
+		android:layout_marginLeft="10dp"
+		android:layout_marginRight="10dp"
+		android:textColor="@android:color/holo_blue_dark"
+		android:onClick="onClick"
+		android:clickable="true"/>
 
 	<TableLayout
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:id="@+id/tl_alarm_back"
-		android:layout_below="@+id/cb_sec_auto_alarm"
+		android:layout_below="@+id/tl_alarm_front"
 		android:visibility="invisible"
 		android:gravity="center_horizontal">
 
@@ -142,7 +159,7 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
-				android:text="@string/sec_rear"
+				android:text="@string/sec_back"
 				android:id="@+id/tv_status_back"
 				android:layout_weight="1"
 				/>
@@ -154,8 +171,8 @@
 			android:layout_height="wrap_content">
 
 			<ImageView
-				android:layout_width="150dp"
-				android:layout_height="150dp"
+				android:layout_width="120dp"
+				android:layout_height="120dp"
 				android:id="@+id/dot_alarm_status_back"
 				android:src="@mipmap/ic_sec_widget_off"
 				android:contentDescription="@string/dot_txt_alarm_status"
@@ -164,21 +181,23 @@
 				android:clickable="true"/>
 
 			<ImageView
-				android:layout_width="150dp"
-				android:layout_height="150dp"
+				android:layout_width="120dp"
+				android:layout_height="120dp"
 				android:id="@+id/dot_light_back"
 				android:src="@mipmap/ic_light_off"
 				android:contentDescription="@string/dot_txt_light"
-				android:layout_weight="1"/>
+				android:layout_weight="1"
+				android:onClick="onClick"/>
 
 			<RelativeLayout
 				android:layout_width="150dp"
 				android:layout_height="150dp"
-				android:layout_weight="1">
+				android:layout_weight="1"
+				android:visibility="gone">
 
 				<ImageView
-					android:layout_width="150dp"
-					android:layout_height="150dp"
+					android:layout_width="120dp"
+					android:layout_height="120dp"
 					android:id="@+id/dot_alarm_off_back"
 					android:src="@mipmap/ic_dot"
 					android:contentDescription="@string/dot_txt_alarm"
@@ -226,7 +245,8 @@
 				android:text="@string/dot_txt_alarm"
 				android:id="@+id/tv_alarm_back"
 				android:gravity="center_horizontal"
-				android:layout_weight="1"/>
+				android:layout_weight="1"
+				android:visibility="gone"/>
 
 		</TableRow>
 
@@ -235,23 +255,9 @@
 	<TextView
 		android:id="@+id/security_status"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_below="@+id/tl_alarm_back"/>
-
-	<TextView
-		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:textAppearance="?android:attr/textAppearanceSmall"
-		android:text="@string/tv_set_alarm_txt"
-		android:id="@+id/tv_change_alarm"
-		android:layout_alignBaseline="@+id/cb_sec_auto_alarm"
-		android:layout_toRightOf="@+id/cb_sec_auto_alarm"
-		android:layout_toEndOf="@+id/cb_sec_auto_alarm"
-		android:layout_marginLeft="10dp"
-		android:layout_marginRight="10dp"
-		android:textColor="@android:color/holo_blue_dark"
-		android:onClick="onClick"
-		android:clickable="true"/>
+		android:layout_alignParentBottom="true"
+		android:layout_below="@+id/cb_sec_auto_alarm"/>
 
 	<ProgressBar
 		android:id="@+id/pb_security"

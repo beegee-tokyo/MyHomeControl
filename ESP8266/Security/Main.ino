@@ -67,15 +67,25 @@ void loop() {
 		lightLDRTriggered = false;
 		if (getLDR()) {
 			sendAlarm(true);
-			sendLightStatus(switchLights);		}
+			sendLightStatus(switchLights);
+		}
 	}
 
+	// wdt_reset();
+	// // Handle new client request on HTTP server if available
+	// WiFiClient client = server.available();
+	// if (client) {
+		// digitalWrite(comLED, LOW);
+		// replyClient(client);
+		// digitalWrite(comLED, HIGH);
+	// }
+
 	wdt_reset();
-	// Handle new client request on HTTP server if available
-	WiFiClient client = server.available();
-	if (client) {
+	// Handle new request on tcp socket server if available
+	WiFiClient tcpClient = tcpServer.available();
+	if (tcpClient) {
 		digitalWrite(comLED, LOW);
-		replyClient(client);
+		socketServer(tcpClient);
 		digitalWrite(comLED, HIGH);
 	}
 
@@ -104,8 +114,13 @@ void loop() {
 	wdt_reset();
 	if (heartBeatTriggered) {
 		heartBeatTriggered = false;
+		// Stop the tcp socket server
+		tcpServer.stop();
 		// Give a "I am alive" signal
 		sendAlarm(true);
+		// Restart the tcp socket server to listen on port 6000
+		tcpServer.begin();
+		sendLightStatus(switchLights);
 	}
 }
 

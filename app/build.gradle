@@ -38,4 +38,5 @@ dependencies {
 	// compile 'com.google.android.gms:play-services-identity:8.4.0'
 	// compile 'com.google.android.gms:play-services-gcm:8.4.0'
 	compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
+	compile 'com.google.android.gms:play-services-appindexing:8.1.0'
 }

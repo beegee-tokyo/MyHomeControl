@@ -3,7 +3,7 @@
 					android:initialLayout="@layout/aircon_widget"
 					android:minHeight="110dp"
 					android:minWidth="110dp"
-					android:previewImage="@drawable/ic_aircon"
+					android:previewImage="@drawable/widget_aircon"
 					android:resizeMode="horizontal|vertical"
 					android:updatePeriodMillis="0">
 </appwidget-provider>

@@ -7,14 +7,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.io.IOException;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 
 /**
@@ -49,43 +48,49 @@ public class LightWidgetClick extends IntentService {
 				/** App widget manager for all widgets of this app */
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 
-				// TODO if we are not on home wifi send command over MQTT instead of WiFi
+				// If we are not on home WiFi, send command to MQTT broker
+				if (!Utilities.isHomeWiFi(getApplicationContext())) {
+					String mqttTopic = "{\"ip\":\"sf1\","; // Device IP address
+					mqttTopic += "\"cm\":\"b\"}"; // The command
 
-				/** A HTTP client to access the ESP device */
-				// Set timeout to 5 minutes in case we have a lot of data to load
-				OkHttpClient client = new OkHttpClient.Builder()
-						.connectTimeout(300, TimeUnit.SECONDS)
-						.writeTimeout(10, TimeUnit.SECONDS)
-						.readTimeout(300, TimeUnit.SECONDS)
-						.build();
+					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
+					mqttTopic = "{\"ip\":\"sb1\","; // Device IP address
+					mqttTopic += "\"cm\":\"b\"}"; // The command
 
-				/** URL to be called */
-				String urlString = MyHomeControl.SECURITY_URL_FRONT_1 + "/?b"; // URL to call
-
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP = " + urlString);
-
-				/** Request to ESP device */
-				Request request = new Request.Builder()
-						.url(urlString)
-						.build();
-
-				if (request != null) {
+					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
+				} else {
 					try {
-						/** Response from ESP device */
-						Response response = client.newCall(request).execute();
-						if (response != null) {
-							int status = response.code();
-							if (status == 200) {
-								LightWidget.updateAppWidget(this, appWidgetManager, mAppWidgetId, true);
-								/** Timer to change back widget icon */
-								Timer timer = new Timer();
-								timer.schedule(new changeBackWidget(this, appWidgetManager, mAppWidgetId), 120000);
-							}
-						}
-					} catch (IOException e) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP failed = " + e.getMessage());
+						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+						Socket tcpSocket = new Socket(tcpServer, 6000);
+
+						tcpSocket.setSoTimeout(1000);
+						PrintWriter out = new PrintWriter(new BufferedWriter(
+								new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+						out.println("b");
+						tcpSocket.close();
+					} catch (Exception e) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
+								+ " " + MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+					}
+					try {
+						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_BACK_1.substring(7));
+						Socket tcpSocket = new Socket(tcpServer, 6000);
+
+						tcpSocket.setSoTimeout(1000);
+						PrintWriter out = new PrintWriter(new BufferedWriter(
+								new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+						out.println("b");
+						tcpSocket.close();
+					} catch (Exception e) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
+								+ " " + MyHomeControl.SECURITY_URL_BACK_1.substring(7));
 					}
 				}
+
+				LightWidget.updateAppWidget(this, appWidgetManager, mAppWidgetId, true);
+				/** Timer to change back widget icon */
+				Timer timer = new Timer();
+				timer.schedule(new changeBackWidget(this, appWidgetManager, mAppWidgetId), 120000);
 			}
 		}
 	}

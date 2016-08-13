@@ -4,22 +4,27 @@ import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.Socket;
 
 
 /**
- * An {@link IntentService} subclass for handling asynchronous task requests in
- * a service on a separate handler thread.
- * <p/>
+ * Handles clicks on specific parts of the aircon widget
  */
 public class AirconWidgetClick extends IntentService {
 
@@ -89,44 +94,83 @@ public class AirconWidgetClick extends IntentService {
 
 	@SuppressLint("CommitPrefEdits")
 	private boolean espComm(String cmd) {
-		/** A HTTP client to access the ESP device */
-		// Set timeout to 5 minutes in case we have a lot of data to load
-		OkHttpClient client = new OkHttpClient.Builder()
-				.connectTimeout(300, TimeUnit.SECONDS)
-				.writeTimeout(10, TimeUnit.SECONDS)
-				.readTimeout(300, TimeUnit.SECONDS)
-				.build();
+		// If we are not on home WiFi, send command to MQTT broker
+		if (!Utilities.isHomeWiFi(getApplicationContext())) {
+			String mqttTopic = "{\"ip\":\"fd1\","; // Device IP address
+			mqttTopic += "\"cm\":\"" + cmd.substring(2) + "\"}"; // The command
 
-		/** URL to be called */
-		String urlString = MyHomeControl.AIRCON_URL_1 + cmd; // URL to call
+			doPublish(mqttTopic, getApplicationContext());
+			return true;
+		}
 
-		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP = " + urlString);
+		try {
+			cmd = cmd.substring(2);
+			InetAddress tcpServer = InetAddress.getByName(MyHomeControl.AIRCON_URL_1.substring(7));
+			Socket tcpSocket = new Socket(tcpServer, 6000);
 
-		/** Request to ESP device */
-		Request request = new Request.Builder()
-				.url(urlString)
-				.build();
+			tcpSocket.setSoTimeout(1000);
+			PrintWriter out = new PrintWriter(new BufferedWriter(
+					new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+			out.println(cmd);
+			tcpSocket.close();
+		} catch (Exception e) {
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
+					+ " " + MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+			return false;
+		}
+		return true;
+	}
 
-		if (request != null) {
+	/**
+	 * Send topic to MQTT broker
+	 *
+	 * @param payload
+	 * 		Topic message
+	 */
+	static void doPublish(String payload, Context widgetContext){
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT topic publish: " + payload);
+		if (MessageListener.mqttClient != null) { // If service is not (yet) active, don't publish
+			IMqttToken token;
+			MqttConnectOptions options = new MqttConnectOptions();
+			String mqttUser = widgetContext.getResources().getString(R.string.MQTT_USER);
+			String mqttPw = widgetContext.getResources().getString(R.string.MQTT_PW);
+			options.setCleanSession(true);
+			options.setUserName(mqttUser);
+			options.setPassword(mqttPw.toCharArray());
 			try {
-				/** Response from ESP device */
-				Response response = client.newCall(request).execute();
-				if (response != null) {
-					int status = response.code();
-					if (status == 200) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP response = " + Integer.toString(status));
-						return true;
-					} else {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP response = " + Integer.toString(status));
-						return false;
-					}
+				byte[] encodedPayload;
+				encodedPayload = payload.getBytes("UTF-8");
+				MqttMessage message = new MqttMessage(encodedPayload);
+				token = MessageListener.mqttClient.publish("/CMD", message);
+				token.waitForCompletion(5000);
+			} catch (MqttSecurityException | UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} catch (MqttException e) {
+				switch (e.getReasonCode()) {
+					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
+						e.printStackTrace();
+						break;
+					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
+						e.printStackTrace();
+						break;
+					case MqttException.REASON_CODE_CONNECTION_LOST:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+						e.printStackTrace();
+						break;
+					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
+						e.printStackTrace();
+						break;
+					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
+						break;
+					default:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+						break;
 				}
-			} catch (IOException e) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP failed = " + e.getMessage());
-				return false;
 			}
 		}
-		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callESP failed with invalid request");
-		return false;
 	}
 }

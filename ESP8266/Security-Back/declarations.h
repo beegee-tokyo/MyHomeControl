@@ -20,9 +20,6 @@ const char compileDate[] = __DATE__ " " __TIME__;
 /* wifiAPinfo.h contains wifi SSID and password */
 #include "wifiAPinfo.h"
 
-/* gcmInfo.h contains the API key for Google cloud messaging */
-#include "gcmInfo.h"
-
 /** Red LED on GPIO0 for visual signal if alarm is on or off */
 #define alarmLED 0
 /** Blue LED on GPIO2 for communication activities */
@@ -58,6 +55,9 @@ WiFiUDP udpClientServer;
 
 /** WiFiServer class to create simple web server */
 WiFiServer server(80);
+
+/** WiFiServer class to create TCP socket server on port 6000 */
+WiFiServer tcpServer(6000);
 
 /** FTPServer class to create simple ftp server */
 FtpServer  ftpSrv;
@@ -97,8 +97,17 @@ boolean wifiConnecting = false;
 boolean panicOn = false;
 
 /** Melody as delay time */
-long melody[] = {1700, 1700, 1136, 1136, 1432, 1915, 1915, 1700 ,1700 ,1136 ,1136 ,1700 ,1700 ,1915 ,1915 ,1432 ,1432 ,1700 ,1700 ,1136 ,1136 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1432 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1136 ,1136 ,1275 ,1275 ,1275 ,1275};
+//long melody[] = {1700, 1700, 1136, 1136, 1432, 1915, 1915, 1700 ,1700 ,1136 ,1136 ,1700 ,1700 ,1915 ,1915 ,1432 ,1432 ,1700 ,1700 ,1136 ,1136 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1432 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1136 ,1136 ,1275 ,1275 ,1275 ,1275};
+/** Number of melody[] notes */
+//int melodyLenght = 40;
+// Bido Bido sound
 //long melody[] = {1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275};
+/** Number of melody[] notes */
+//int melodyLenght = 40;
+// Martinshorn
+long melody[] = {1136, 1136, 850, 850, 850, 850, 1136, 1136 ,850 ,850 ,850 ,850 ,1136 ,1136 ,850 ,850 ,850 ,850 ,1136 ,1136 ,850 ,850 ,850 ,850 ,1136 ,1136 ,850 ,850 ,850 ,850 ,1136 ,1136 ,850 ,850 ,850 ,850 ,1136 ,1136 ,850 ,850 ,850 ,850};
+/** Number of melody[] notes */
+int melodyLenght = 42;
 
 /** Relation between values and notes */
 //	1915	1700	1519	1432	1275	1136	1014	956
@@ -106,8 +115,6 @@ long melody[] = {1700, 1700, 1136, 1136, 1432, 1915, 1915, 1700 ,1700 ,1136 ,113
 
 /** Melody position pointer */
 int melodyPoint = 0;
-/** Number of melody[] notes */
-int melodyLenght = 40;
 /** Time to play a single tune in milliseconds */
 int melodyTuneTime = 175;
 
@@ -136,9 +143,9 @@ String rebootReason = "unknown";
 String lastRebootReason = "unknown";
 
 /** Instance of the Adafruit TSL2561 sensor */
-Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified ( TSL2561_ADDR_FLOAT, 1 );
-/** Currently used integration time for light sensor, 0 = 13.7ms, 1 = 101ms, 2 = 402ms */
-int lightInteg = 2;
+//Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified ( TSL2561_ADDR_FLOAT, 1 );
+/** Integration time for light sensor, 0 = 13.7ms, 1 = 101ms, 2 = 402ms */
+//int lightInteg = 2;
 /** Result of last light measurement */
 long lightValue = 0;
 

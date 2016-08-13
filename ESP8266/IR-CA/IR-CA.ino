@@ -16,6 +16,6 @@
 */
 
 /* Security.h contains all includes, defines, variables and instance declarations */
-#include "IR-CA_declarations.h"
+#include "declarations.h"
 /* Security_function.h contains all function declarations */
-#include "IR-CA_functions.h"
+#include "functions.h"

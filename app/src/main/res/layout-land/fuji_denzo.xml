@@ -174,7 +174,7 @@
 					android:layout_height="wrap_content"
 					android:layout_weight="1"
 					android:gravity="center"
-					android:text="@string/txt_consumption"
+					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
 					android:textStyle="bold"/>
 
@@ -194,7 +194,7 @@
 					android:layout_height="wrap_content"
 					android:layout_weight="1"
 					android:gravity="center"
-					android:text="@string/txt_auto_status"
+					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
 					android:textStyle="bold"/>
 
@@ -214,7 +214,7 @@
 					android:layout_height="wrap_content"
 					android:layout_weight="1"
 					android:gravity="center"
-					android:text="@string/txt_cool_temp"
+					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
 					android:textStyle="bold"/>
 
@@ -344,7 +344,7 @@
 			android:layout_height="wrap_content"
 			android:layout_margin="2dp"
 			android:layout_weight="1"
-			android:background="@android:color/holo_blue_bright"
+			android:background="@android:color/holo_red_light"
 			android:gravity="center"
 			android:onClick="onClick"
 			android:text="@string/bt_txt_plus"
@@ -358,7 +358,7 @@
 			android:layout_height="wrap_content"
 			android:layout_margin="2dp"
 			android:layout_weight="1"
-			android:background="@android:color/holo_red_light"
+			android:background="@android:color/holo_blue_bright"
 			android:gravity="center"
 			android:onClick="onClick"
 			android:text="@string/bt_txt_minus"

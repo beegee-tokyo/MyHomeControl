@@ -47,6 +47,7 @@ void relayOff() {
 		relayOffTimer.detach();
 		alarmTimer.detach();
 		analogWrite(speakerPin, 0);
+		digitalWrite(speakerPin, LOW);
 		lightOffTriggered = true;
 	}
 }

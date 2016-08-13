@@ -1,6 +1,7 @@
 package tk.giesecke.myhomecontrol;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -40,23 +41,46 @@ class FindAllDevices extends AsyncTask<String, String, Void> {
 		}
 		for (int i=0; i<hosts.size(); i++) {
 			// SPmonitor, Security front, Aircon 1, Aircon 2, Aircon 3, Security back
-			if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SOLAR_URL.substring(7))) {
+			if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SOLAR_URL.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.spMonitorIndex]) {
 				MyHomeControl.deviceIsOn[MyHomeControl.spMonitorIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_FRONT_1.substring(7))) {
+				sendBC("spm");
+			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_FRONT_1.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.secFrontIndex]) {
 				MyHomeControl.deviceIsOn[MyHomeControl.secFrontIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_BACK_1.substring(7))) {
-				MyHomeControl.deviceIsOn[MyHomeControl.secRearIndex] = true;
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_1.substring(7))) {
+				sendBC("sf1");
+			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.SECURITY_URL_BACK_1.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.secBackIndex]) {
+				MyHomeControl.deviceIsOn[MyHomeControl.secBackIndex] = true;
+				sendBC("sb1");
+			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_1.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.aircon1Index]) {
 				MyHomeControl.deviceIsOn[MyHomeControl.aircon1Index] = true;
 				MyHomeControl.espIP[0] = MyHomeControl.AIRCON_URL_1.substring(7);
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_2.substring(7))) {
+				sendBC("fd1");
+			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_2.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.aircon2Index]) {
 				MyHomeControl.deviceIsOn[MyHomeControl.aircon2Index] = true;
 				MyHomeControl.espIP[1] = MyHomeControl.AIRCON_URL_2.substring(7);
-			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_3.substring(7))) {
+				sendBC("ca1");
+			} else if (hosts.get(i).equalsIgnoreCase(MyHomeControl.AIRCON_URL_3.substring(7))
+					&& !MyHomeControl.deviceIsOn[MyHomeControl.aircon3Index]) {
 				MyHomeControl.deviceIsOn[MyHomeControl.aircon3Index] = true;
 				MyHomeControl.espIP[2] = MyHomeControl.AIRCON_URL_3.substring(7);
+				sendBC("xy1");
 			}
 		}
 		return null;
+	}
+	/**
+	 * Send broadcast to main thread to start initialization of device
+	 */
+	private void sendBC(final String deviceFound) {
+		/** Intent for activity internal broadcast message */
+		Intent broadCastIntent = new Intent();
+		broadCastIntent.setAction(MessageListener.BROADCAST_RECEIVED);
+		broadCastIntent.putExtra("from", "search");
+		broadCastIntent.putExtra("message", deviceFound);
+		appContext.sendBroadcast(broadCastIntent);
 	}
 }

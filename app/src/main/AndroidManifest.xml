@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="tk.giesecke.myhomecontrol"
-		  xmlns:android="http://schemas.android.com/apk/res/android"
-		  xmlns:tools="http://schemas.android.com/tools">
+          xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 	<uses-permission android:name="android.permission.INTERNET"/>
@@ -12,14 +12,6 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-	<!-- For receiving GCM messages -->
-	<!-- <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/> -->
-	<!-- For protecting GCM messages so that only your app can receive them -->
-	<!-- <permission
-		android:name="tk.giesecke.security.permission.C2D_MESSAGE"
-		android:protectionLevel="signature"/> -->
-
-	<!-- <uses-permission android:name="tk.giesecke.security.permission.C2D_MESSAGE"/> -->
 
 	<application
 		android:allowBackup="false"
@@ -28,6 +20,7 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme"
 		tools:ignore="GoogleAppIndexingWarning">
+
 		<activity
 			android:name=".MyHomeControl"
 			android:label="@string/app_name"
@@ -39,12 +32,14 @@
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
+
 		<activity
 			android:name=".Utilities"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
+
 		<activity
 			android:name=".ChartHelper"
 			android:label="@string/app_name"
@@ -61,15 +56,11 @@
 			</intent-filter>
 		</receiver>
 
-		<service
-			android:name=".UDPlistener"
-			android:enabled="true">
-		</service>
-
 		<receiver
 			android:name=".EventReceiver"
 			android:enabled="true">
 		</receiver>
+
 		<receiver android:name=".SecurityWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -91,33 +82,11 @@
 			android:name=".StartBackgroundServices"
 			android:exported="false">
 		</service>
-		<!-- <service
-			android:name=".SolarUpdateService"
-			android:exported="false">
-		</service> -->
+
 		<service
 			android:name=".SolarSyncDBService"
 			android:exported="false">
 		</service>
-
-		<!-- For receiving GCM message and registration success -->
-		<!-- <receiver
-			android:name=".GCMBroadcastReceiver"
-			android:permission="com.google.android.c2dm.permission.SEND">
-			<intent-filter>
-				<action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-				<action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-
-				<category android:name="tk.giesecke.security"/>
-			</intent-filter>
-		</receiver> -->
-
-		<!-- <service android:name=".GCMIntentService"/> -->
-
-		<!-- make sure to add google-play-services_lib from  project properties->android->library -->
-		<!-- <meta-data
-			android:name="com.google.android.gms.version"
-			android:value="@integer/google_play_services_version"/> -->
 
 		<receiver android:name=".SPwidget">
 			<intent-filter>
@@ -165,11 +134,26 @@
 			android:exported="false">
 		</service>
 
-
 		<service
-			android:name=".MQTTService"
+			android:name=".MessageListener"
 			android:exported="false">
 		</service>
+
+		<receiver android:name=".PanicButton" >
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/panic_button_info" />
+		</receiver>
+
+		<service
+			android:name=".PanicButtonClick"
+			android:exported="false" >
+		</service>
+
 	</application>
 
 </manifest>

@@ -19,6 +19,16 @@ void blueLedFlash() {
 }
 
 /**
+	switchBackDisplay
+	Change display back to layout 0
+	called by Ticker resetDisplay
+*/
+void switchBackDisplay() {
+	displayLayout = 0;
+	displayChange = true;
+}
+
+/**
 	triggerGetStatus
 	Sets flag statusUpdated to true for handling in loop()
 	called by Ticker updateLightTimer
@@ -38,40 +48,98 @@ void triggerGetDHT() {
 }
 
 /**
+	updateDisplay
+	Updates display for different layouts
+*/
+void updateDisplay(boolean all) {
+	switch (displayLayout) {
+		case 1: // Weather & time display layout
+			updateWeather(all);
+			break;
+		case 2: // AC detail display layout
+			updateAC(all);
+			break;
+		case 3: // Security detail display layout
+			updateSecurity(all);
+			break;
+		case 4: // Solar data display layout
+			updateSolar(all);
+			break;
+		default: // default display layout
+			updateSolar(all);
+			updateWeather(all);
+			updateAC(all);
+			updateSecurity(all);
+			break;
+	}
+}
+
+/**
 	updateSolar
 	Update solar values
 */
 void updateSolar(boolean all) {
 	/** String for some constructed text */
 	String outText = "";
-	// Draw background boxes 
-	ucg.setColor(255, 255, 0);
-	if (all) {
-		ucg.drawBox(0, 0, 128, 22); // Solar production
-	} else {
-		ucg.drawBox(30, 0, 94, 22); // Solar production
-	}
-	if (consPower < 0.0) {
-		ucg.setColor(0, 255, 0);
-	} else {
-		ucg.setColor(255, 0, 0);
-	}
-	ucg.drawBox(0, 22, 128, 22); // House consumption
+	if (displayLayout == 0) { // default display layout
+		// Draw background boxes 
+		ucg.setColor(255, 255, 0);
+		if (all) {
+			ucg.drawBox(0, 0, 128, 22); // Solar production
+		} else {
+			ucg.drawBox(30, 0, 94, 22); // Solar production
+		}
+		if (consPower < 0.0) {
+			ucg.setColor(0, 255, 0);
+		} else {
+			ucg.setColor(255, 0, 0);
+		}
+		ucg.drawBox(0, 22, 128, 22); // House consumption
 
-	// Print fixed text for solar values
-	ucg.setFont(ucg_font_helvB18_tf);
-	ucg.setColor(0, 0, 0);
-	if (all) {
-		ucg.setPrintPos(0,20);
-		ucg.print("S");
-	}
+		// Print fixed text for solar values
+		ucg.setFont(ucg_font_helvB18_tr);
+		ucg.setColor(0, 0, 0);
+		if (all) {
+			ucg.setPrintPos(0,20);
+			ucg.print("S");
+		}
 
-	// Print solar values
-	ucg.setFont(ucg_font_helvB18_tf);
-	ucg_print_center(String(solarPower,0) + "W", 15, 20);
-	ucg.setPrintPos(0,42);
-	ucg.print("C");
-	ucg_print_center(String(abs(consPower),0) + "W", 15, 42);
+		// Print solar values
+		ucg.setFont(ucg_font_helvB18_tr);
+		ucg_print_center(String(solarPower,0) + "W", 15, 20);
+		ucg.setPrintPos(0,42);
+		ucg.print("C");
+		ucg_print_center(String(abs(consPower),0) + "W", 15, 42);
+	} else if (displayLayout == 4) {
+		// Draw background boxes 
+		ucg.setColor(255, 255, 0);
+		if (all) {
+			ucg.drawBox(0, 0, 128, 64); // Solar production
+		} else {
+			ucg.drawBox(30, 0, 98, 64); // Solar production
+		}
+		if (consPower < 0.0) {
+			ucg.setColor(0, 255, 0);
+		} else {
+			ucg.setColor(255, 0, 0);
+		}
+		ucg.drawBox(0, 64, 128, 64); // House consumption
+
+		// Print fixed text for solar values
+		ucg.setFont(ucg_font_helvB24_tr);
+		ucg.setColor(0, 0, 0);
+		if (all) {
+			ucg.setPrintPos(0,44);
+			ucg.print("S");
+		}
+
+		// Print solar values
+		ucg.setFont(ucg_font_helvB24_tr);
+		ucg_print_center(String(solarPower,0) + "W", 20, 44);
+		ucg.setPrintPos(0,108);
+		ucg.print("C");
+		ucg_print_center(String(abs(consPower),0) + "W", 20, 108);
+	}
 }
 
 /**
@@ -81,38 +149,130 @@ void updateSolar(boolean all) {
 void updateWeather(boolean all) {
 	/** String for some constructed text */
 	String outText = "";
-	// Draw background boxes 
-	ucg.setColor(0, 0, 0);
-	if (all) {
-		ucg.drawBox(0, 44, 128, 21); // Weather text
-	}
-
-	// Print fixed text for weather values
-	ucg.setFont(ucg_font_helvB10_tf);
-	if (all) {
-		ucg.setColor(255, 255, 255);
-		ucg.setPrintPos(0,61);
-		outText = "1C";
-		outText.setCharAt(0, 176);
-		ucg.print(outText);
-		ucg.setPrintPos(45,61);
-		ucg.print("%h");
-		ucg.setPrintPos(90,61);
-		ucg.print("lux");
+	if (displayLayout == 0) {
+		// Draw background boxes 
 		ucg.setColor(0, 0, 0);
-	}
-	
-	// Print weather values 
-	ucg.setColor(102, 255, 255);
-	ucg.drawBox(0, 65, 128, 21); // Clear weather values
+		if (all) {
+			ucg.drawBox(0, 44, 128, 21); // Weather text
+		}
 
-	ucg.setColor(0, 0, 0);
-	ucg.setFont(ucg_font_helvB10_tf);
-	ucg.setPrintPos(2,80);
-	ucg.print(String((tempInside/sensorReadings),1));
-	ucg.setPrintPos(45,80);
-	ucg.print(String((humidInside/sensorReadings),1));
-	ucg_print_center(String(lightValue/sensorReadings), 70, 80);
+		// Print fixed text for weather values
+		ucg.setFont(ucg_font_helvB10_tr);
+		if (all) {
+			ucg.setColor(255, 255, 255);
+			ucg.setPrintPos(10,61);
+			outText = "1C";
+			outText.setCharAt(0, 176);
+			ucg.print(outText);
+			ucg.setPrintPos(50,61);
+			ucg.print("%h");
+			ucg.setPrintPos(90,61);
+			ucg.print("Feel");
+			ucg.setColor(0, 0, 0);
+		}
+		
+		// Clear weather values
+		ucg.setColor(255, 255, 255);
+		ucg.drawBox(0, 65, 128, 42); 
+
+		// Print inside weather values 
+		ucg.setColor(0, 0, 0);
+		ucg.setFont(ucg_font_helvB10_tr);
+		ucg.setPrintPos(1,80);
+		ucg.print("I");
+		ucg.setPrintPos(12,80);
+		if (sensorReadings != 0) {
+			ucg.print(String((tempInside/sensorReadings),1));
+			ucg.setPrintPos(50,80);
+			ucg.print(String((humidInside/sensorReadings),1));
+			ucg.setPrintPos(90,80);
+			ucg.print(String(dht.computeHeatIndex(tempInside/sensorReadings, humidInside/sensorReadings, false),1));
+		} else {
+			ucg.print(String((tempInside),1));
+			ucg.setPrintPos(50,80);
+			ucg.print(String((humidInside),1));
+			ucg.setPrintPos(90,80);
+			ucg.print(String(dht.computeHeatIndex(tempInside, humidInside, false),1));
+		}
+
+		// Print outside weather values 
+		ucg.setColor(0, 0, 0);
+		ucg.setPrintPos(1,102);
+		ucg.print("E");
+		ucg.setFont(ucg_font_helvB10_tr);
+		ucg.setPrintPos(12,102);
+		ucg.print(String(tempOutside,1));
+		ucg.setPrintPos(50,102);
+		ucg.print(String(humidOutside,1));
+		ucg.setPrintPos(90,102);
+		ucg.print(String(heatIndexOut,1));
+	} else if (displayLayout == 1) {
+		// Draw background boxes 
+		ucg.setColor(255, 255, 255);
+		ucg.drawBox(0, 0, 128, 22); // Date & time 
+		ucg.setPrintPos(1,18);
+		ucg.setFont(ucg_font_helvB12_tr);
+		outText = digitalClockDisplay();
+		ucg.setColor(0, 0, 0);
+		ucg.print(outText);
+		
+		if (all) {
+			ucg.drawBox(0, 22, 128, 22); // Location text
+			ucg.drawBox(0, 44, 40, 84); // Weather text
+		}
+
+		// Print fixed text for weather values
+		ucg.setFont(ucg_font_helvB14_tr);
+		if (all) {
+			ucg.setColor(255, 255, 255);
+			ucg.setPrintPos(5,65);
+			outText = "1C";
+			outText.setCharAt(0, 176);
+			ucg.print(outText);
+			ucg.setPrintPos(5,93);
+			ucg.print("%h");
+			ucg.setPrintPos(45,40);
+			ucg.print("IN");
+			ucg.setPrintPos(89,40);
+			ucg.print("OUT");
+			ucg.setPrintPos(5,121);
+			ucg.setFont(ucg_font_helvB12_tr);
+			ucg.print("Feel");
+			ucg.setColor(0, 0, 0);
+		}
+		
+		// Clear weather values
+		ucg.setColor(255, 255, 255);
+		ucg.drawBox(40, 44, 98, 94); 
+
+		// Print inside weather values 
+		ucg.setColor(0, 0, 0);
+		ucg.setFont(ucg_font_helvB14_tr);
+		ucg.setPrintPos(45,65);
+		if (sensorReadings != 0) {
+			ucg.print(String((tempInside/sensorReadings),1));
+			ucg.setPrintPos(45,93);
+			ucg.print(String((humidInside/sensorReadings),1));
+			ucg.setPrintPos(45,121);
+			ucg.print(String(dht.computeHeatIndex(tempInside/sensorReadings, humidInside/sensorReadings, false),1));
+		} else {
+			ucg.print(String((tempInside),1));
+			ucg.setPrintPos(45,93);
+			ucg.print(String((humidInside),1));
+			ucg.setPrintPos(45,121);
+			ucg.print(String(dht.computeHeatIndex(tempInside, humidInside, false),1));
+		}
+
+		// Print outside weather values 
+		ucg.setColor(0, 0, 0);
+		ucg.setFont(ucg_font_helvB14_tr);
+		ucg.setPrintPos(89,65);
+		ucg.print(String(tempOutside,1));
+		ucg.setPrintPos(89,93);
+		ucg.print(String(humidOutside,1));
+		ucg.setPrintPos(89,121);
+		ucg.print(String(heatIndexOut,1));
+	}
 }
 
 /**
@@ -120,76 +280,271 @@ void updateWeather(boolean all) {
 	Update AC values
 */
 void updateAC(boolean all) {
-	// Draw background boxes 
-	ucg.setColor(224, 224, 209);
-	if (all) {
-		ucg.drawBox(0, 86, 128, 21); // AC Status
-	} else {
-		ucg.drawBox(25, 86, 103, 21); // AC Status
-	}
-	
-	// Print fixed text for aircon
-	ucg.setFont(ucg_font_helvB18_tf);
-	ucg.setColor(0, 0, 0);
-	if (all) {
-		ucg.setFont(ucg_font_helvB10_tf);
-		ucg.setPrintPos(0,103);
-		ucg.print("AC");
-	}
-	
-	// Print AC status
-	ucg.setFont(ucg_font_helvB10_tf);
-	if (ac1On == 2) {
+	if (displayLayout == 0) {
+		// Draw background boxes 
 		ucg.setColor(0, 0, 0);
-		ucg_print_center("  ", 20, 103);
-	} else {
-		if (ac1On == 1) {
-			bmDraw("/on.tga",25,104);
+		ucg.drawBox (0, 107, 71, 21);
+
+		// Print AC status
+		ucg.setFont(ucg_font_helvB10_tr);
+		if (ac1On == 2) {
+			ucg.setColor(128, 128, 128);
+			ucg.setPrintPos(0,124);
+			ucg.print("A1 -");
 		} else {
-			bmDraw("/off.tga",25,104);
-		}
-		if (ac1Mode == 2) {
-			bmDraw("/cool.tga",42,104);
-		} else if (ac1Mode == 1) {
-			bmDraw("/dry.tga",42,104);
-		} else {
-			bmDraw("/fan.tga",42,104);
-		}
-		if (ac1Timer == 1) {
-			bmDraw("/timer.tga",59,104);
-		} else {
-			if (ac1Auto == 1) {
-				bmDraw("/auto.tga",59,104);
+			if (ac1On == 1) {
+				ucg.setColor(255, 0, 0);
 			} else {
-				bmDraw("/manual.tga",59,104);
+				ucg.setColor(0, 255, 255);
+			}
+			ucg.setPrintPos(0,124);
+			ucg.print("A1");
+
+			ucg.setFont(ucg_font_helvB08_tr);
+			ucg.setPrintPos(22,117);
+			if (ac1Mode == 2) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("C");
+			} else if (ac1Mode == 1) {
+				ucg.setColor(0, 255, 0);
+				ucg.print("D");
+			} else {
+				ucg.setColor(0, 255, 255);
+				ucg.print("F");
+			}
+
+			ucg.setPrintPos(22,127);
+			if (ac1Timer == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("T");
+			} else {
+				if (ac1Auto == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.print("A");
+				} else {
+					ucg.setColor(255, 0, 0);
+					ucg.print("M");
+				}
 			}
 		}
-	}
-	if (ac2On == 2) {
-		ucg.setColor(0, 0, 0);
-		ucg.setFont(ucg_font_helvB10_tf);
-		ucg_print_center("  ", 90, 103);
-	} else {
-		if (ac2On == 1) {
-			bmDraw("/on.tga",78,104);
+
+		ucg.setFont(ucg_font_helvB10_tr);
+		if (ac2On == 2) {
+			ucg.setColor(128, 128, 128);
+			ucg.setPrintPos(35,124);
+			ucg.print("A2 -");
 		} else {
-			bmDraw("/off.tga",78,104);
-		}
-		if (ac2Mode == 2) {
-			bmDraw("/cool.tga",95,104);
-		} else if (ac1Mode == 1) {
-			bmDraw("/dry.tga",95,104);
-		} else {
-			bmDraw("/fan.tga",95,104);
-		}
-		if (ac2Timer == 1) {
-			bmDraw("/timer.tga",112,104);
-		} else {
-			if (ac2Auto == 1) {
-				bmDraw("/auto.tga",112,104);
+			if (ac2On == 1) {
+				ucg.setColor(255, 0, 0);
 			} else {
-				bmDraw("/manual.tga",112,104);
+				ucg.setColor(0, 0, 255);
 			}
+			ucg.setPrintPos(35,124);
+			ucg.print("A2");
+
+			ucg.setFont(ucg_font_helvB08_tr);
+			ucg.setPrintPos(57,117);
+			if (ac2Mode == 2) {
+				ucg.setColor(0, 255, 255);
+				ucg.print("C");
+			} else if (ac2Mode == 1) {
+				ucg.setColor(0, 255, 0);
+				ucg.print("D");
+			} else {
+				ucg.setColor(0, 255, 255);
+				ucg.print("F");
+			}
+
+			ucg.setPrintPos(57,127);
+			if (ac2Timer == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("T");
+			} else {
+				if (ac2Auto == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.print("A");
+				} else {
+					ucg.setColor(255, 0, 0);
+					ucg.print("M");
+				}
+			}
+		}
+	} else if (displayLayout == 2) {
+		String outText;
+		ucg.setFont(ucg_font_helvB10_tr);
+		// Draw background boxes 
+		ucg.setColor(0, 0, 0);
+		if (all) {
+			ucg.drawBox (0, 0, 128, 23);
+			ucg.drawBox (0, 23, 40, 125);
+			ucg.setColor(255, 255, 255);
+			ucg.setPrintPos(1,41);
+			ucg.print("Stat");
+			ucg.setPrintPos(1,62);
+			ucg.print("Mode");
+			ucg.setPrintPos(1,83);
+			ucg.print("Auto");
+			ucg.setPrintPos(1,104);
+			ucg.print("Fan");
+			ucg.setPrintPos(1,125);
+			ucg.print("Temp");
+			ucg.setFont(ucg_font_helvB10_tr);
+			ucg.setPrintPos(40,17);
+			ucg.print("Office");
+			ucg.setPrintPos(84,17);
+			ucg.print("Living");
+		}
+		ucg.setColor(255, 255, 255);
+		ucg.drawBox (40, 23, 88, 105);
+
+		// Print office AC status
+		ucg.setFont(ucg_font_helvB18_tr);
+		if (ac1On == 2) {
+			ucg.setColor(128, 128, 128);
+			outText = "NA";
+			ucg.setPrintPos(42,43);
+			ucg.print(outText);
+			ucg.setPrintPos(42,64);
+			ucg.print(outText);
+			ucg.setPrintPos(42,85);
+			ucg.print(outText);
+			ucg.setPrintPos(42,106);
+			ucg.print(outText);
+			ucg.setPrintPos(42,127);
+			ucg.print(outText);
+		} else {
+			ucg.setPrintPos(42,43);
+			if (ac1On == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(42,64);
+			if (ac1Mode == 2) {
+				ucg.setColor(0, 0, 255);
+				ucg.setFont(ucg_font_helvB14_tr);
+				ucg.print("Cool");
+			} else if (ac1Mode == 1) {
+				ucg.setColor(0, 255, 0);
+				ucg.print("Dry");
+			} else {
+				ucg.setColor(255, 0, 0);
+				ucg.print("Fan");
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+			
+			ucg.setPrintPos(42,85);
+			if (ac1Timer == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Tim");
+			} else {
+				if (ac1Auto == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.setFont(ucg_font_helvB14_tr);
+					ucg.print("Auto");
+				} else {
+					ucg.setColor(255, 0, 0);
+					ucg.print("Man");
+				}
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+
+			ucg.setPrintPos(42,106);
+			if (ac1Speed == 0) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Low");
+			} else if (ac1Speed == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Med");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.setFont(ucg_font_helvB14_tr);
+				ucg.print("High");
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+			
+			ucg.setPrintPos(42,127);
+			outText = String(ac1Temp);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
+		}
+
+		// Print living room AC status
+		ucg.setFont(ucg_font_helvB18_tr);
+		if (ac2On == 2) {
+			ucg.setColor(128, 128, 128);
+			outText = "NA";
+			ucg.setPrintPos(89,43);
+			ucg.print(outText);
+			ucg.setPrintPos(89,64);
+			ucg.print(outText);
+			ucg.setPrintPos(89,85);
+			ucg.print(outText);
+			ucg.setPrintPos(89,106);
+			ucg.print(outText);
+			ucg.setPrintPos(89,127);
+			ucg.print(outText);
+		} else {
+			ucg.setPrintPos(89,43);
+			if (ac2On == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(89,64);
+			if (ac2Mode == 2) {
+				ucg.setColor(0, 0, 255);
+				ucg.setFont(ucg_font_helvB14_tr);
+				ucg.print("Cool");
+			} else if (ac2Mode == 1) {
+				ucg.setColor(0, 255, 0);
+				ucg.print("Dry");
+			} else {
+				ucg.setColor(255, 0, 0);
+				ucg.print("Fan");
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+
+			ucg.setPrintPos(89,85);
+			if (ac2Timer == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Tim");
+			} else {
+				if (ac1Auto == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.setFont(ucg_font_helvB14_tr);
+					ucg.print("Auto");
+				} else {
+					ucg.setColor(255, 0, 0);
+					ucg.print("Man");
+				}
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+
+			ucg.setPrintPos(89,106);
+			if (ac2Speed == 0) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Low");
+			} else if (ac2Speed == 1) {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Med");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.setFont(ucg_font_helvB14_tr);
+				ucg.print("High");
+			}
+			ucg.setFont(ucg_font_helvB18_tr);
+			
+			ucg.setPrintPos(89,127);
+			outText = String(ac2Temp);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
 		}
 	}
 }
@@ -199,51 +554,193 @@ void updateAC(boolean all) {
 	Update Security values
 */
 void updateSecurity(boolean all) {
-	// Draw background boxes 
-	ucg.setColor(224, 224, 209);
-	if (all) {
-		ucg.drawBox(0, 107, 128, 21); // Security Status
-	} else {
-		ucg.drawBox(32, 107, 96, 21); // Security Status
-	}
-	
-	// Print fixed text for and security
-	ucg.setFont(ucg_font_helvB10_tf);
-	ucg.setColor(0, 0, 0);
-	if (all) {
-		ucg.setPrintPos(0,124);
-		ucg.print("SEC");
-	}
-	
-	// Print Security status
-	if (secFrontOn == 2) {
+	String outText;
+	if (displayLayout == 0) {
+		// Draw background boxes 
 		ucg.setColor(0, 0, 0);
-		ucg_print_center("  ", 20, 124);
-	} else {
-		if (secFrontOn == 1) {
-			bmDraw("/s_on.tga",40,125);
+		ucg.drawBox(71, 107, 57, 21);
+		ucg.setFont(ucg_font_helvB10_tr);
+		
+		// Print Security status
+		if (secFrontOn == 2) {
+			ucg.setColor(128, 128, 128);
+			ucg.setPrintPos(71,124);
+			ucg.print("SF -");
 		} else {
-			bmDraw("/s_off.tga",40,125);
+			if (secFrontOn == 1) {
+				ucg.setColor(255, 0, 0);
+			} else {
+				ucg.setColor(0, 255, 255);
+			}
+			ucg.setPrintPos(71,124);
+			ucg.print("SF");
+			
+			if (secFrontLight == 1) {
+				ucg.setColor(255, 0, 0);
+			} else {
+				ucg.setColor(0, 255, 255);
+			}
+			ucg.setFont(ucg_font_helvB08_tr);
+			ucg.setPrintPos(93,122);
+			ucg.print("L");
 		}
-		if (secFrontLight == 1) {
-			bmDraw("/l_on.tga",57,125);
+
+		ucg.setFont(ucg_font_helvB10_tr);
+		if (secBackOn == 2) {
+			ucg.setColor(128, 128, 128);
+			ucg.setPrintPos(101,124);
+			ucg.print("SB -");
 		} else {
-			bmDraw("/l_off.tga",57,125);
+			if (secBackOn == 1) {
+				ucg.setColor(255, 0, 0);
+			} else {
+				ucg.setColor(0, 255, 255);
+			}
+			ucg.setPrintPos(101,124);
+			ucg.print("SB");
+
+			if (secBackLight == 1) {
+				ucg.setColor(255, 0, 0);
+			} else {
+				ucg.setColor(0, 255, 255);
+			}
+			ucg.setFont(ucg_font_helvB08_tr);
+			ucg.setPrintPos(123,122);
+			ucg.print("L");
 		}
-	}
-	if (secBackOn == 2) {
+	} else if (displayLayout == 3) {
+		String outText;
+		ucg.setFont(ucg_font_helvB10_tr);
+		// Draw background boxes 
 		ucg.setColor(0, 0, 0);
-		ucg_print_center("  ", 80, 124);
-	} else {
-		if (secBackOn == 1) {
-			bmDraw("/on.tga",90,125);
-		} else {
-			bmDraw("/off.tga",90,125);
+		if (all) {
+			ucg.drawBox (0, 0, 128, 23);
+			ucg.drawBox (0, 23, 40, 125);
+			ucg.setColor(255, 255, 255);
+			ucg.setPrintPos(1,41);
+			ucg.print("Alarm");
+			ucg.setPrintPos(1,62);
+			ucg.print("Light");
+			ucg.setPrintPos(1,83);
+			ucg.print("Auto");
+			ucg.setPrintPos(1,104);
+			ucg.print("On");
+			ucg.setPrintPos(1,125);
+			ucg.print("Off");
+			ucg.setFont(ucg_font_helvB10_tr);
+			ucg.setPrintPos(40,17);
+			ucg.print("Front");
+			ucg.setPrintPos(84,17);
+			ucg.print("Back");
 		}
-		if (secBackLight == 1) {
-			bmDraw("/l_on.tga",107,125);
+		ucg.setColor(255, 255, 255);
+		ucg.drawBox (40, 23, 88, 105);
+		
+		ucg.setFont(ucg_font_helvB18_tr);
+		// Print Security front status
+		if (secFrontOn == 2) {
+			ucg.setColor(128, 128, 128);
+			outText = "NA";
+			ucg.setPrintPos(42,43);
+			ucg.print(outText);
+			ucg.setPrintPos(42,64);
+			ucg.print(outText);
+			ucg.setPrintPos(42,85);
+			ucg.print(outText);
+			ucg.setPrintPos(42,106);
+			ucg.print(outText);
+			ucg.setPrintPos(42,127);
+			ucg.print(outText);
 		} else {
-			bmDraw("/l_off.tga",107,125);
+			ucg.setPrintPos(42,43);
+			if (secFrontOn == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+			
+			ucg.setPrintPos(42,64);
+			if (secFrontLight == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(42,85);
+			if (secFrontAuto == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(42,106);
+			outText = String(secFrontOnTime);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
+
+			ucg.setPrintPos(42,127);
+			outText = String(secFrontOffTime);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
+		}
+
+		// Print Security back status
+		if (secBackOn == 2) {
+			ucg.setColor(128, 128, 128);
+			outText = "NA";
+			ucg.setPrintPos(89,43);
+			ucg.print(outText);
+			ucg.setPrintPos(89,64);
+			ucg.print(outText);
+			ucg.setPrintPos(89,85);
+			ucg.print(outText);
+			ucg.setPrintPos(89,106);
+			ucg.print(outText);
+			ucg.setPrintPos(89,127);
+			ucg.print(outText);
+		} else {
+			ucg.setPrintPos(89,43);
+			if (secBackOn == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+			
+			ucg.setPrintPos(89,64);
+			if (secBackLight == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(89,85);
+			if (secBackAuto == 1) {
+				ucg.setColor(255, 0, 0);
+				ucg.print("On");
+			} else {
+				ucg.setColor(0, 0, 255);
+				ucg.print("Off");
+			}
+
+			ucg.setPrintPos(89,106);
+			outText = String(secBackOnTime);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
+
+			ucg.setPrintPos(89,127);
+			outText = String(secBackOffTime);
+			ucg.setColor(0, 0, 255);
+			ucg.print(outText);
 		}
 	}
 }
@@ -255,8 +752,8 @@ void updateSecurity(boolean all) {
 */
 void showMQTTerrorScreen() {
 	ucg.clearScreen();
-	ucg.setFont(ucg_font_helvB14_tf);
-	// ucg.setRotate180();
+	ucg.setFont(ucg_font_helvB14_tr);
+	ucg.setRotate180();
 	ucg.setColor(255, 128, 0);
 	ucg.drawBox(0, 0, 128, 128);
 	ucg.setColor(0, 0, 0);
@@ -307,53 +804,143 @@ void ucg_print_center(String text, int xPos, int yPos) {
 void getHomeInfo(boolean all) {
 	// getLight();
 	getTemperature();
-	makeWeather();
-	if (all) {
-		getSPMStatus();
-		getAC1Status();
-		getAC2Status();
-		getSEFStatus();
-		getSERStatus();
-	}
+	makeInWeather();
+	makeOutWeather();
 	if (all) {
 		updateSolar(all);
 		updateWeather(all);
 		updateAC(all);
 		updateSecurity(all);
-	}
+
+		getSPMStatus();
+
+		/** Wait out time for client request */
+		int waitTimeOut = 0;
+
+		reqStatusUpdate(ipAC1);
+		udpMsgLength = 0;
+		while (udpMsgLength == 0) {
+			// Check if broadcast arrived
+			udpMsgLength = udpListener.parsePacket();
+			if (udpMsgLength != 0) {
+				getUDPbroadcast(udpMsgLength);
+				break;
+			} else {
+				delay(10);
+				waitTimeOut++;
+				if (waitTimeOut == 200) { // Wait 2000 ms
+					udpMsgLength = 1; // Finish waiting
+				}
+			}
+		}
+
+		reqStatusUpdate(ipAC2);
+		udpMsgLength = 0;
+		while (udpMsgLength == 0) {
+			// Check if broadcast arrived
+			udpMsgLength = udpListener.parsePacket();
+			if (udpMsgLength != 0) {
+				getUDPbroadcast(udpMsgLength);
+				break;
+			} else {
+				delay(10);
+				waitTimeOut++;
+				if (waitTimeOut == 200) { // Wait 2000 ms
+					udpMsgLength = 1; // Finish waiting
+				}
+			}
+		}
+
+		reqStatusUpdate(ipSecFront);
+		udpMsgLength = 0;
+		while (udpMsgLength == 0) {
+			// Check if broadcast arrived
+			udpMsgLength = udpListener.parsePacket();
+			if (udpMsgLength != 0) {
+				getUDPbroadcast(udpMsgLength);
+				break;
+			} else {
+				delay(10);
+				waitTimeOut++;
+				if (waitTimeOut == 200) { // Wait 2000 ms
+					udpMsgLength = 1; // Finish waiting
+				}
+			}
+		}
+
+		reqStatusUpdate(ipSecBack);
+		udpMsgLength = 0;
+		while (udpMsgLength == 0) {
+			// Check if broadcast arrived
+			udpMsgLength = udpListener.parsePacket();
+			if (udpMsgLength != 0) {
+				getUDPbroadcast(udpMsgLength);
+				break;
+			} else {
+				delay(10);
+				waitTimeOut++;
+				if (waitTimeOut == 200) { // Wait 2000 ms
+					udpMsgLength = 1; // Finish waiting
+				}
+			}
+		}
+
+		updateSolar(all);
+		updateWeather(all);
+		updateAC(all);
+		updateSecurity(all);
+}
 
 	// Reset weather values for next reading cycle
 	sensorReadings = 0;
 	tempInside = 0;
 	humidInside = 0;
 	heatIndexIn = 0;
-	lightValue = 0;
 }
 
 /**
-	makeWeather
-	Build weather info JSON object
+	makeInWeather
+	Build inside weather info JSON object
 */
-void makeWeather() {
+void makeInWeather() {
  	/** Buffer for outgoing JSON string */
 	DynamicJsonBuffer jsonOutBuffer;
 	/** Json object for outgoing data */
 	JsonObject& jsonOut = jsonOutBuffer.createObject();
 
-	heatIndexIn = dht.computeHeatIndex(tempInside/sensorReadings, humidInside/sensorReadings, false);
-	
 	jsonOut["de"] = "wei";
 	if (sensorReadings != 0) {
+		heatIndexIn = dht.computeHeatIndex(tempInside/sensorReadings, humidInside/sensorReadings, false);
 		jsonOut["te"] = tempInside/sensorReadings; 
 		jsonOut["hu"] = humidInside/sensorReadings;
 		jsonOut["hi"] = heatIndexIn;
 	} else {
+		heatIndexIn = dht.computeHeatIndex(tempInside, humidInside, false);
 		jsonOut["te"] = tempInside; 
 		jsonOut["hu"] = humidInside;
 		jsonOut["hi"] = heatIndexIn;
 	}
 	inWeatherStatus = "";
 	jsonOut.printTo(inWeatherStatus);
+}
+
+/**
+	makeOutWeather
+	Build outside weather info JSON object
+*/
+void makeOutWeather() {
+ 	/** Buffer for outgoing JSON string */
+	DynamicJsonBuffer jsonOutBuffer;
+	/** Json object for outgoing data */
+	JsonObject& jsonOut = jsonOutBuffer.createObject();
+
+	jsonOut["de"] = "weo";
+	jsonOut["te"] = tempOutside; 
+	jsonOut["hu"] = humidOutside;
+	jsonOut["hi"] = heatIndexOut;
+
+	outWeatherStatus = "";
+	jsonOut.printTo(outWeatherStatus);
 }
 
 /**
@@ -379,23 +966,4 @@ void getTemperature() {
 	humidInside += newHumidValue;
 	tempInside += newTempValue;
 	sensorReadings++;
-}
-
-/**
- * Plays the tune defined with melody[] endless until ticker is detached
- */
-void playSound() {
-	/** Current tone to be played */
-	int toneLength = melody[melodyPoint];
-	analogWriteFreq(toneLength / 2);
-	analogWrite(SPEAKER, toneLength / 4);
-
-	melodyPoint ++;
-	if (melodyPoint == melodyLenght) {
-		melodyPoint = 0;
-		soundTimer.detach();
-//		analogWriteFreq(0);
-		analogWrite(SPEAKER, 0);
-		digitalWrite(SPEAKER, LOW);
-	}
 }

@@ -34,14 +34,30 @@ void connectWiFi() {
 */
 void sendToMQTT() {
 	digitalWrite(ACT_LED, LOW); // Turn on red LED
-	mqttClient.publish("/SPM", spmStatus);
-	mqttClient.publish("/AC1", ac1Status);
-	mqttClient.publish("/AC2", ac2Status);
-	mqttClient.publish("/WEI", inWeatherStatus);
-	mqttClient.publish("/WEO", outWeatherStatus);
-	mqttClient.publish("/SEF", secFrontStatus);
-	mqttClient.publish("/SEB", secBackStatus);
+	digitalWrite(COM_LED, LOW); // Turn on blue LED
+	if (spmStatus.length() != 0) {
+		mqttClient.publish("/SPM", spmStatus);
+	}
+	if (ac1Status.length() != 0) {
+		mqttClient.publish("/AC1", ac1Status);
+	}
+	if (ac2Status.length() != 0) {
+		mqttClient.publish("/AC2", ac2Status);
+	}
+	if (inWeatherStatus.length() != 0) {
+		mqttClient.publish("/WEI", inWeatherStatus);
+	}
+	if (outWeatherStatus.length() != 0) {
+		mqttClient.publish("/WEO", outWeatherStatus);
+	}
+	if (secFrontStatus.length() != 0) {
+		mqttClient.publish("/SEF", secFrontStatus);
+	}
+	if (secBackStatus.length() != 0) {
+		mqttClient.publish("/SEB", secBackStatus);
+	}
 	digitalWrite(ACT_LED, HIGH); // Turn off red LED
+	digitalWrite(COM_LED, HIGH); // Turn off blue LED
 }
 
 /**
@@ -203,6 +219,8 @@ void getAC1Status() {
 		ac1Mode = jsonOut["mo"];
 		ac1Timer = jsonOut["ti"];
 		ac1Auto = jsonOut["au"];
+		ac1Speed = jsonOut["sp"];
+		ac1Temp = jsonOut["te"];
 	}
 }
 
@@ -282,6 +300,8 @@ void getAC2Status() {
 		ac2Mode = jsonOut["mo"];
 		ac2Timer = jsonOut["ti"];
 		ac2Auto = jsonOut["au"];
+		ac2Speed = jsonOut["sp"];
+		ac2Temp = jsonOut["te"];
 	}
 }
 
@@ -367,14 +387,17 @@ void getSEFStatus() {
 
 		secFrontOn = jsonOut["ao"];
 		secFrontLight = jsonOut["lo"];
+		secFrontAuto = jsonOut["au"];
+		secFrontOnTime = jsonOut["an"];
+		secFrontOffTime = jsonOut["af"];
 	}
 }
 
 /**
-	getSERStatus
+	getSEBStatus
 	Get current status of back yard security
 */
-void getSERStatus() {
+void getSEBStatus() {
 	digitalWrite(COM_LED, LOW);
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpClient;
@@ -447,12 +470,47 @@ void getSERStatus() {
 		jsonOut["an"] = jsonIn["auto_on"];
 		jsonOut["af"] = jsonIn["auto_off"];
 		jsonOut["lo"] = jsonIn["light_on"];
+		jsonOut["te"] = jsonIn["temp"];
+		jsonOut["hu"] = jsonIn["humid"];
+		jsonOut["he"] = jsonIn["heat"];
+		jsonOut["li"] = jsonIn["light_val"];
 		secBackStatus = "";
 		jsonOut.printTo(secBackStatus);
 
 		secBackOn = jsonOut["ao"];
 		secBackLight = jsonOut["lo"];
+		secBackAuto = jsonOut["au"];
+		secBackOnTime = jsonOut["an"];
+		secBackOffTime = jsonOut["af"];
+		tempOutside = jsonIn["temp"];
+		humidOutside = jsonIn["humid"];
+		heatIndexOut = jsonIn["heat"];
 	}
+}
+
+/**
+	reqStatusUpdate
+	Request current status of a device
+	Returns true if request could be sent or false if connection failed
+*/
+void reqStatusUpdate(IPAddress serverIP) {
+	digitalWrite(COM_LED, LOW);
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpClient;
+	
+	const int httpPort = 6000;
+
+	if (!tcpClient.connect(serverIP, httpPort)) {
+		Serial.println("connection to " + String(serverIP[0]) + "." + String(serverIP[1]) + "." + String(serverIP[2]) + "." + String(serverIP[3]) + " failed");
+		tcpClient.stop();
+		digitalWrite(COM_LED, HIGH);
+		return;
+	}
+
+	tcpClient.print("s");
+
+	tcpClient.stop();
+	digitalWrite(COM_LED, HIGH);
 }
 
 /** 
@@ -547,6 +605,11 @@ void parseACpacket (JsonObject& jsonIn, String device) {
 		ac1Mode = jsonOut["mo"];
 		ac1Timer = jsonOut["ti"];
 		ac1Auto = jsonOut["au"];
+		ac1Speed = jsonOut["sp"];
+		ac1Temp = jsonOut["te"];
+		// digitalWrite(ACT_LED, LOW); // Turn on red LED
+		// mqttClient.publish("/AC1", ac1Status);
+		// digitalWrite(ACT_LED, HIGH); // Turn off red LED
 	} else if (device == "ca1") {
 		ac2Status = "";
 		jsonOut.printTo(ac2Status);
@@ -555,6 +618,11 @@ void parseACpacket (JsonObject& jsonIn, String device) {
 		ac2Mode = jsonOut["mo"];
 		ac2Timer = jsonOut["ti"];
 		ac2Auto = jsonOut["au"];
+		ac2Speed = jsonOut["sp"];
+		ac2Temp = jsonOut["te"];
+		// digitalWrite(ACT_LED, LOW); // Turn on red LED
+		// mqttClient.publish("/AC2", ac2Status);
+		// digitalWrite(ACT_LED, HIGH); // Turn off red LED
 	}
 }
 
@@ -582,6 +650,12 @@ void parseSecFrontPacket (JsonObject& jsonIn) {
 
 	secFrontOn = jsonOut["ao"];
 	secFrontLight = jsonOut["lo"];
+	secFrontAuto = jsonOut["au"];
+	secFrontOnTime = jsonOut["an"];
+	secFrontOffTime = jsonOut["af"];
+	// digitalWrite(ACT_LED, LOW); // Turn on red LED
+	// mqttClient.publish("/SEF", secFrontStatus);
+	// digitalWrite(ACT_LED, HIGH); // Turn off red LED
 }
 
 /**
@@ -603,11 +677,29 @@ void parseSecBackPacket (JsonObject& jsonIn) {
 	jsonOut["an"] = jsonIn["auto_on"];
 	jsonOut["af"] = jsonIn["auto_off"];
 	jsonOut["lo"] = jsonIn["light_on"];
+	jsonOut["te"] = jsonIn["temp"];
+	jsonOut["hu"] = jsonIn["humid"];
+	jsonOut["he"] = jsonIn["heat"];
+	jsonOut["li"] = jsonIn["light_val"];
 	secBackStatus = "";
 	jsonOut.printTo(secBackStatus);
 
 	secBackOn = jsonOut["ao"];
 	secBackLight = jsonOut["lo"];
+	secBackAuto = jsonOut["au"];
+	secBackOnTime = jsonOut["an"];
+	secBackOffTime = jsonOut["af"];
+	tempOutside = jsonIn["temp"];
+	humidOutside = jsonIn["humid"];
+	heatIndexOut = jsonIn["heat"];
+	// digitalWrite(ACT_LED, LOW); // Turn on red LED
+	// mqttClient.publish("/SEB", secBackStatus);
+	// digitalWrite(ACT_LED, HIGH); // Turn off red LED
+	// makeOutWeather();
+	// digitalWrite(ACT_LED, LOW); // Turn on red LED
+	// mqttClient.publish("/WEO", outWeatherStatus);
+	// digitalWrite(ACT_LED, HIGH); // Turn off red LED
+
 }
 
 /**
@@ -629,6 +721,9 @@ void parseSPMPacket (JsonObject& jsonIn) {
 	solarPower = jsonIn["s"].as<double>();
 	spmStatus = "";
 	jsonOut.printTo(spmStatus);
+	// digitalWrite(ACT_LED, LOW); // Turn on red LED
+	// mqttClient.publish("/SPM", spmStatus);
+	// digitalWrite(ACT_LED, HIGH); // Turn off red LED
 }
 
 // For debug over TCP

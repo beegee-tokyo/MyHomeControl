@@ -29,30 +29,25 @@ public class AirconWidget extends AppWidgetProvider {
 			rvACview.setTextViewText(R.id.bt_ac_wid_timer, newButtonText);
 		}
 
-		// Create an intent to launch the service on PLUS button push
-		/** Intent to start method to increase timer time */
+		/** Intent to start method to increase timer time on PLUS button push */
 		Intent serviceIntent = new Intent(context, AirconWidgetClick.class);
 		serviceIntent.setAction("p");
-		// PendingIntent is required for the onClickPendingIntent that actually
-		// starts the service from a button click
-		/** Pending intent to start method when widget is clicked */
+		/** Pending intent to start method when plus button is clicked */
 		PendingIntent pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		// Attach a click listener to the button
 		rvACview.setOnClickPendingIntent(R.id.bt_ac_wid_plus, pendingServiceIntent);
 
-		// Create an intent to launch the service on MINUS button push
-		/** Intent to start method to decrease timer time */
+		/** Intent to start method to decrease timer time on MINUS button push */
 		serviceIntent = new Intent(context, AirconWidgetClick.class);
 		serviceIntent.setAction("m");
-		/** Pending intent to start method when widget is clicked */
+		/** Pending intent to start method when minus button is clicked */
 		pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		// Attach a click listener to the button
 		rvACview.setOnClickPendingIntent(R.id.bt_ac_wid_minus, pendingServiceIntent);
 
-		// Create an intent to launch the service on MINUS button push
 		/** Intent to start method to start aircon in timer mode */
 		serviceIntent = new Intent(context, AirconWidgetClick.class);
 		serviceIntent.setAction("s");
@@ -62,12 +57,9 @@ public class AirconWidget extends AppWidgetProvider {
 		// Attach a click listener to the button
 		rvACview.setOnClickPendingIntent(R.id.bt_ac_wid_timer, pendingServiceIntent);
 
-		// Create an Intent to launch MainActivity
 		/** Intent to start app if widget is pushed */
 		Intent appIntent = new Intent(context, MyHomeControl.class);
 		appIntent.putExtra("view", 2);
-		// Creating a pending intent, which will be invoked when the user
-		// clicks on the widget
 		/** Pending intent to start app if widget is pushed */
 		PendingIntent pendingAppIntent = PendingIntent.getActivity(context, 2,
 				appIntent, PendingIntent.FLAG_UPDATE_CURRENT);

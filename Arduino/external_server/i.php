@@ -1,9 +1,9 @@
 <?php
+        include ("utility.php");
 	$dayValue = $_GET['d'];
 	$solarValue = $_GET['s'];
 	$consValue = $_GET['c'];
 	$lightValue = $_GET['l'];
-	include ("utility.php");
 
 	try {
 		$dbh = new PDO('mysql:host=localhost;dbname=giesecke_sp',  $username, $password)or die("cannot open database");

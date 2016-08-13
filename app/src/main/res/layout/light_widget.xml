@@ -7,7 +7,7 @@
 	android:padding="@dimen/widget_margin"
 	android:id="@+id/light_widget"
 	android:clickable="true"
-	android:background="#80ffffff"
+	android:background="@android:color/transparent"
 	tools:ignore="Overdraw">
 
 	<ImageView

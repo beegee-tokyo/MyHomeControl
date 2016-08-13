@@ -6,7 +6,8 @@ void getSPMStatus();
 void getAC1Status();
 void getAC2Status();
 void getSEFStatus();
-void getSERStatus();
+void getSEBStatus();
+void reqStatusUpdate(IPAddress serverIP);
 void getUDPbroadcast(int udpMsgLength);
 void parseACpacket (JsonObject& jsonIn);
 void parseSecFrontPacket (JsonObject& jsonIn);
@@ -16,19 +17,21 @@ void sendDebug(String debugMsg);
 
 time_t getNtpTime();
 void sendNTPpacket();
-void digitalClockDisplay();
+String digitalClockDisplay();
 String getDigits(int digits);
 
 void getHomeInfo(boolean all);
 void getTemperature();
-void makeWeather();
+void makeInWeather();
+void makeOutWeather();
 
 void redLedFlash();
 void blueLedFlash();
 void triggerGetStatus();
 void triggerGetDHT();
-void playSound();
+void switchBackDisplay();
 
+void updateDisplay(boolean all);
 void updateSolar(boolean all);
 void updateWeather(boolean all);
 void updateAC(boolean all);

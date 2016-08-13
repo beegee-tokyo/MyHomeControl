@@ -70,39 +70,39 @@ void WiFiEvent(WiFiEvent_t event) {
 	Serial.printf("[WiFi-event] event: %d\n", event);
 
 	switch (event) {
-		case WIFI_EVENT_STAMODE_CONNECTED:
-			Serial.println("WiFiEvent: WiFi connected");
-			break;
+		// case WIFI_EVENT_STAMODE_CONNECTED:
+			// Serial.println("WiFiEvent: WiFi connected");
+			// break;
 		case WIFI_EVENT_STAMODE_DISCONNECTED:
 			Serial.println("WiFiEvent: WiFi lost connection");
 			if (!wifiConnecting && !otaRunning) {
 				connectWiFi();
 			}
 			break;
-		case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
-			Serial.println("WiFiEvent: WiFi authentication mode changed");
-			break;
-		case WIFI_EVENT_STAMODE_GOT_IP:
-			Serial.println("WiFiEvent: WiFi got IP");
-			Serial.println("IP address: ");
-			Serial.println(WiFi.localIP());
-			break;
-		case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
-			Serial.println("WiFiEvent: WiFi DHCP timeout");
-			break;
-		case WIFI_EVENT_MAX:
-			Serial.println("WiFiEvent: WiFi MAX event");
-			break;
+		// case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
+			// Serial.println("WiFiEvent: WiFi authentication mode changed");
+			// break;
+		// case WIFI_EVENT_STAMODE_GOT_IP:
+			// Serial.println("WiFiEvent: WiFi got IP");
+			// Serial.println("IP address: ");
+			// Serial.println(WiFi.localIP());
+			// break;
+		// case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
+			// Serial.println("WiFiEvent: WiFi DHCP timeout");
+			// break;
+		// case WIFI_EVENT_MAX:
+			// Serial.println("WiFiEvent: WiFi MAX event");
+			// break;
 	}
 }
 
 /**
  * Send broadcast message over UDP into local network
  *
- * @param doGCM
- *              Flag if message is pushed over GCM as well
+ * @param makeShort
+ *              If true send short status, else send long status
  */
-void sendAlarm(boolean doGCM) {
+void sendAlarm(boolean makeShort) {
 	digitalWrite(comLED, LOW);
 	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
@@ -111,9 +111,9 @@ void sendAlarm(boolean doGCM) {
 	/* Json object with the alarm message */
 	JsonObject& root = jsonBuffer.createObject();
 
-Serial.println("Create status");
+	Serial.println("Create status");
 	// Create status
-	createStatus(root, true);
+	createStatus(root, makeShort);
 
 	/** WiFiUDP class for creating UDP communication */
 	WiFiUDP udpClientServer;
@@ -128,20 +128,17 @@ Serial.println("Create status");
 		connectWiFi();
 		return;
 	}
-	root.printTo(udpClientServer);
+	String broadCast;
+	root.printTo(broadCast);
+	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
 
-	if (doGCM) {
-		/** Buffer for Json object */
-		DynamicJsonBuffer msgBuffer;
+	udpClientServer.beginPacket(monitorIP,5000);
+	udpClientServer.print(broadCast);
+	udpClientServer.endPacket();
+	udpClientServer.stop();
 
-		// Prepare json object for the response
-		/** Json object with the push notification for GCM */
-		JsonObject& msgJson = msgBuffer.createObject();
-		msgJson["message"] = root;
-		gcmSendMsg(msgJson);
-	}
 	digitalWrite(comLED, HIGH);
 }
 
@@ -160,9 +157,7 @@ Serial.println("Create status");
  *		/?p   to switch on alarm sound (panic button function)
  *		/?i   to get detailed status information
  *		/?b   to switch on the lights for 2 minutes
- *		/?regid= to register a new device for GCM
- *		/?l   to list all devices registered for GCM
- *		/?d   to delete one or all registered GCM devices
+ *
  * @param httpClient
  *              Connected WiFi client
  */
@@ -260,7 +255,7 @@ void replyClient(WiFiClient httpClient) {
 		httpClient.flush();
 		httpClient.stop();
 		delay(500);
-		sendAlarm(false);
+		sendAlarm(true);
 		return;
 		// Request short status
 	} else if (req.substring(0, 3) == "/?s") {
@@ -293,7 +288,8 @@ void replyClient(WiFiClient httpClient) {
 	} else if (req.substring(0, 3) == "/?p") {
 		if (panicOn) {
 			alarmTimer.detach();
-			analogWrite(speakerPin, LOW); // Switch off speaker
+			analogWrite(speakerPin, 0);
+			digitalWrite(speakerPin, LOW); // Switch off speaker
 			panicOn = false;
 			root["panic"] = "off";
 		} else {
@@ -357,120 +353,6 @@ void replyClient(WiFiClient httpClient) {
 		httpClient.stop();
 		delay(1000);
 		return;
-		// Registration of new device
-	} else if (req.substring(0, 8) == "/?regid=") {
-		/** String to hold the received registration ID */
-		String regID = req.substring(8,req.length());
-		#ifdef DEBUG_OUT Serial.println("RegID: "+regID);
-		Serial.println("Length: "+String(regID.length()));
-		#endif
-		// Check if length of ID is correct
-		if (regID.length() != 140) {
-			#ifdef DEBUG_OUT 
-			Serial.println("Length of ID is wrong");
-			#endif
-			root["result"] = "invalid";
-			root["reason"] = "Length of ID is wrong";
-		} else {
-			// Try to save ID 
-			if (!addRegisteredDevice(regID)) {
-				#ifdef DEBUG_OUT 
-				Serial.println("Failed to save ID");
-				#endif
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			} else {
-				#ifdef DEBUG_OUT 
-				Serial.println("Successful saved ID");
-				#endif
-				root["result"] = "success";
-				getRegisteredDevices();
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-				root["num"] = regDevNum;
-			}
-		}
-		root.printTo(jsonString);
-		s += jsonString;
-		httpClient.print(s);
-		httpClient.flush();
-		httpClient.stop();
-		delay(1000);
-		return;
-	// Send list of registered devices
-	} else if (req.substring(0, 3) == "/?l"){
-		if (getRegisteredDevices()) {
-			if (regDevNum != 0) { // Any devices already registered?
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-			}
-			root["num"] = regDevNum;
-			root["result"] = "success";
-		} else {
-			root["result"] = "failed";
-			root["reason"] = failReason;
-		}
-		root.printTo(jsonString);
-		s += jsonString;
-		httpClient.print(s);
-		httpClient.flush();
-		httpClient.stop();
-		delay(1000);
-		return;
-	// Delete one or all registered device
-	} else if (req.substring(0, 3) == "/?d"){
-		/** String for the sub command */
-		String delReq = req.substring(3,4);
-		if (delReq == "a") { // Delete all registered devices
-			if (delRegisteredDevice()) {
-				root["result"] = "success";
-			} else {
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			}
-		} else if (delReq == "i") {
-			/** String to hold the ID that should be deleted */
-			String delRegId = req.substring(5,146);
-			delRegId.trim();
-			if (delRegisteredDevice(delRegId)) {
-				root["result"] = "success";
-			} else {
-				root["result"] = "failed";
-				root["reason"] = failReason;
-			}
-		} else if (delReq == "x") {
-			/** Index of the registration ID that should be deleted */
-			int delRegIndex = req.substring(5,req.length()).toInt();
-			if ((delRegIndex < 0) || (delRegIndex > MAX_DEVICE_NUM-1)) {
-				root["result"] = "invalid";
-				root["reason"] = "Index out of range";
-			} else {
-				if (delRegisteredDevice(delRegIndex)) {
-					root["result"] = "success";
-				} else {
-					root["result"] = "failed";
-					root["reason"] = failReason;
-				}
-			}
-		}
-		// Send list of registered devices
-		if (getRegisteredDevices()) {
-			if (regDevNum != 0) { // Any devices already registered?
-				for (int i=0; i<regDevNum; i++) {
-					root[String(i)] = regAndroidIds[i];
-				}
-			}
-			root["num"] = regDevNum;
-		}
-		root.printTo(jsonString);
-		s += jsonString;
-		httpClient.print(s);
-		httpClient.flush();
-		httpClient.stop();
-		delay(1000);
-		return;
 	}
 
 	root["result"] = "failed";
@@ -481,4 +363,147 @@ void replyClient(WiFiClient httpClient) {
 	httpClient.flush();
 	httpClient.stop();
 	delay(1000);
+}
+
+/**
+ * Answer request on tcp socket server
+ * Commands: 
+ * 		a=0 to switch off alarm
+ *		a=1 to switch on alarm
+ * 		a=2 to switch on the defined hour on/off alarm
+ * 		a=3 to switch off the defined hour on/off alarm
+ * 		a=4 to switch on automatic light  
+ * 		a=5 to switch off automatic light  
+ *		s   to get short status message
+ *		p   to switch on alarm sound (panic button function)
+ *		i   to get detailed status information
+ *		b   to switch on the lights for 2 minutes
+ *
+ * @param httpClient
+ *              Connected WiFi client
+ */
+void socketServer(WiFiClient tcpClient) {
+
+	// Get data from client until he stops the connection or timeout occurs
+	long timeoutStart = now();
+	String req = "123456789012345";
+	char inByte;
+	byte index = 0;
+	while (tcpClient.connected()) {
+		if (tcpClient.available()) {
+			inByte = tcpClient.read();
+			req[index] = inByte;
+			index++;
+		}
+		if (now() > timeoutStart + 3000) { // Wait a maximum of 3 seconds
+			break; // End the while loop because of timeout
+		}
+	}
+
+	req[index] = 0;
+	
+	tcpClient.flush();
+	tcpClient.stop();
+	if (req.length() < 1) { // No data received
+		return;
+	}
+
+	// Switch on/off the alarm
+	if (req.substring(0, 2) == "a=") {
+		if (req.substring(2, 3) == "0") { // Alarm off
+			alarmOn = false;
+			ledFlasher.detach();
+			digitalWrite(alarmLED, HIGH);
+		} else if (req.substring(2, 3) == "1") { // Alarm on
+			alarmOn = true;
+			ledFlasher.attach(1, redLedFlash);
+		} else if (req.substring(2, 3) == "2") { // Alarm auto
+			if (req.substring(3, 4) == "," 
+					&& req.substring(6, 7) == ",") {
+				int timeIn = req.substring(4, 6).toInt(); // Get activation time
+				if (timeIn >= 1 && timeIn <= 24) {
+					if (timeIn == 24) {
+						timeIn = 0;
+					}
+					autoActivOn = timeIn;
+				} else {
+					autoActivOn = 22;
+				}
+				timeIn = req.substring(7, 9).toInt(); // Get deactivation time
+				if (timeIn >= 1 && timeIn <= 24) {
+					if (timeIn == 24) {
+						timeIn = 0;
+					}
+					autoActivOff = timeIn;
+				} else {
+					autoActivOff = 8;
+				}
+				hasAutoActivation = true;
+				writeStatus();
+			}
+		} else if (req.substring(2, 3) == "3") { // Alarm auto off
+			hasAutoActivation = false;
+		} else if (req.substring(2, 3) == "4") { // Auto lights on
+			switchLights = true;
+		} else if (req.substring(2, 3) == "5") { // Auto lights off
+			switchLights = false;
+		}
+		// Send back status over UDP
+		sendAlarm(true);
+		return;
+		// Request short status
+	} else if (req.substring(0, 1) == "s") {
+		// Send back status over UDP
+		sendAlarm(true);
+		return;
+		// PANIC!!!! set the alarm off
+	} else if (req.substring(0, 1) == "p") {
+		if (panicOn) {
+			alarmTimer.detach();
+			analogWrite(speakerPin, 0);
+			digitalWrite(speakerPin, LOW); // Switch off speaker
+			panicOn = false;
+		} else {
+			melodyPoint = 0; // Reset melody pointer to 0
+			alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
+			panicOn = true;
+		}
+		// Send back status over UDP
+		sendAlarm(true);
+		return;
+		// Request long status
+	} else if (req.substring(0, 1) == "i") {
+	
+		// Send back long status over UDP
+		sendAlarm(false);
+		return;
+	// Switch lights on for 2 minutes
+	} else if (req.substring(0, 1) == "b") {
+		// Switch on lights for 2 minutes
+		offDelay = 0;
+		relayOffTimer.attach(1, relayOff);
+		digitalWrite(relayPort, HIGH);
+		// Send back status over UDP
+		sendAlarm(true);
+		return;
+	}
+}
+
+// For debug over TCP
+void sendDebug(String debugMsg) {
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpClient;
+
+	const int httpPort = 9999;
+	if (!tcpClient.connect(debugIP, httpPort)) {
+		Serial.println("connection to Debug PC " + String(debugIP[0]) + "." + String(debugIP[1]) + "." + String(debugIP[2]) + "." + String(debugIP[3]) + " failed");
+		tcpClient.stop();
+		return;
+	}
+
+	String sendMsg = host;
+	debugMsg = sendMsg + " " + debugMsg;
+	tcpClient.print(debugMsg);
+
+	tcpClient.stop();
 }

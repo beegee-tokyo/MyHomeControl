@@ -1,12 +1,12 @@
 package tk.giesecke.myhomecontrol;
 
-import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -20,11 +20,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 
 public class Utilities extends MyHomeControl {
@@ -33,16 +31,16 @@ public class Utilities extends MyHomeControl {
 	 * Check WiFi connection and return SSID
 	 *
 	 * @param context
-	 *            application context
+	 * 		application context
 	 * @return <code>String</code>
-	 *            SSID name or empty string if not connected
+	 * SSID name or empty string if not connected
 	 */
 	@SuppressWarnings("deprecation")
 	public static Boolean isHomeWiFi(Context context) {
 		/** Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		/** WiFi connection information  */
-		android.net.NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 		if (!wifiOn.isConnected()) {
 			return false;
@@ -53,7 +51,7 @@ public class Utilities extends MyHomeControl {
 			final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
 			if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
 				String currentSSID = connectionInfo.getSSID();
-				currentSSID = currentSSID.substring(1,currentSSID.length()-1);
+				currentSSID = currentSSID.substring(1, currentSSID.length() - 1);
 				String MY_LOCAL_SSID = context.getResources().getString(R.string.MY_LOCAL_SSID);
 				return currentSSID.equalsIgnoreCase(MY_LOCAL_SSID);
 			}
@@ -62,31 +60,63 @@ public class Utilities extends MyHomeControl {
 	}
 
 	/**
-	 * Scan the local subnet and update the list of devices
+	 * Check if an internet connection is available
+	 *
+	 * @param context
+	 * 		Context of application
+	 * @return <code>boolean</code>
+	 * True if we have connection
+	 * False if we do not have connection
 	 */
-	public static void checkMainDevices(){
+	public static boolean[] connectionAvailable(Context context) {
+		/** Flags for connections */
+		boolean[] bConnFlags = new boolean[3];
+		/** Flag for WiFi available */
+		boolean bHaveWiFi;
+		/** Flag for mobile connection available */
+		boolean bHaveMobile;
+		/** Flag for internet connection is working */
+		boolean bHaveConnection;
+
+		/** Access to connectivity manager */
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		NetworkInfo mobileOn = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+
+		// Check if wifi is available && if we are connected
+		// Result is false if there is no Wifi on the device
+		// Result is true if we have Wifi
+		// else result is false
+		bHaveWiFi = wifiOn != null && wifiOn.isConnected();
+		bConnFlags[0] = bHaveWiFi;
+
+		// Check if we have mobile && if mobile is allowed
+		// Result is false if there is no mobile on the device
+		// Result is true if we have mobile
+		bHaveMobile = mobileOn != null && mobileOn.isConnected();
+		bConnFlags[1] = bHaveMobile;
+
 		try {
-			if(InetAddress.getByName("192.168.0.140").isReachable(5000)){
-				MyHomeControl.deviceIsOn[spMonitorIndex] = true;
-			}
-			if(InetAddress.getByName("192.168.0.141").isReachable(5000)){
-				MyHomeControl.deviceIsOn[secFrontIndex] = true;
-			}
-			if(InetAddress.getByName("192.168.0.142").isReachable(10000)){
-				MyHomeControl.deviceIsOn[aircon1Index] = true;
-			}
-		} catch (IOException e) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Exception " + e);
+			InetAddress ipAddr = InetAddress.getByName("google.com");
+
+			//noinspection EqualsBetweenInconvertibleTypes
+			bHaveConnection = !ipAddr.equals("");
+			bConnFlags[2] = bHaveConnection;
+
+		} catch (Exception e) {
+			bConnFlags[2] = false;
 		}
+
+		return bConnFlags;
 	}
 
 	/**
-	 * Get list of all available notification tones
+	 * Get data from security device status update
 	 *
 	 * @param jsonResult
-	 *              JSON object with the status received from the ESP8266
+	 * 		JSON object with the status received from the ESP8266
 	 * @return <code>String message</code>
-	 *              String with the status in viewable format
+	 * String with the status in viewable format
 	 */
 	@SuppressLint("CommitPrefEdits")
 	@SuppressWarnings("deprecation")
@@ -106,33 +136,24 @@ public class Utilities extends MyHomeControl {
 		ImageView ivAlarmStatusThis = ivAlarmStatus;
 		/** ImageView to show status of light enabled */
 		ImageView ivLightStatusThis = ivLightStatus;
-		/** ImageView to show active alarm */
-		ImageView ivAlarmOnThis = ivAlarmOn;
-		/** Animator to make blinking active alarm ImageView */
-		ValueAnimator animatorThis = animator;
-		/** Flag for front or rear sensor */
+		/** Flag for front or back sensor */
 		boolean isFrontSensor = true;
 
 		if (deviceIDString.equalsIgnoreCase("sb1")) {
 			ivAlarmStatusThis = ivAlarmStatusBack;
 			ivLightStatusThis = ivLightStatusBack;
-			ivAlarmOnThis = ivAlarmOnBack;
-			animatorThis = animatorBack;
 			isFrontSensor = false;
-		}
+			secBackView.setVisibility(View.VISIBLE);		}
 
 		try {
 			if (jsonResult.getInt("alarm") == 1) {
 				Log.d(DEBUG_LOG_TAG, "Alarm on from " + deviceIDString);
 				Log.d(DEBUG_LOG_TAG, "JSON = " + jsonResult);
 				message = "Intruder! from " + deviceIDString + "\n";
-				animatorThis.start();
 			} else {
 				Log.d(DEBUG_LOG_TAG, "Alarm off from " + deviceIDString);
 				Log.d(DEBUG_LOG_TAG, "JSON = " + jsonResult);
 				message = "No detection at " + deviceIDString + "\n";
-				animatorThis.end();
-				ivAlarmOnThis.setAlpha(0f);
 			}
 		} catch (JSONException ignore) {
 		}
@@ -158,58 +179,60 @@ public class Utilities extends MyHomeControl {
 			}
 		} catch (JSONException ignore) {
 		}
-		try {
-			if (jsonResult.has("auto_on")) {
-				secAutoOnStored = jsonResult.getInt("auto_on");
-				if (secAutoOnStored < 12) {
-					secAutoOn = Integer.toString(secAutoOnStored) + "am";
-				} else {
-					if (secAutoOnStored == 12) {
-						secAutoOn = Integer.toString(secAutoOnStored) + "pm";
+		if (isFrontSensor) {
+			try {
+				if (jsonResult.has("auto_on")) {
+					secAutoOnStored = jsonResult.getInt("auto_on");
+					if (secAutoOnStored < 12) {
+						secAutoOn = Integer.toString(secAutoOnStored) + "am";
 					} else {
-						secAutoOn = Integer.toString(secAutoOnStored-12) + "pm";
+						if (secAutoOnStored == 12) {
+							secAutoOn = Integer.toString(secAutoOnStored) + "pm";
+						} else {
+							secAutoOn = Integer.toString(secAutoOnStored - 12) + "pm";
+						}
 					}
-				}
-			} else {
-				secAutoOn = "10pm";
-				secAutoOnStored = 22;
-			}
-		} catch (JSONException ignore) {
-		}
-		try {
-			if (jsonResult.has("auto_off")) {
-				secAutoOffStored = jsonResult.getInt("auto_off");
-				if (secAutoOffStored < 12) {
-					secAutoOff = Integer.toString(secAutoOffStored) + "am";
 				} else {
-					if (secAutoOffStored == 12) {
-						secAutoOff = Integer.toString(secAutoOffStored) + "pm";
-					} else {
-						secAutoOff = Integer.toString(secAutoOffStored-12) + "pm";
-					}
+					secAutoOn = "10pm";
+					secAutoOnStored = 22;
 				}
-			} else {
-				secAutoOff = "8am";
-				secAutoOffStored = 8;
+			} catch (JSONException ignore) {
 			}
-		} catch (JSONException ignore) {
-		}
-		try {
-			if (jsonResult.getInt("auto") == 1) {
-				secAutoAlarm.setChecked(true);
-				secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
-						secAutoOn, secAutoOff));
-				message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
-						secAutoOn, secAutoOff) + "\n";
-				secChangeAlarm.setVisibility(View.VISIBLE);
-			} else {
-				message += "Alarm auto activation off\n";
-				secAutoAlarm.setChecked(false);
-				secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
-				message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
-				secChangeAlarm.setVisibility(View.INVISIBLE);
+			try {
+				if (jsonResult.has("auto_off")) {
+					secAutoOffStored = jsonResult.getInt("auto_off");
+					if (secAutoOffStored < 12) {
+						secAutoOff = Integer.toString(secAutoOffStored) + "am";
+					} else {
+						if (secAutoOffStored == 12) {
+							secAutoOff = Integer.toString(secAutoOffStored) + "pm";
+						} else {
+							secAutoOff = Integer.toString(secAutoOffStored - 12) + "pm";
+						}
+					}
+				} else {
+					secAutoOff = "8am";
+					secAutoOffStored = 8;
+				}
+			} catch (JSONException ignore) {
 			}
-		} catch (JSONException ignore) {
+			try {
+				if (jsonResult.getInt("auto") == 1) {
+					secAutoAlarm.setChecked(true);
+					secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff) + "\n";
+					secChangeAlarm.setVisibility(View.VISIBLE);
+				} else {
+					message += "Alarm auto activation off\n";
+					secAutoAlarm.setChecked(false);
+					secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
+					secChangeAlarm.setVisibility(View.INVISIBLE);
+				}
+			} catch (JSONException ignore) {
+			}
 		}
 		try {
 			if (jsonResult.getInt("light_on") == 1) {
@@ -243,9 +266,9 @@ public class Utilities extends MyHomeControl {
 	 * Get light related status from the JSON object received from the ESP8266
 	 *
 	 * @param jsonResult
-	 *              JSON object with the status received from the ESP8266
+	 * 		JSON object with the status received from the ESP8266
 	 * @return <code>String message</code>
-	 *              String with the status in viewable format
+	 * String with the status in viewable format
 	 */
 	public static String getLightStatus(JSONObject jsonResult) {
 		/** Light value measured by TSL2561 connected to the ESP8266 */
@@ -277,13 +300,13 @@ public class Utilities extends MyHomeControl {
 	 * Get list of all available notification tones
 	 *
 	 * @param context
-	 *              application context
+	 * 		application context
 	 * @param notifNames
-	 *              array list to store the name of the tones
+	 * 		array list to store the name of the tones
 	 * @param notifUri
-	 *              array list to store the paths of the tones
+	 * 		array list to store the paths of the tones
 	 * @return <code>int uriIndex</code>
-	 *              URI of user selected alarm sound
+	 * URI of user selected alarm sound
 	 */
 	public static int getNotifSounds(Context context, ArrayList<String> notifNames, ArrayList<String> notifUri, boolean isSelAlarm) {
 		/** Instance of the ringtone manager */
@@ -296,9 +319,9 @@ public class Utilities extends MyHomeControl {
 		/** Last user selected alarm tone */
 		String lastUri;
 		if (isSelAlarm) {
-			lastUri = mPrefs.getString(MyHomeControl.prefsSecurityAlarm,"");
+			lastUri = mPrefs.getString(MyHomeControl.prefsSecurityAlarm, "");
 		} else {
-			lastUri = mPrefs.getString(MyHomeControl.prefsSolarWarning,"");
+			lastUri = mPrefs.getString(MyHomeControl.prefsSolarWarning, "");
 		}
 		/** Index of lastUri in the list */
 		int uriIndex = -1;
@@ -319,7 +342,7 @@ public class Utilities extends MyHomeControl {
 	 * Get current time as string
 	 *
 	 * @return <code>String</code>
-	 *            Time as string HH:mm
+	 * Time as string HH:mm
 	 */
 	public static String getCurrentTime() {
 		/** Calendar to get current time and date */
@@ -333,10 +356,10 @@ public class Utilities extends MyHomeControl {
 	 * Get current date as integer
 	 *
 	 * @return <code>int[]</code>
-	 *            Date as integer values
-	 *            int[0] = year
-	 *            int[1] = month
-	 *            int[2] = day
+	 * Date as integer values
+	 * int[0] = year
+	 * int[1] = month
+	 * int[2] = day
 	 */
 	public static int[] getCurrentDate() {
 		/** Integer array for return values */
@@ -360,8 +383,8 @@ public class Utilities extends MyHomeControl {
 	 * Get current month and last month as string
 	 *
 	 * @return <code>String[]</code>
-	 *            [0] current month as string yy-mm
-	 *            [1] last month as string yy-mm
+	 * [0] current month as string yy-mm
+	 * [1] last month as string yy-mm
 	 */
 	public static String[] getDateStrings() {
 		/** Array with strings for this and last month date */
@@ -371,7 +394,7 @@ public class Utilities extends MyHomeControl {
 		/** Time format */
 		@SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yy-MM");
 		dateStrings[0] = df.format(cal.getTime());
-		cal.add(Calendar.MONTH,-1);
+		cal.add(Calendar.MONTH, -1);
 		dateStrings[1] = df.format(cal.getTime());
 
 		return dateStrings;
@@ -381,10 +404,10 @@ public class Utilities extends MyHomeControl {
 	 * Check if JSON object is valid
 	 *
 	 * @param test
-	 *            String with JSON object or array
+	 * 		String with JSON object or array
 	 * @return boolean
-	 *            true if "test" us a JSON object or array
-	 *            false if no JSON object or array
+	 * true if "test" us a JSON object or array
+	 * false if no JSON object or array
 	 */
 	public static boolean isJSONValid(String test) {
 		try {
@@ -401,13 +424,14 @@ public class Utilities extends MyHomeControl {
 
 	/**
 	 * Return notification icon ID as int
+	 *
 	 * @param currPower
-	 *          power value as float
+	 * 		power value as float
 	 * @return <code>int</code>
-	 *          ID of matching icon
+	 * ID of matching icon
 	 */
 	public static int getNotifIcon(float currPower) {
-		if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
 			if (currPower > 0.0d) {
 				return R.drawable.arrow_red_down_small;
 			} else {
@@ -431,7 +455,7 @@ public class Utilities extends MyHomeControl {
 			return R.drawable.m100;
 		} else if (currPower < -50) {
 			return R.drawable.m50;
-		} else if (currPower < 0){
+		} else if (currPower < 0) {
 			return R.drawable.m0;
 		} else if (currPower < 50) {
 			return R.drawable.p0;
@@ -459,7 +483,7 @@ public class Utilities extends MyHomeControl {
 	 * all other icons will be shown normal
 	 *
 	 * @param selIconID
-	 *            index of icon that will be highlighted
+	 * 		index of icon that will be highlighted
 	 */
 	@SuppressWarnings("deprecation")
 	public static void highlightDlgIcon(int selIconID, View locationsView) {
@@ -518,50 +542,8 @@ public class Utilities extends MyHomeControl {
 	}
 
 	/**
-	 * Encrypt/Decrypt a string with my secret key
-	 *
-	 * @param payLoad
-	 *            Message string to be encrypted/decrypted
-	 * @return <code>String</code>
-	 *            Encrypted/Decrypted string
+	 * Returns the consumer friendly device name
 	 */
-	public static String cryptMessage(byte[] payLoad) {
-		byte[] result = new byte[130];
-		//String result = "";
-		String encryptBase = appContext.getString(R.string.CRYPT_STRING);
-		byte encryptIndex = 0;
-		byte index = 0;
-		String strResult = "";
-		String testResult = "";
-		Log.d(DEBUG_LOG_TAG, "Topic is " + "ctrl");
-		for (int i=0; i<payLoad.length; i++) {
-			byte org = payLoad[i];
-			byte key = (byte) encryptBase.charAt(encryptIndex);
-			result[i] = (byte) (org ^ key);
-			strResult += (char) result[i];
-			testResult +=  payLoad[i] + ".";
-			encryptIndex++;
-			index++;
-			if (encryptIndex == encryptBase.length()) {
-				encryptIndex = 0;
-			}
-		}
-		result[index] = 0;
-
-		StringBuilder str = new StringBuilder();
-		for(int i = 0; i < index; i++)
-			str.append(String.format("%02x", result[i]));
-		testResult = str.toString();
-
-		Log.d(DEBUG_LOG_TAG, "Test string " + testResult);
-		Log.d(DEBUG_LOG_TAG, "Original message " + Arrays.toString(payLoad));
-		Log.d(DEBUG_LOG_TAG, "Original message length " + payLoad.length);
-		Log.d(DEBUG_LOG_TAG, "Key " + encryptBase);
-		Log.d(DEBUG_LOG_TAG, "Result message " + strResult);
-		return testResult;
-	}
-
-	/** Returns the consumer friendly device name */
 	public static String getDeviceName() {
 		String manufacturer = Build.MANUFACTURER;
 		String model = Build.MODEL;

@@ -48,7 +48,7 @@ boolean getLDR() {
 	 // Check light only if relay is off and light is switched off
 	if (digitalRead(relayPort) == LOW) {
 		ldrValue = (analogRead(A0));
-		if (ldrValue < 850) {
+		if (ldrValue < 500) { // was 850
 			if (switchLights == false) { // On change send status 
 				hasChanged = true;
 			}

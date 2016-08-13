@@ -36,6 +36,10 @@ boolean statusUpdated = false;
 Ticker getDHTTimer;
 /** Timer for playing sound */
 Ticker soundTimer;
+/** Timer to reset display to layout 0 */
+Ticker resetDisplay;
+/** Flag for request to switch back to display layout 0 */
+boolean displayChange = false;
 
 /** Flag for request to read out temperature & humidity information */
 boolean dhtUpdated = false;
@@ -58,12 +62,12 @@ unsigned int otaStatus = 0;
 #define DIS_CS 12
 /** SPI address pin */
 #define DIS_AO 16
-/** Speaker pin */
-#define SPEAKER 4
 /** Definition of DHT sensor type */
 #define DHTTYPE DHT11
 /** Definition of data pin for DHT sensor */
 #define DHTPIN  5
+/** Definition of button input */
+#define BUTTPIN  4
 
 
 /** Current line position for scrolling text */
@@ -89,6 +93,13 @@ String inWeatherStatus = "";
 /** Status of outside weather station */
 String outWeatherStatus = "";
 
+/** Outside temperature measurement */
+float tempOutside = 0.0;
+/** Outside humidity measurement */
+float humidOutside = 0.0;
+/** Outside heat index calculation */
+float heatIndexOut = 0.0;
+
 /** Power consumption of the house from spMonitor */
 double consPower = 0;
 /** Solar panel production from spMonitor */
@@ -100,68 +111,79 @@ String spmStatus = "";
 /** Status of the office aircon */
 String ac1Status = "";
 /** Power status of office aircon */
-byte ac1On = 0;
+byte ac1On = 2;
 /** Modus of office aircon */
 byte ac1Mode = 0;
 /** Auto status of office aircon */
 byte ac1Auto = 0;
 /** Timer status of office aircon */
 byte ac1Timer = 0;
+/** Fan speed status of office aircon */
+byte ac1Speed = 0;
+/** Temp setting of office aircon */
+byte ac1Temp = 0;
 
 /** Status of the living aircon */
 String ac2Status = "";
 /** Power status of living aircon */
-byte ac2On = 0;
+byte ac2On = 2;
 /** Modus of living aircon */
 byte ac2Mode = 0;
 /** Auto status of living aircon */
 byte ac2Auto = 0;
 /** Timer status of living aircon */
 byte ac2Timer = 0;
+/** Fan speed status of living aircon */
+byte ac2Speed = 0;
+/** Temp setting of living aircon */
+byte ac2Temp = 0;
 
 /** Status of the front yard security */
 String secFrontStatus = "";
 /** Alarm status of front yard security */
-byte secFrontOn = 0;
+byte secFrontOn = 2;
 /** Light modus of front yard security */
 byte secFrontLight = 0;
+/** Auto modus of front yard security */
+byte secFrontAuto = 0;
+/** On time of front yard security */
+byte secFrontOnTime = 22;
+/** Off time of front yard security */
+byte secFrontOffTime = 8;
 
 /** Status of the back yard security */
 String secBackStatus = "";
 /** Alarm status of back yard security */
-byte secBackOn = 0;
+byte secBackOn = 2;
 /** Light modus of back yard security */
 byte secBackLight = 0;
-/** Light value from TSL2561 sensor on back yard security */
-long lightValue = 0;
+/** Auto modus of back yard security */
+byte secBackAuto = 0;
+/** On time of back yard security */
+byte secBackOnTime = 22;
+/** Off time of back yard security */
+byte secBackOffTime = 8;
 
 // NTP Servers stuff
 /** URL of NTP server */
-const char* timeServerURL = "time.nist.gov";
+static const char* timeServerURL = "time.nist.gov";
 
 /** Definition of timezone */
-const int timeZone = 8;     // Philippine time (GMT + 8h)
+static const int timeZone = 8;     // Philippine time (GMT + 8h)
 
 /** Size of NTP time server packet */
-const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
+static const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
 /** Buffer for data from NTP server */
 byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 
 /** Length of received UDP broadcast message */
 int udpMsgLength = 0;
 
-/** Melody as delay time */
-long melody[] = {1700,1700,1136,1136,1432,1915,1915,1700,1700,1136,1136,1700,1700,1915,1915,1432,1432,1700,1700,1136,1136,1915,1915,1700,1700,1136,1136,1432,1915,1915,1700,1700,1136,1136,1136,1136,1275,1275,1275,1275};
-
-//long melody[] = {1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275};
-//long melody[] = {3830, 3830, 3830, 3830, 2550, 2550, 2550, 2550, 3830, 3830, 3830, 3830, 2550, 2550, 2550, 2550, 3830, 3830, 3830, 3830, 2550, 2550, 2550, 2550, 3830, 3830, 3830, 3830, 2550, 2550, 2550, 2550, 3830, 3830, 3830, 3830, 2550, 2550, 2550, 2550};
-/** Relation between values and notes */
-//	1915	1700	1519	1432	1275	1136	1014	956
-//	c		d		e		f		g		a		b		c
-/** Melody position pointer */
-int melodyPoint = 0;
-/** Number of melody[] notes */
-int melodyLenght = 40;
-/** Time to play a single tune in milliseconds */
-int melodyTuneTime = 175;
-
+/** Current display layout */
+byte displayLayout = 0;
+/** Button status */
+byte lastButtonStatus = HIGH;
+/** Button debounce time value */
+unsigned long lastButtonChange;
+/** Flag for button accepted */
+boolean displayChanged = false;

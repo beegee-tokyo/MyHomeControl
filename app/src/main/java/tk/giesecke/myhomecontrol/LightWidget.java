@@ -25,12 +25,9 @@ public class LightWidget extends AppWidgetProvider {
 			views.setImageViewResource(R.id.iv_light_widget, R.mipmap.ic_light_off);
 		}
 
-		// Create an intent to launch the service on widget push
 		/** Intent to start method to switch on light when widget is clicked */
 		Intent serviceIntent = new Intent(context, LightWidgetClick.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-		// PendingIntent is required for the onClickPendingIntent that actually
-		// starts the service from a button click
 		/** Pending intent to start method when widget is clicked */
 		PendingIntent pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
