@@ -34,9 +34,6 @@ dependencies {
 	compile 'com.squareup.okio:okio:1.6.0'
 	compile 'com.squareup.okhttp3:okhttp:3.2.0'
 	compile 'com.github.PhilJay:MPAndroidChart:v2.2.4'
-	// compile 'com.google.android.gms:play-services-ads:8.4.0'
-	// compile 'com.google.android.gms:play-services-identity:8.4.0'
-	// compile 'com.google.android.gms:play-services-gcm:8.4.0'
-	compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.0.2'
-	compile 'com.google.android.gms:play-services-appindexing:8.1.0'
+	compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+	compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
 }

@@ -20,7 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -71,12 +70,6 @@ public class Utilities extends MyHomeControl {
 	public static boolean[] connectionAvailable(Context context) {
 		/** Flags for connections */
 		boolean[] bConnFlags = new boolean[3];
-		/** Flag for WiFi available */
-		boolean bHaveWiFi;
-		/** Flag for mobile connection available */
-		boolean bHaveMobile;
-		/** Flag for internet connection is working */
-		boolean bHaveConnection;
 
 		/** Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -87,25 +80,12 @@ public class Utilities extends MyHomeControl {
 		// Result is false if there is no Wifi on the device
 		// Result is true if we have Wifi
 		// else result is false
-		bHaveWiFi = wifiOn != null && wifiOn.isConnected();
-		bConnFlags[0] = bHaveWiFi;
+		bConnFlags[0] = wifiOn != null && wifiOn.isConnected();
 
 		// Check if we have mobile && if mobile is allowed
 		// Result is false if there is no mobile on the device
 		// Result is true if we have mobile
-		bHaveMobile = mobileOn != null && mobileOn.isConnected();
-		bConnFlags[1] = bHaveMobile;
-
-		try {
-			InetAddress ipAddr = InetAddress.getByName("google.com");
-
-			//noinspection EqualsBetweenInconvertibleTypes
-			bHaveConnection = !ipAddr.equals("");
-			bConnFlags[2] = bHaveConnection;
-
-		} catch (Exception e) {
-			bConnFlags[2] = false;
-		}
+		bConnFlags[1] = mobileOn != null && mobileOn.isConnected();
 
 		return bConnFlags;
 	}
@@ -127,7 +107,7 @@ public class Utilities extends MyHomeControl {
 		String message = "";
 
 		try {
-			deviceIDString = jsonResult.getString("device");
+			deviceIDString = jsonResult.getString("de");
 		} catch (JSONException e) {
 			deviceIDString = "unknown";
 		}
@@ -146,7 +126,7 @@ public class Utilities extends MyHomeControl {
 			secBackView.setVisibility(View.VISIBLE);		}
 
 		try {
-			if (jsonResult.getInt("alarm") == 1) {
+			if (jsonResult.getInt("al") == 1) {
 				Log.d(DEBUG_LOG_TAG, "Alarm on from " + deviceIDString);
 				Log.d(DEBUG_LOG_TAG, "JSON = " + jsonResult);
 				message = "Intruder! from " + deviceIDString + "\n";
@@ -158,104 +138,132 @@ public class Utilities extends MyHomeControl {
 		} catch (JSONException ignore) {
 		}
 		try {
-			if (jsonResult.getInt("alarm_on") == 1) {
+			if (jsonResult.getInt("au") == 1) {
+				if (isFrontSensor) {
+					secAutoAlarmFront.setChecked(true);
+					secAutoAlarmFront.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff) + "\n";
+					hasAutoOnFront = true;
+				} else {
+					secAutoAlarmBack.setChecked(true);
+					secAutoAlarmBack.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
+							secAutoOn, secAutoOff) + "\n";
+					hasAutoOnBack = true;
+				}
+			} else {
+				if (isFrontSensor) {
+					message += "Alarm auto activation off\n";
+					secAutoAlarmFront.setChecked(false);
+					secAutoAlarmFront.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
+					hasAutoOnFront = false;
+				} else {
+					message += "Alarm auto activation off\n";
+					secAutoAlarmBack.setChecked(false);
+					secAutoAlarmBack.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
+					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
+					hasAutoOnBack = false;
+				}
+			}
+			if (secAutoAlarmFront.isChecked() || secAutoAlarmBack.isChecked()) {
+				secChangeAlarm.setVisibility(View.VISIBLE);
+			} else {
+				secChangeAlarm.setVisibility(View.INVISIBLE);
+			}
+		} catch (JSONException ignore) {
+		}
+		try {
+			if (jsonResult.getInt("ao") == 1) {
 				message += "Alarm active\n";
-				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_sec_widget_on));
+				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_on));
 				if (isFrontSensor) {
 					hasAlarmOnFront = true;
 				} else {
 					hasAlarmOnBack = true;
 				}
-				mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, true).commit();
 			} else {
 				message += "Alarm not active\n";
-				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_sec_widget_off));
+				secAutoAlarmFront.isChecked();
 				if (isFrontSensor) {
 					hasAlarmOnFront = false;
+					if (hasAutoOnFront) {
+						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
+					} else {
+						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
+					}
 				} else {
 					hasAlarmOnBack = false;
+					if (hasAutoOnBack) {
+						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
+					} else {
+						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
+					}
 				}
-				mPrefs.edit().putBoolean(MyHomeControl.prefsSecurityAlarmOn, false).commit();
 			}
 		} catch (JSONException ignore) {
 		}
-		if (isFrontSensor) {
-			try {
-				if (jsonResult.has("auto_on")) {
-					secAutoOnStored = jsonResult.getInt("auto_on");
-					if (secAutoOnStored < 12) {
-						secAutoOn = Integer.toString(secAutoOnStored) + "am";
+		try {
+			if (jsonResult.has("an")) {
+				secAutoOnStored = jsonResult.getInt("an");
+				if (secAutoOnStored < 12) {
+					secAutoOn = Integer.toString(secAutoOnStored) + "am";
+				} else {
+					if (secAutoOnStored == 12) {
+						secAutoOn = Integer.toString(secAutoOnStored) + "pm";
 					} else {
-						if (secAutoOnStored == 12) {
-							secAutoOn = Integer.toString(secAutoOnStored) + "pm";
-						} else {
-							secAutoOn = Integer.toString(secAutoOnStored - 12) + "pm";
-						}
+						secAutoOn = Integer.toString(secAutoOnStored - 12) + "pm";
 					}
-				} else {
-					secAutoOn = "10pm";
-					secAutoOnStored = 22;
 				}
-			} catch (JSONException ignore) {
+			} else {
+				secAutoOn = "10pm";
+				secAutoOnStored = 22;
 			}
-			try {
-				if (jsonResult.has("auto_off")) {
-					secAutoOffStored = jsonResult.getInt("auto_off");
-					if (secAutoOffStored < 12) {
-						secAutoOff = Integer.toString(secAutoOffStored) + "am";
-					} else {
-						if (secAutoOffStored == 12) {
-							secAutoOff = Integer.toString(secAutoOffStored) + "pm";
-						} else {
-							secAutoOff = Integer.toString(secAutoOffStored - 12) + "pm";
-						}
-					}
-				} else {
-					secAutoOff = "8am";
-					secAutoOffStored = 8;
-				}
-			} catch (JSONException ignore) {
-			}
-			try {
-				if (jsonResult.getInt("auto") == 1) {
-					secAutoAlarm.setChecked(true);
-					secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
-							secAutoOn, secAutoOff));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
-							secAutoOn, secAutoOff) + "\n";
-					secChangeAlarm.setVisibility(View.VISIBLE);
-				} else {
-					message += "Alarm auto activation off\n";
-					secAutoAlarm.setChecked(false);
-					secAutoAlarm.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
-					secChangeAlarm.setVisibility(View.INVISIBLE);
-				}
-			} catch (JSONException ignore) {
-			}
+		} catch (JSONException ignore) {
 		}
 		try {
-			if (jsonResult.getInt("light_on") == 1) {
+			if (jsonResult.has("af")) {
+				secAutoOffStored = jsonResult.getInt("af");
+				if (secAutoOffStored < 12) {
+					secAutoOff = Integer.toString(secAutoOffStored) + "am";
+				} else {
+					if (secAutoOffStored == 12) {
+						secAutoOff = Integer.toString(secAutoOffStored) + "pm";
+					} else {
+						secAutoOff = Integer.toString(secAutoOffStored - 12) + "pm";
+					}
+				}
+			} else {
+				secAutoOff = "8am";
+				secAutoOffStored = 8;
+			}
+		} catch (JSONException ignore) {
+		}
+		try {
+			if (jsonResult.getInt("lo") == 1) {
 				message += "Light active\n";
 				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_on));
 			} else {
 				message += "Light not active\n";
-				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_off));
+				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_autooff));
 			}
 		} catch (JSONException ignore) {
 		}
 		try {
-			if (jsonResult.getInt("boot") != 0) {
+			if (jsonResult.getInt("bo") != 0) {
 				message += "Device restarted!\n";
 			}
 		} catch (JSONException ignore) {
 		}
 		try {
-			message += "Signal = " + jsonResult.getInt("rssi") + " dB\n";
+			message += "Signal = " + jsonResult.getInt("rs") + " dB\n";
 		} catch (JSONException ignore) {
 		}
 		try {
-			message += "Debug: " + jsonResult.getString("reboot") + "\n";
+			message += "Debug: " + jsonResult.getString("re") + "\n";
 		} catch (JSONException ignore) {
 		}
 
@@ -276,12 +284,12 @@ public class Utilities extends MyHomeControl {
 		/** Light value measured by the LDR connected to the ESP8266 */
 		int ldrValueInt;
 		try {
-			lightValueLong = jsonResult.getLong("light_val");
+			lightValueLong = jsonResult.getLong("lv");
 		} catch (JSONException ignore) {
 			lightValueLong = 0;
 		}
 		try {
-			ldrValueInt = jsonResult.getInt("ldr_val");
+			ldrValueInt = jsonResult.getInt("ld");
 		} catch (JSONException ignore) {
 			ldrValueInt = 0;
 		}

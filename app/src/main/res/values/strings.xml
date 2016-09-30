@@ -10,11 +10,11 @@
 	<string name="action_location">Locations</string>
 	<string name="action_debug">Show debug messages</string>
 	<string name="action_debug_off">Hide debug messages</string>
+	<string name="action_devDebug">Device Debug</string>
 
-	<string name="udp_listener">MyHomeControl is listening to ESP8266 device</string>
-	<string name="err_no_esp">No ESP not found. Make sure it is switched on and is connected to the same WiFi network.</string>
-	<string name="err_esp">Communication with ESP failed. Make sure it is switched on and is connected to the same WiFi network.</string>
-	<string name="err_unknown">Unknown error</string>
+	<string name="msg_listener">MyHomeControl is listening to Home Control Devices</string>
+	<string name="err_no_esp">No SPM not found. Make sure it is switched on and is connected to the same WiFi network.</string>
+	<string name="err_esp">Communication with SPM failed. Make sure it is switched on and is connected to the same WiFi network.</string>
 	<string name="err_spMonitor">spMonitor device is offline</string>
 	<string name="err_aircon">All aircon devices are offline</string>
 	<string name="snd_alarm">Alarm</string>
@@ -28,12 +28,12 @@
 	<string name="dot_txt_alarm_status">Alarm status</string>
 	<string name="dot_txt_light">Light status</string>
 	<string name="dot_txt_alarm">Alarm</string>
-	<string name="sec_front">Status front sensor</string>
-	<string name="sec_back">Status back sensor</string>
-	<string name="sec_front_device_1">Front yard</string>
-	<string name="sec_back_device_1">Back yard</string>
+	<string name="sec_front">Status security front</string>
+	<string name="sec_back">Status security back</string>
+	<string name="sec_front_device">Front yard</string>
+	<string name="sec_back_device">Back yard</string>
 	<string name="sec_auto_alarm_on">Alarm on from %1$s to %2$s</string>
-	<string name="sec_auto_alarm_off">Manual alarm activation</string>
+	<string name="sec_auto_alarm_off">Manual alarm activ.</string>
 	<string name="tv_sec_alarm_on">Activation time</string>
 	<string name="tv_sec_alarm_off">Deactivation time</string>
 	<string name="tv_set_alarm_txt">Set activation hours</string>
@@ -91,5 +91,18 @@
 	<string name="dialog_selector_title">Select device to change</string>
 	<string name="bt_txt_hour">HOUR</string>
 	<string name="timer_on">TIMER ON</string>
+
+	<string name="bt_txt_clear">Clear</string>
+	<string name="bt_txt_debug_moni">Debug\nMoni</string>
+	<string name="bt_txt_debug_secf">Debug\nSfront</string>
+	<string name="bt_txt_debug_secb">Debug\nSback</string>
+	<string name="bt_txt_debug_ac1">Debug\nAC1</string>
+	<string name="bt_txt_debug_ac2">Debug\nAC2</string>
+	<string name="bt_txt_reset_moni">Reset\nMoni</string>
+	<string name="bt_txt_reset_secf">Reset\nSfront</string>
+	<string name="bt_txt_reset_secb">Reset\nSback</string>
+	<string name="bt_txt_reset_ac1">Reset\nAC1</string>
+	<string name="bt_txt_reset_ac2">Reset\nAC2</string>
+	<string name="bt_txt_find">SEARCH</string>
 
 </resources>

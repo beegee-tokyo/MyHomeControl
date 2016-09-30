@@ -29,4 +29,6 @@
 
 	<include layout="@layout/view_aircon"/>
 
+	<include layout="@layout/view_devdebug"/>
+
 </android.support.design.widget.CoordinatorLayout>

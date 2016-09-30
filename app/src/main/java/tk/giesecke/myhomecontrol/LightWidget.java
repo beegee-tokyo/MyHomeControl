@@ -22,7 +22,7 @@ public class LightWidget extends AppWidgetProvider {
 		if (lightIsOn) {
 			views.setImageViewResource(R.id.iv_light_widget, R.mipmap.ic_light_on);
 		} else {
-			views.setImageViewResource(R.id.iv_light_widget, R.mipmap.ic_light_off);
+			views.setImageViewResource(R.id.iv_light_widget, R.mipmap.ic_light_autooff);
 		}
 
 		/** Intent to start method to switch on light when widget is clicked */

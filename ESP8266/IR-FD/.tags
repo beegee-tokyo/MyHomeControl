@@ -1,0 +1,144 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+AC_CLR	.\src\globals.h	120;"	d
+AC_MASK	.\src\globals.h	121;"	d
+AC_OFF	.\src\globals.h	118;"	d
+AC_ON	.\src\globals.h	119;"	d
+ACcodes_h	.\src\codes.h	2;"	d
+AUTO_CLR	.\src\globals.h	110;"	d
+AUTO_MASK	.\src\globals.h	111;"	d
+AUTO_OFF	.\src\globals.h	108;"	d
+AUTO_ON	.\src\globals.h	109;"	d
+CMD_AUTO_OFF	.\src\globals.h	56;"	d
+CMD_AUTO_ON	.\src\globals.h	55;"	d
+CMD_FAN_HIGH	.\src\globals.h	35;"	d
+CMD_FAN_LOW	.\src\globals.h	37;"	d
+CMD_FAN_MED	.\src\globals.h	36;"	d
+CMD_FAN_SPEED	.\src\globals.h	38;"	d
+CMD_INIT_AC	.\src\globals.h	49;"	d
+CMD_MODE_AUTO	.\src\globals.h	30;"	d
+CMD_MODE_COOL	.\src\globals.h	31;"	d
+CMD_MODE_DRY	.\src\globals.h	32;"	d
+CMD_MODE_FAN	.\src\globals.h	33;"	d
+CMD_ON_OFF	.\src\globals.h	28;"	d
+CMD_OTHER_ION	.\src\globals.h	46;"	d
+CMD_OTHER_SWEEP	.\src\globals.h	44;"	d
+CMD_OTHER_TIMER	.\src\globals.h	43;"	d
+CMD_OTHER_TURBO	.\src\globals.h	45;"	d
+CMD_REMOTE_0	.\src\globals.h	51;"	d
+CMD_REMOTE_1	.\src\globals.h	52;"	d
+CMD_REMOTE_2	.\src\globals.h	53;"	d
+CMD_RESET	.\src\globals.h	48;"	d
+CMD_TEMP_MINUS	.\src\globals.h	41;"	d
+CMD_TEMP_PLUS	.\src\globals.h	40;"	d
+COOL	.\src\codes.h	/^byte COOL[4] =	{B00001000,B11100111,B00101000,B11010111};$/;"	v
+DEVICE_ID	.\src\globals.h	10;"	d
+DEVICE_ID	.\src\globals.h	7;"	d
+DRY	.\src\codes.h	/^byte DRY[4] =	{B00001000,B11100111,B00110000,B11001111};$/;"	v
+FAN	.\src\codes.h	/^byte FAN[4] =	{B00001000,B11100111,B00010000,B11101111};$/;"	v
+FAN_CLR	.\src\globals.h	133;"	d
+FAN_HIGH	.\src\globals.h	132;"	d
+FAN_LOW	.\src\globals.h	130;"	d
+FAN_MASK	.\src\globals.h	134;"	d
+FAN_MED	.\src\globals.h	131;"	d
+H_FAN	.\src\codes.h	/^byte H_FAN[4] = {B00001000,B11100111,B01101000,B10010111};$/;"	v
+ION_CLR	.\src\globals.h	144;"	d
+ION_MASK	.\src\globals.h	145;"	d
+ION_OFF	.\src\globals.h	142;"	d
+ION_ON	.\src\globals.h	143;"	d
+IR_LED_OUT	.\src\globals.h	153;"	d
+L_FAN	.\src\codes.h	/^byte L_FAN[4] = {B00001000,B11100111,B01010000,B10101111};$/;"	v
+MAX_TEMP	.\src\globals.h	148;"	d
+MINUS	.\src\codes.h	/^byte MINUS[4] =	{B00001000,B11100111,B10010000,B01101111};$/;"	v
+MIN_TEMP	.\src\globals.h	150;"	d
+MODE_AUTO	.\src\globals.h	126;"	d
+MODE_CLR	.\src\globals.h	127;"	d
+MODE_COOL	.\src\globals.h	125;"	d
+MODE_DRY	.\src\globals.h	124;"	d
+MODE_FAN	.\src\globals.h	123;"	d
+MODE_MASK	.\src\globals.h	128;"	d
+M_FAN	.\src\codes.h	/^byte M_FAN[4] = {B00001000,B11100111,B01110000,B10001111};$/;"	v
+OTA_HOST	.\src\globals.h	11;"	d
+OTA_HOST	.\src\globals.h	8;"	d
+PLUS	.\src\codes.h	/^byte PLUS[4] =	{B00001000,B11100111,B10101000,B01010111};$/;"	v
+POWER	.\src\codes.h	/^byte POWER[4] = {B00001000,B11100111,B00000000,B11111111};$/;"	v
+SWP_CLR	.\src\globals.h	105;"	d
+SWP_MASK	.\src\globals.h	106;"	d
+SWP_OFF	.\src\globals.h	103;"	d
+SWP_ON	.\src\globals.h	104;"	d
+Setup_h	.\src\Setup.h	2;"	d
+TEMP_CLR	.\src\globals.h	136;"	d
+TEMP_MASK	.\src\globals.h	137;"	d
+TIMER	.\src\codes.h	/^byte TIMER[4] = {B00001000,B11100111,B10000000,B01111111};$/;"	v
+TIM_CLR	.\src\globals.h	115;"	d
+TIM_MASK	.\src\globals.h	116;"	d
+TIM_OFF	.\src\globals.h	113;"	d
+TIM_ON	.\src\globals.h	114;"	d
+TUR_CLR	.\src\globals.h	140;"	d
+TUR_MASK	.\src\globals.h	141;"	d
+TUR_OFF	.\src\globals.h	138;"	d
+TUR_ON	.\src\globals.h	139;"	d
+acMode	.\src\declarations.h	/^byte acMode =		B00000000;$/;"	v
+acTemp	.\src\declarations.h	/^byte acTemp =		B00000000;$/;"	v
+avgConsIndex	.\src\ACSubs.cpp	/^byte avgConsIndex = 0;$/;"	v
+avgConsPower	.\src\declarations.h	/^double avgConsPower[10] = {0,0,0,0,0,0,0,0,0,0};$/;"	v
+avgSolarPower	.\src\ACSubs.cpp	/^double avgSolarPower[10] = {0,0,0,0,0,0,0,0,0,0};$/;"	v
+buildBuffer	.\src\ACSubs.cpp	/^void buildBuffer(unsigned int *newBuffer, byte *cmd) {$/;"	f
+checkPower	.\src\ACSubs.cpp	/^void checkPower() {$/;"	f
+cmdCnt	.\src\declarations.h	/^byte cmdCnt = -1;$/;"	v
+compileDate	.\src\declarations.h	/^const char compileDate[] = __DATE__ " " __TIME__;$/;"	v
+consPower	.\src\declarations.h	/^double consPower = 0;$/;"	v
+consPowerOld	.\src\ACSubs.cpp	/^double consPowerOld = 0;$/;"	v
+dayTime	.\src\declarations.h	/^boolean dayTime = false;$/;"	v
+debugOn	.\src\declarations.h	/^bool debugOn = false;$/;"	v
+endOfDay	.\src\declarations.h	/^int endOfDay = 17;$/;"	v
+fanSpeedUp	.\src\declarations.h	/^boolean fanSpeedUp = true;$/;"	v
+formatInt	.\src\Subs.cpp	/^ String formatInt(int number) {$/;"	f
+ftpSrv	.\src\declarations.h	/^FtpServer ftpSrv;$/;"	v
+getPowerTimer	.\src\declarations.h	/^Ticker getPowerTimer;$/;"	v
+getPowerVal	.\src\ACSubs.cpp	/^void getPowerVal(boolean doPowerCheck) {$/;"	f
+getVal	.\src\ACSubs.cpp	/^unsigned int getVal(byte testVal, byte maskVal) {$/;"	f
+handleCmd	.\src\ACSubs.cpp	/^void handleCmd() {$/;"	f
+inSetup	.\src\declarations.h	/^boolean inSetup = true;$/;"	v
+initAC	.\src\ACSubs.cpp	/^void initAC() {$/;"	f
+ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipAC1;$/;"	v
+ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipSpare4;$/;"	v
+irCmd	.\src\declarations.h	/^int irCmd = 9999;$/;"	v
+isInFanMode	.\src\declarations.h	/^boolean isInFanMode = false;$/;"	v
+lastCmd	.\src\declarations.h	/^int lastCmd = 99;$/;"	v
+liveCnt	.\src\Main.cpp	/^long liveCnt = 0;$/;"	v
+loop	.\src\Main.cpp	/^void loop() {$/;"	f
+onTime	.\src\declarations.h	/^uint32_t onTime = 1; \/\/ default 1 hour$/;"	v
+otaRunning	.\src\declarations.h	/^boolean otaRunning = false;$/;"	v
+parseSocketCmd	.\src\Subs.cpp	/^void parseSocketCmd() {$/;"	f
+powerStatus	.\src\declarations.h	/^byte powerStatus = 0;$/;"	v
+powerUpdateTriggered	.\src\declarations.h	/^boolean powerUpdateTriggered = false;$/;"	v
+readStatus	.\src\Subs.cpp	/^bool readStatus() {$/;"	f
+resetFanModeTimer	.\src\declarations.h	/^Ticker resetFanModeTimer;$/;"	v
+restoreTempSetting	.\src\ACSubs.cpp	/^void restoreTempSetting() {$/;"	f
+savedAcTemp	.\src\declarations.h	/^byte savedAcTemp = 0;$/;"	v
+sendBroadCast	.\src\LanSubs.cpp	/^void sendBroadCast() {$/;"	f
+sendBuffer	.\src\codes.h	/^unsigned int sendBuffer[67] = {9000,4500,450,700,450,700,450,700,450,700,450,1800,450,700,450,700,450,700,450,1800,450,1800,450,1800,450,700,450,700,450,1800,450,1800,450,1800,450,0,450,0,450,0,450,0,450,0,450,700,450,700,450,700,450,0,450,0,450,0,450,0,450,0,450,1800,450,1800,450,1800,450};$/;"	v
+sendCmd	.\src\ACSubs.cpp	/^void sendCmd() {$/;"	f
+sendCode	.\src\ACSubs.cpp	/^void sendCode(int repeat, unsigned int *rawCodes, int rawCount) {$/;"	f
+sendStatusToDebug	.\src\Subs.cpp	/^void sendStatusToDebug() {$/;"	f
+sendUpdateTimer	.\src\declarations.h	/^Ticker sendUpdateTimer;$/;"	v
+sendUpdateTriggered	.\src\declarations.h	/^boolean sendUpdateTriggered = false;$/;"	v
+setup	.\src\Setup.cpp	/^void setup() {$/;"	f
+socketServer	.\src\LanSubs.cpp	/^void socketServer(WiFiClient tcpClient) {$/;"	f
+solarPower	.\src\ACSubs.cpp	/^double solarPower = 0;$/;"	v
+startOfDay	.\src\declarations.h	/^int startOfDay = 8;$/;"	v
+switchSlaveAC	.\src\ACSubs.cpp	/^boolean switchSlaveAC(IPAddress ipSlave, byte reqMode) {$/;"	f
+tcpClientOut	.\src\declarations.h	/^WiFiClient tcpClientOut;$/;"	v
+timerCounter	.\src\Subs.cpp	/^uint32_t timerCounter = 0;$/;"	v
+timerEndTimer	.\src\declarations.h	/^Ticker timerEndTimer;$/;"	v
+timerEndTriggered	.\src\declarations.h	/^boolean timerEndTriggered = false;$/;"	v
+triggerGetPower	.\src\Subs.cpp	/^void triggerGetPower() {$/;"	f
+triggerSendUpdate	.\src\Subs.cpp	/^void triggerSendUpdate() {$/;"	f
+triggerTimerEnd	.\src\Subs.cpp	/^void triggerTimerEnd() {$/;"	f
+udpClientServer	.\src\LanSubs.cpp	/^WiFiUDP udpClientServer;$/;"	v
+writeStatus	.\src\Subs.cpp	/^bool writeStatus() {$/;"	f

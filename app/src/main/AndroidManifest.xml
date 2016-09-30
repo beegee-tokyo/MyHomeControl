@@ -136,6 +136,7 @@
 
 		<service
 			android:name=".MessageListener"
+			android:enabled="true"
 			android:exported="false">
 		</service>
 

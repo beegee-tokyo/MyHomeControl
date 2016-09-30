@@ -22,7 +22,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 
-
 /**
  * Handles clicks on specific parts of the aircon widget
  */
@@ -47,30 +46,30 @@ public class AirconWidgetClick extends IntentService {
 			if (intent.getAction().equals("m")){
 				if (timerTime > 1) {
 					timerTime--;
-					espComm("/?t=" + Integer.toString(timerTime));
+					espComm("t=" + Integer.toString(timerTime));
 				}
 			}
 			if (intent.getAction().equals("p")){
 				if (timerTime < 9) {
 					timerTime++;
-					espComm("/?t=" + Integer.toString(timerTime));
+					espComm("t=" + Integer.toString(timerTime));
 				}
 			}
 			if (intent.getAction().equals("s")){
 				if (!isRunning) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Starting timer");
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "/?t=" + Integer.toString(timerTime));
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Second command = " + "/?c="  + MyHomeControl.CMD_OTHER_TIMER);
-					if (espComm("/?t=" + Integer.toString(timerTime))) {
-						if (espComm("/?c=" + MyHomeControl.CMD_OTHER_TIMER)) {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(timerTime));
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Second command = " + "c="  + MyHomeControl.CMD_OTHER_TIMER);
+					if (espComm("t=" + Integer.toString(timerTime))) {
+						if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
 							isRunning = true;
 							mPrefs.edit().putBoolean("acTimerOn", true).apply();
 						}
 					}
 				} else {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stopping timer");
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "/?c="  + MyHomeControl.CMD_OTHER_TIMER);
-					if (espComm("/?c=" + MyHomeControl.CMD_OTHER_TIMER)) {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "c="  + MyHomeControl.CMD_OTHER_TIMER);
+					if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
 						isRunning = false;
 						mPrefs.edit().putBoolean("acTimerOn", false).apply();
 					}
@@ -92,20 +91,26 @@ public class AirconWidgetClick extends IntentService {
 		}
 	}
 
+	/**
+	 * Send command to ESP
+	 *
+	 * @param cmd
+	 * 		Command to be sent to ESP
+	 */
 	@SuppressLint("CommitPrefEdits")
 	private boolean espComm(String cmd) {
 		// If we are not on home WiFi, send command to MQTT broker
 		if (!Utilities.isHomeWiFi(getApplicationContext())) {
 			String mqttTopic = "{\"ip\":\"fd1\","; // Device IP address
-			mqttTopic += "\"cm\":\"" + cmd.substring(2) + "\"}"; // The command
+			mqttTopic += "\"cm\":\"" + cmd + "\"}"; // The command
 
 			doPublish(mqttTopic, getApplicationContext());
 			return true;
 		}
 
+		String url = getApplicationContext().getResources().getString(R.string.AIRCON_URL_1);
 		try {
-			cmd = cmd.substring(2);
-			InetAddress tcpServer = InetAddress.getByName(MyHomeControl.AIRCON_URL_1.substring(7));
+			InetAddress tcpServer = InetAddress.getByName(url);
 			Socket tcpSocket = new Socket(tcpServer, 6000);
 
 			tcpSocket.setSoTimeout(1000);
@@ -115,7 +120,7 @@ public class AirconWidgetClick extends IntentService {
 			tcpSocket.close();
 		} catch (Exception e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
-					+ " " + MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+					+ " " + url);
 			return false;
 		}
 		return true;
@@ -126,6 +131,8 @@ public class AirconWidgetClick extends IntentService {
 	 *
 	 * @param payload
 	 * 		Topic message
+	 * @param widgetContext
+	 * 		Context
 	 */
 	static void doPublish(String payload, Context widgetContext){
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT topic publish: " + payload);
@@ -144,24 +151,20 @@ public class AirconWidgetClick extends IntentService {
 				token = MessageListener.mqttClient.publish("/CMD", message);
 				token.waitForCompletion(5000);
 			} catch (MqttSecurityException | UnsupportedEncodingException e) {
-				e.printStackTrace();
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT connect exception " +e.getMessage());
 			} catch (MqttException e) {
 				switch (e.getReasonCode()) {
 					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
-						e.printStackTrace();
 						break;
 					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
-						e.printStackTrace();
 						break;
 					case MqttException.REASON_CODE_CONNECTION_LOST:
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
-						e.printStackTrace();
 						break;
 					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
-						e.printStackTrace();
 						break;
 					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());

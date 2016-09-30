@@ -236,7 +236,6 @@ public class ChartHelper extends MyHomeControl {
 		// to use for it
 		/** Instance of custom marker view handler */
 		ChartCustomMarkerView mv = new ChartCustomMarkerView(appContext);
-//		lineChart.setMarkerView(mv);
 
 		// set the marker to the chart
 		lineChart.setMarkerView(mv);

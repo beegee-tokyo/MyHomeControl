@@ -8,9 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
 
-/** spMonitor - DataBaseHelper
+/** MyHomeControl - DataBaseHelper
  *
- * Access to the spMonitor database
+ * Access to the solar panel database
  *
  * @author Bernd Giesecke
  * @version 0.2 beta August 19, 2015.

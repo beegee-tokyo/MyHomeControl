@@ -25,7 +25,8 @@ public class AirconWidget extends AppWidgetProvider {
 			rvACview.setTextViewText(R.id.bt_ac_wid_timer, context.getResources().getString(R.string.timer_on));
 		} else {
 			rvACview.setInt(R.id.bt_ac_wid_timer, "setBackgroundResource", R.drawable.green_round_button);
-			String newButtonText = Integer.toString(timerTime) + " " + context.getResources().getString(R.string.bt_txt_hour);
+			String newButtonText = Integer.toString(timerTime)
+					+ " " + context.getResources().getString(R.string.bt_txt_hour);
 			rvACview.setTextViewText(R.id.bt_ac_wid_timer, newButtonText);
 		}
 

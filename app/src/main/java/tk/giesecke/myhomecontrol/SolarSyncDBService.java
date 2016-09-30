@@ -135,7 +135,7 @@ public class SolarSyncDBService extends IntentService {
 				.build();
 
 		/** URL to be called */
-		String urlString = MyHomeControl.SOLAR_URL + "/sd/spMonitor/query2.php"; // URL to call
+		String urlString = "http://" + MyHomeControl.solarUrl + "/sd/spMonitor/query2.php"; // URL to call
 
 		// Check for last entry in the local database
 		/** Instance of DataBaseHelper */

@@ -43,5 +43,6 @@ public class StartBackgroundServices extends Service {
 		AlarmManager am = (AlarmManager) intentContext.getSystemService(Context.ALARM_SERVICE);
 		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000,
 				7200000, pi);
+		stopSelf();
 	}
 }

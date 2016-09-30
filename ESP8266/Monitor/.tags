@@ -1,0 +1,110 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+DEVICE_ID	.\src\globals.h	24;"	d
+DEVICE_ID	.\src\globals.h	27;"	d
+DHTTYPE	.\src\globals.h	12;"	d
+OTA_HOST	.\src\globals.h	25;"	d
+OTA_HOST	.\src\globals.h	28;"	d
+Setup_h	.\src\Setup.h	2;"	d
+ac1Auto	.\src\declarations.h	/^byte ac1Auto = 0;$/;"	v
+ac1Mode	.\src\declarations.h	/^byte ac1Mode = 0;$/;"	v
+ac1On	.\src\declarations.h	/^byte ac1On = 2;$/;"	v
+ac1Speed	.\src\declarations.h	/^byte ac1Speed = 0;$/;"	v
+ac1Status	.\src\LanSubs.cpp	/^String ac1Status = "";$/;"	v
+ac1Temp	.\src\declarations.h	/^byte ac1Temp = 0;$/;"	v
+ac1Timer	.\src\declarations.h	/^byte ac1Timer = 0;$/;"	v
+ac2Auto	.\src\declarations.h	/^byte ac2Auto = 0;$/;"	v
+ac2Mode	.\src\declarations.h	/^byte ac2Mode = 0;$/;"	v
+ac2On	.\src\declarations.h	/^byte ac2On = 2;$/;"	v
+ac2Speed	.\src\declarations.h	/^byte ac2Speed = 0;$/;"	v
+ac2Status	.\src\LanSubs.cpp	/^String ac2Status = "";$/;"	v
+ac2Temp	.\src\declarations.h	/^byte ac2Temp = 0;$/;"	v
+ac2Timer	.\src\declarations.h	/^byte ac2Timer = 0;$/;"	v
+buttonPin	.\src\globals.h	16;"	d
+compileDate	.\src\Setup.cpp	/^const char compileDate[] = __DATE__ " " __TIME__;$/;"	v
+consPower	.\src\declarations.h	/^double consPower = 0;$/;"	v
+currLine	.\src\DisplayUpdate.cpp	/^byte currLine = 10;$/;"	v
+debugOn	.\src\declarations.h	/^bool debugOn = false;$/;"	v
+declarations_h	.\src\declarations.h	2;"	d
+dhtPin	.\src\globals.h	14;"	d
+dhtUpdated	.\src\declarations.h	/^boolean dhtUpdated = false;$/;"	v
+disA0	.\src\globals.h	10;"	d
+disCS	.\src\globals.h	8;"	d
+disMOSI	.\src\globals.h	6;"	d
+disSCLK	.\src\globals.h	4;"	d
+displayChange	.\src\declarations.h	/^boolean displayChange = false;$/;"	v
+displayChanged	.\src\Main.cpp	/^boolean displayChanged = false;$/;"	v
+displayLayout	.\src\declarations.h	/^byte displayLayout = 0;$/;"	v
+ftpSrv	.\src\declarations.h	/^FtpServer ftpSrv;$/;"	v
+getDHTTimer	.\src\declarations.h	/^Ticker getDHTTimer;$/;"	v
+getHomeInfo	.\src\Subs.cpp	/^void getHomeInfo(boolean all) {$/;"	f
+getSPMStatus	.\src\LanSubs.cpp	/^void getSPMStatus() {$/;"	f
+getStatusTimer	.\src\Setup.cpp	/^Ticker getStatusTimer;$/;"	v
+getTemperature	.\src\Subs.cpp	/^void getTemperature() {$/;"	f
+getUDPbroadcast	.\src\LanSubs.cpp	/^void getUDPbroadcast(int udpMsgLength) {$/;"	f
+heatIndexIn	.\src\declarations.h	/^float heatIndexIn = 0.0;$/;"	v
+heatIndexOut	.\src\declarations.h	/^float heatIndexOut = 0.0;$/;"	v
+humidInside	.\src\declarations.h	/^float humidInside = 0.0;$/;"	v
+humidOutside	.\src\declarations.h	/^float humidOutside = 0.0;$/;"	v
+inWeatherStatus	.\src\declarations.h	/^String inWeatherStatus = "";$/;"	v
+ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = IPSPARE4;$/;"	v
+ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipMonitor;$/;"	v
+lastAC1status	.\src\LanSubs.cpp	/^int lastAC1status = 0;$/;"	v
+lastAC2status	.\src\LanSubs.cpp	/^int lastAC2status = 0;$/;"	v
+lastButtonChange	.\src\Main.cpp	/^unsigned long lastButtonChange;$/;"	v
+lastButtonStatus	.\src\Main.cpp	/^byte lastButtonStatus = HIGH;$/;"	v
+lastSEBstatus	.\src\LanSubs.cpp	/^int lastSEBstatus = 0;$/;"	v
+lastSEFstatus	.\src\LanSubs.cpp	/^int lastSEFstatus = 0;$/;"	v
+loop	.\src\Main.cpp	/^void loop() {$/;"	f
+makeInWeather	.\src\Subs.cpp	/^void makeInWeather() {$/;"	f
+makeOutWeather	.\src\Subs.cpp	/^void makeOutWeather() {$/;"	f
+messageReceived	.\src\LanSubs.cpp	/^void messageReceived(String topic, String payload, char * bytes, unsigned int length) {$/;"	f
+mqttClient	.\src\declarations.h	/^MQTTClient mqttClient;$/;"	v
+mqttReceiver	.\src\declarations.h	/^WiFiClient mqttReceiver;$/;"	v
+otaRunning	.\src\declarations.h	/^bool otaRunning = false;$/;"	v
+otaStatus	.\src\Setup.cpp	/^unsigned int otaStatus = 0;$/;"	v
+outWeatherStatus	.\src\declarations.h	/^String outWeatherStatus = "";$/;"	v
+parseACpacket	.\src\LanSubs.cpp	/^void parseACpacket (JsonObject& jsonIn, String device) {$/;"	f
+parseSPMPacket	.\src\LanSubs.cpp	/^void parseSPMPacket (JsonObject& jsonIn) {$/;"	f
+parseSecBackPacket	.\src\LanSubs.cpp	/^void parseSecBackPacket (JsonObject& jsonIn) {$/;"	f
+parseSecFrontPacket	.\src\LanSubs.cpp	/^void parseSecFrontPacket (JsonObject& jsonIn) {$/;"	f
+resetDisplay	.\src\declarations.h	/^Ticker resetDisplay;$/;"	v
+secBackAuto	.\src\declarations.h	/^byte secBackAuto = 0;$/;"	v
+secBackLight	.\src\declarations.h	/^byte secBackLight = 0;$/;"	v
+secBackOffTime	.\src\declarations.h	/^byte secBackOffTime = 8;$/;"	v
+secBackOn	.\src\declarations.h	/^byte secBackOn = 2;$/;"	v
+secBackOnTime	.\src\declarations.h	/^byte secBackOnTime = 22;$/;"	v
+secBackStatus	.\src\LanSubs.cpp	/^String secBackStatus = "";$/;"	v
+secFrontAuto	.\src\declarations.h	/^byte secFrontAuto = 0;$/;"	v
+secFrontLight	.\src\declarations.h	/^byte secFrontLight = 0;$/;"	v
+secFrontOffTime	.\src\declarations.h	/^byte secFrontOffTime = 8;$/;"	v
+secFrontOn	.\src\declarations.h	/^byte secFrontOn = 2;$/;"	v
+secFrontOnTime	.\src\declarations.h	/^byte secFrontOnTime = 22;$/;"	v
+secFrontStatus	.\src\LanSubs.cpp	/^String secFrontStatus = "";$/;"	v
+sendCmd	.\src\LanSubs.cpp	/^void sendCmd(IPAddress serverIP, String deviceCmd) {$/;"	f
+sendToMQTT	.\src\LanSubs.cpp	/^void sendToMQTT() {$/;"	f
+sensorReadings	.\src\declarations.h	/^int sensorReadings = 0;$/;"	v
+setup	.\src\Setup.cpp	/^void setup() {$/;"	f
+showMQTTerrorScreen	.\src\DisplayUpdate.cpp	/^void showMQTTerrorScreen() {$/;"	f
+socketServer	.\src\LanSubs.cpp	/^void socketServer(WiFiClient tcpClient) {$/;"	f
+solarPower	.\src\declarations.h	/^double solarPower = 0;$/;"	v
+spmStatus	.\src\LanSubs.cpp	/^String spmStatus = "";$/;"	v
+statusUpdated	.\src\declarations.h	/^boolean statusUpdated = false;$/;"	v
+switchBackDisplay	.\src\Subs.cpp	/^void switchBackDisplay() {$/;"	f
+tempInside	.\src\declarations.h	/^float tempInside = 0.0;$/;"	v
+tempOutside	.\src\declarations.h	/^float tempOutside = 0.0;$/;"	v
+triggerGetDHT	.\src\Subs.cpp	/^void triggerGetDHT() {$/;"	f
+triggerGetStatus	.\src\Subs.cpp	/^void triggerGetStatus() {$/;"	f
+ucg_print_center	.\src\DisplayUpdate.cpp	/^void ucg_print_center(String text, int xPos, int yPos) {$/;"	f
+ucg_print_ln	.\src\DisplayUpdate.cpp	/^void ucg_print_ln(String text, boolean center) {$/;"	f
+udpListener	.\src\declarations.h	/^WiFiUDP udpListener;$/;"	v
+udpMsgLength	.\src\declarations.h	/^int udpMsgLength = 0;$/;"	v
+updateAC	.\src\DisplayUpdate.cpp	/^void updateAC(boolean all) {$/;"	f
+updateDisplay	.\src\DisplayUpdate.cpp	/^void updateDisplay(boolean all) {$/;"	f
+updateSecurity	.\src\DisplayUpdate.cpp	/^void updateSecurity(boolean all) {$/;"	f
+updateSolar	.\src\DisplayUpdate.cpp	/^void updateSolar(boolean all) {$/;"	f
+updateWeather	.\src\DisplayUpdate.cpp	/^void updateWeather(boolean all) {$/;"	f

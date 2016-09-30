@@ -54,13 +54,16 @@ public class LightWidgetClick extends IntentService {
 					mqttTopic += "\"cm\":\"b\"}"; // The command
 
 					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
+
 					mqttTopic = "{\"ip\":\"sb1\","; // Device IP address
 					mqttTopic += "\"cm\":\"b\"}"; // The command
 
 					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
 				} else {
+					String urlFront = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
+					String urlBack = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
 					try {
-						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+						InetAddress tcpServer = InetAddress.getByName(urlFront);
 						Socket tcpSocket = new Socket(tcpServer, 6000);
 
 						tcpSocket.setSoTimeout(1000);
@@ -70,10 +73,10 @@ public class LightWidgetClick extends IntentService {
 						tcpSocket.close();
 					} catch (Exception e) {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
-								+ " " + MyHomeControl.SECURITY_URL_FRONT_1.substring(7));
+								+ " " + urlFront);
 					}
 					try {
-						InetAddress tcpServer = InetAddress.getByName(MyHomeControl.SECURITY_URL_BACK_1.substring(7));
+						InetAddress tcpServer = InetAddress.getByName(urlBack);
 						Socket tcpSocket = new Socket(tcpServer, 6000);
 
 						tcpSocket.setSoTimeout(1000);
@@ -83,7 +86,7 @@ public class LightWidgetClick extends IntentService {
 						tcpSocket.close();
 					} catch (Exception e) {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
-								+ " " + MyHomeControl.SECURITY_URL_BACK_1.substring(7));
+								+ " " + urlBack);
 					}
 				}
 

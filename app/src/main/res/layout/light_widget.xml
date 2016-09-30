@@ -16,7 +16,7 @@
 		android:id="@+id/iv_light_widget"
 		android:layout_gravity="center"
 		android:contentDescription="@string/action_security"
-		android:src="@mipmap/ic_light_off"
+		android:src="@mipmap/ic_light_autooff"
 		android:scaleType="fitXY"/>
 
 </LinearLayout>

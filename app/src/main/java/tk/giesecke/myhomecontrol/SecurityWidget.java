@@ -31,9 +31,9 @@ public class SecurityWidget extends AppWidgetProvider {
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.security_widget);
 
 		if (alarmIsActive) {
-			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_on);
+			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_alarm_on);
 		} else {
-			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_sec_widget_off);
+			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_alarm_autooff);
 		}
 
 		// Create an intent to launch the service on widget push

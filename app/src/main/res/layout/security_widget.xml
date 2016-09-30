@@ -16,7 +16,7 @@
 		android:id="@+id/iv_sec_widget"
 		android:layout_gravity="center"
 		android:contentDescription="@string/action_security"
-		android:src="@mipmap/ic_sec_widget_on"
+		android:src="@mipmap/ic_alarm_on"
 		android:scaleType="fitXY"/>
 
 </LinearLayout>

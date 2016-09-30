@@ -17,9 +17,9 @@ while True:
 		subprocess.call(["mplayer", "-volume", "100", "-loop", "1", "/media/TERESA/dog.mp3"])
 		subprocess.call(["amixer", "cset", "numid=3", "2"])
 	parsedJson = json.loads(msg)
-	if parsedJson["device"] == 'sf1':
-		if parsedJson["boot"] == 0:
-			if parsedJson["alarm"] == 1:
+	if parsedJson["de"] == 'sf1':
+		if parsedJson["bo"] == 0:
+			if parsedJson["al"] == 1:
 				subprocess.call(["amixer", "cset", "numid=3", "1"])
 				subprocess.call(["mplayer", "-volume", "100", "-loop", "1", "/media/TERESA/dog.mp3"])
 				subprocess.call(["amixer", "cset", "numid=3", "2"])

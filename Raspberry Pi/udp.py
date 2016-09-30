@@ -13,11 +13,11 @@ while True:
 	parsedJson = json.loads(msg) # parse JSON
 	# print ("Received UDP")
 	# print "Message: %s" % msg
-	if parsedJson["device"] == 'sf1': # check if message is from security device
+	if parsedJson["de"] == 'sf1': # check if message is from security device
 		# print ("Device is sf1")
-		if parsedJson["alarm"] == 1: # check if there is a detection
+		if parsedJson["al"] == 1: # check if there is a detection
 			# print ("Alarm was 1")
-			if parsedJson["alarm_on"] == 1: # check if there the alarm is active
+			if parsedJson["ao"] == 1: # check if there the alarm is active
 				# print ("Alarm_on was 1")
 				subprocess.call(["amixer", "cset", "numid=3", "1"])
 				subprocess.call(["mplayer", "-volume", "100", "-loop", "3", "/media/TERESA/dog.mp3"])

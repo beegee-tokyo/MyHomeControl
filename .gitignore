@@ -32,3 +32,9 @@ local.properties
 *.ipr
 *~
 *.swp
+
+# PlatformIO
+.pioenvs
+.clang_complete
+.gcc-flags.json
+.piolibdeps
