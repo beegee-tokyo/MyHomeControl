@@ -81,6 +81,9 @@ public class MessageListener extends Service {
 	/** Counter for entries in average consumption array */
 	private static int avgConsIndex = 0;
 
+	/** Flag if user UI has just started */
+	public static boolean uiStarted = false;
+
 	public MessageListener() {
 	}
 
@@ -192,7 +195,7 @@ public class MessageListener extends Service {
 					}
 					stopSelf();
 				} else {
-					if (mqttClient == null) {
+					if (mqttClient == null && shouldRestartSocketListen) {
 						new doConnect().execute();
 					}
 				}
@@ -542,7 +545,7 @@ public class MessageListener extends Service {
 					boolean notOnHomeWifi = !Utilities.isHomeWiFi(getApplicationContext());
 
 					// If we are not on home Wifi or screen is off or locked => process the message
-					if (notOnHomeWifi || phoneIsLocked || screenIsOff) {
+					if (notOnHomeWifi || phoneIsLocked || screenIsOff || uiStarted) {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Not home or phone is locked or screen is off");
 
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Payload is " + receivedMessage);

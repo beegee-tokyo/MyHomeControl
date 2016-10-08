@@ -48,6 +48,7 @@ public class ChartCustomMarkerView extends MarkerView {
 	@Override
 	public void refreshContent(Entry e, Highlight highlight) {
 		/** Index for the series at the touched data point */
+
 		int dataIndex = highlight.getXIndex();
 		/** Entry with data of solar power at given index */
 		Entry touchSolar = ChartHelper.solarSeries.get(dataIndex);
@@ -118,7 +119,8 @@ public class ChartCustomMarkerView extends MarkerView {
 	public void draw(Canvas canvas, float posx, float posy)
 	{
 		// take offsets into consideration
-		posx = getDeviceWidth(MyHomeControl.appContext)/2;
+//		posx = getDeviceWidth(MyHomeControl.appContext)/2;
+		posx = getDeviceWidth(getContext())/2;
 		posy = 30;
 
 		// translate to the correct position and draw

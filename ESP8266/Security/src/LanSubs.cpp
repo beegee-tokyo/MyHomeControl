@@ -104,6 +104,10 @@ void socketServer(WiFiClient tcpClient) {
 		return;
 	}
 
+	if (debugOn) {
+		String debugMsg = "TCP cmd = " + req;
+		sendDebug(debugMsg, OTA_HOST);
+	}
 	// Switch on/off the alarm
 	if (req.substring(0, 2) == "a=") {
 		if (req.substring(2, 3) == "0") { // Alarm off
@@ -177,6 +181,7 @@ void socketServer(WiFiClient tcpClient) {
 	// Switch lights on for 2 minutes
 	} else if (req.substring(0, 1) == "b") {
 		// Switch on lights for 2 minutes
+		relayOffTimer.detach();
 		relayOffTimer.once(onTime, relayOff);
 		digitalWrite(relayPort, HIGH);
 		// Send back status over UDP

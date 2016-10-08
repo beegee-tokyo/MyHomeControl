@@ -1,6 +1,7 @@
 package tk.giesecke.myhomecontrol;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.view.View;
@@ -27,8 +28,6 @@ public class ChartHelper extends MyHomeControl {
 	public static LineChart lineChart;
 	/** LineData for the plot */
 	public static LineData plotData;
-	/** Text view for the date */
-	public static TextView chartTitle;
 
 	/** List to hold the timestamps for the chart from a log file */
 	public static final ArrayList<String> timeSeries = new ArrayList<>();
@@ -84,7 +83,7 @@ public class ChartHelper extends MyHomeControl {
 	 */
 	@SuppressWarnings("deprecation")
 	@SuppressLint("SimpleDateFormat")
-	public static void initChart(boolean isContinuous) {
+	public static void initChart(boolean isContinuous, Context thisAppContext, TextView chartTitleThis) {
 
 		timeSeries.clear();
 		solarSeries.clear();
@@ -202,7 +201,7 @@ public class ChartHelper extends MyHomeControl {
 			} catch (ParseException ignore) {
 			}
 
-			chartTitle.setText(dayToShow);
+			chartTitleThis.setText(dayToShow);
 		}
 
 		/** Instance of left y axis */
@@ -235,7 +234,7 @@ public class ChartHelper extends MyHomeControl {
 		// create a custom MarkerView (extend MarkerView) and specify the layout
 		// to use for it
 		/** Instance of custom marker view handler */
-		ChartCustomMarkerView mv = new ChartCustomMarkerView(appContext);
+		ChartCustomMarkerView mv = new ChartCustomMarkerView(thisAppContext);
 
 		// set the marker to the chart
 		lineChart.setMarkerView(mv);
@@ -261,7 +260,7 @@ public class ChartHelper extends MyHomeControl {
 	 *        cursor[7] = light value
 	 */
 	@SuppressLint("DefaultLocale")
-	public static void fillSeries(Cursor data) {
+	public static void fillSeries(Cursor data, View appView) {
 
 		data.moveToFirst();
 		/* Solar energy generated up to now on the displayed day */
@@ -317,11 +316,11 @@ public class ChartHelper extends MyHomeControl {
 		String updateTxt;
 		if (showingLog) {
 			/** Text view to show consumed / produced energy */
-			TextView energyText = (TextView) MyHomeControl.appView.findViewById(R.id.tv_cons_energy);
+			TextView energyText = (TextView) appView.findViewById(R.id.tv_cons_energy);
 			energyText.setVisibility(View.VISIBLE);
 			updateTxt = "Consumed: " + String.format("%.3f", consEnergy) + "kWh";
 			energyText.setText(updateTxt);
-			energyText = (TextView) MyHomeControl.appView.findViewById(R.id.tv_solar_energy);
+			energyText = (TextView) appView.findViewById(R.id.tv_solar_energy);
 			energyText.setVisibility(View.VISIBLE);
 			updateTxt = "Produced: " + String.format("%.3f", solarEnergy) + "kWh";
 			energyText.setText(updateTxt);
@@ -329,10 +328,10 @@ public class ChartHelper extends MyHomeControl {
 		/** Text view to show max consumed / produced power */
 		if (tempConsMStamps.size() != 0 && tempSolarStamps.size() != 0) {
 			/** Text view to show max consumed / produced energy */
-			TextView maxPowerText = (TextView) MyHomeControl.appView.findViewById(R.id.tv_cons_max);
+			TextView maxPowerText = (TextView) appView.findViewById(R.id.tv_cons_max);
 			updateTxt = "(" + String.format("%.0f", Collections.max(tempConsMStamps)) + "W)";
 			maxPowerText.setText(updateTxt);
-			maxPowerText = (TextView) MyHomeControl.appView.findViewById(R.id.tv_solar_max);
+			maxPowerText = (TextView) appView.findViewById(R.id.tv_solar_max);
 			updateTxt = "(" + String.format("%.0f", Collections.max(tempSolarStamps)) + "W)";
 			maxPowerText.setText(updateTxt);
 		}

@@ -60,6 +60,10 @@ public class EventReceiver extends BroadcastReceiver {
 						}
 					}, 5000);
 				}
+			} else {
+				MessageListener.shouldRestartSocketListen = false;
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stop Message listener");
+				context.stopService(new Intent(context, MessageListener.class));
 			}
 		}
 	}

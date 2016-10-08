@@ -13,8 +13,11 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TableLayout;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,18 +64,18 @@ public class Utilities extends MyHomeControl {
 	/**
 	 * Check if an internet connection is available
 	 *
-	 * @param context
+	 * @param thisAppContext
 	 * 		Context of application
 	 * @return <code>boolean</code>
 	 * True if we have connection
 	 * False if we do not have connection
 	 */
-	public static boolean[] connectionAvailable(Context context) {
+	public static boolean[] connectionAvailable(Context thisAppContext) {
 		/** Flags for connections */
 		boolean[] bConnFlags = new boolean[3];
 
 		/** Access to connectivity manager */
-		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		NetworkInfo mobileOn = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
 
@@ -100,7 +103,13 @@ public class Utilities extends MyHomeControl {
 	 */
 	@SuppressLint("CommitPrefEdits")
 	@SuppressWarnings("deprecation")
-	public static String getDeviceStatus(JSONObject jsonResult) {
+	public static String getDeviceStatus(JSONObject jsonResult,
+	                                     Context thisAppContext,
+	                                     ImageView ivAlarmStatusThis,
+	                                     ImageView ivLightStatusThis,
+	                                     TableLayout secBackViewThis,
+	                                     CheckBox secAutoAlarmThis,
+	                                     TextView secChangeAlarmThis) {
 		/** Device ID */
 		String deviceIDString;
 		/** String with the device related status */
@@ -112,18 +121,12 @@ public class Utilities extends MyHomeControl {
 			deviceIDString = "unknown";
 		}
 
-		/** ImageView to show status of alarm enabled */
-		ImageView ivAlarmStatusThis = ivAlarmStatus;
-		/** ImageView to show status of light enabled */
-		ImageView ivLightStatusThis = ivLightStatus;
 		/** Flag for front or back sensor */
 		boolean isFrontSensor = true;
 
 		if (deviceIDString.equalsIgnoreCase("sb1")) {
-			ivAlarmStatusThis = ivAlarmStatusBack;
-			ivLightStatusThis = ivLightStatusBack;
 			isFrontSensor = false;
-			secBackView.setVisibility(View.VISIBLE);		}
+			secBackViewThis.setVisibility(View.VISIBLE);		}
 
 		try {
 			if (jsonResult.getInt("al") == 1) {
@@ -140,46 +143,46 @@ public class Utilities extends MyHomeControl {
 		try {
 			if (jsonResult.getInt("au") == 1) {
 				if (isFrontSensor) {
-					secAutoAlarmFront.setChecked(true);
-					secAutoAlarmFront.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
+					secAutoAlarmThis.setChecked(true);
+					secAutoAlarmThis.setText(thisAppContext.getResources().getString(R.string.sec_auto_alarm_on,
 							secAutoOn, secAutoOff));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
+					message += thisAppContext.getResources().getString(R.string.sec_auto_alarm_on,
 							secAutoOn, secAutoOff) + "\n";
 					hasAutoOnFront = true;
 				} else {
-					secAutoAlarmBack.setChecked(true);
-					secAutoAlarmBack.setText(appContext.getResources().getString(R.string.sec_auto_alarm_on,
+					secAutoAlarmThis.setChecked(true);
+					secAutoAlarmThis.setText(thisAppContext.getResources().getString(R.string.sec_auto_alarm_on,
 							secAutoOn, secAutoOff));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_on,
+					message += thisAppContext.getResources().getString(R.string.sec_auto_alarm_on,
 							secAutoOn, secAutoOff) + "\n";
 					hasAutoOnBack = true;
 				}
 			} else {
 				if (isFrontSensor) {
 					message += "Alarm auto activation off\n";
-					secAutoAlarmFront.setChecked(false);
-					secAutoAlarmFront.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
+					secAutoAlarmThis.setChecked(false);
+					secAutoAlarmThis.setText(thisAppContext.getResources().getString(R.string.sec_auto_alarm_off));
+					message += thisAppContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
 					hasAutoOnFront = false;
 				} else {
 					message += "Alarm auto activation off\n";
-					secAutoAlarmBack.setChecked(false);
-					secAutoAlarmBack.setText(appContext.getResources().getString(R.string.sec_auto_alarm_off));
-					message += appContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
+					secAutoAlarmThis.setChecked(false);
+					secAutoAlarmThis.setText(thisAppContext.getResources().getString(R.string.sec_auto_alarm_off));
+					message += thisAppContext.getResources().getString(R.string.sec_auto_alarm_off) + "\n";
 					hasAutoOnBack = false;
 				}
 			}
-			if (secAutoAlarmFront.isChecked() || secAutoAlarmBack.isChecked()) {
-				secChangeAlarm.setVisibility(View.VISIBLE);
+			if (secAutoAlarmThis.isChecked()) {
+				secChangeAlarmThis.setVisibility(View.VISIBLE);
 			} else {
-				secChangeAlarm.setVisibility(View.INVISIBLE);
+				secChangeAlarmThis.setVisibility(View.INVISIBLE);
 			}
 		} catch (JSONException ignore) {
 		}
 		try {
 			if (jsonResult.getInt("ao") == 1) {
 				message += "Alarm active\n";
-				ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_on));
+				ivAlarmStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_alarm_on));
 				if (isFrontSensor) {
 					hasAlarmOnFront = true;
 				} else {
@@ -187,20 +190,20 @@ public class Utilities extends MyHomeControl {
 				}
 			} else {
 				message += "Alarm not active\n";
-				secAutoAlarmFront.isChecked();
+				secAutoAlarmThis.isChecked();
 				if (isFrontSensor) {
 					hasAlarmOnFront = false;
 					if (hasAutoOnFront) {
-						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
+						ivAlarmStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
 					} else {
-						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
+						ivAlarmStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
 					}
 				} else {
 					hasAlarmOnBack = false;
 					if (hasAutoOnBack) {
-						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
+						ivAlarmStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_alarm_autooff));
 					} else {
-						ivAlarmStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
+						ivAlarmStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_alarm_off));
 					}
 				}
 			}
@@ -245,10 +248,10 @@ public class Utilities extends MyHomeControl {
 		try {
 			if (jsonResult.getInt("lo") == 1) {
 				message += "Light active\n";
-				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_on));
+				ivLightStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_light_on));
 			} else {
 				message += "Light not active\n";
-				ivLightStatusThis.setImageDrawable(appContext.getResources().getDrawable(R.mipmap.ic_light_autooff));
+				ivLightStatusThis.setImageDrawable(thisAppContext.getResources().getDrawable(R.mipmap.ic_light_autooff));
 			}
 		} catch (JSONException ignore) {
 		}
@@ -307,7 +310,7 @@ public class Utilities extends MyHomeControl {
 	/**
 	 * Get list of all available notification tones
 	 *
-	 * @param context
+	 * @param thisAppContext
 	 * 		application context
 	 * @param notifNames
 	 * 		array list to store the name of the tones
@@ -316,14 +319,14 @@ public class Utilities extends MyHomeControl {
 	 * @return <code>int uriIndex</code>
 	 * URI of user selected alarm sound
 	 */
-	public static int getNotifSounds(Context context, ArrayList<String> notifNames, ArrayList<String> notifUri, boolean isSelAlarm) {
+	public static int getNotifSounds(Context thisAppContext, ArrayList<String> notifNames, ArrayList<String> notifUri, boolean isSelAlarm) {
 		/** Instance of the ringtone manager */
-		RingtoneManager manager = new RingtoneManager(context);
+		RingtoneManager manager = new RingtoneManager(thisAppContext);
 		manager.setType(RingtoneManager.TYPE_NOTIFICATION);
 		/** Cursor with the notification tones */
 		Cursor cursor = manager.getCursor();
 		/** Access to shared preferences of application*/
-		SharedPreferences mPrefs = context.getSharedPreferences(sharedPrefName, 0);
+		SharedPreferences mPrefs = thisAppContext.getSharedPreferences(sharedPrefName, 0);
 		/** Last user selected alarm tone */
 		String lastUri;
 		if (isSelAlarm) {
@@ -494,57 +497,58 @@ public class Utilities extends MyHomeControl {
 	 * 		index of icon that will be highlighted
 	 */
 	@SuppressWarnings("deprecation")
-	public static void highlightDlgIcon(int selIconID, View locationsView) {
+	public static void highlightDlgIcon(int selIconID, View locationsView, Context thisAppContext) {
+
 		// deselect all buttons
 		/** Image button in device change dialog used to deselect and highlight */
 		ImageButton changeButton = (ImageButton) locationsView.findViewById(R.id.im_bath);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_bed);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_dining);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_entertain);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_kids);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_kitchen);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_living);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		changeButton = (ImageButton) locationsView.findViewById(R.id.im_office);
-		changeButton.setBackgroundColor(appContext.getResources().getColor(R.color.colorPrimary));
+		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		switch (selIconID) {
 			case R.id.im_bath:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_bath);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_bed:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_bed);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_dining:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_dining);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_entertain:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_entertain);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_kids:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_kids);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_kitchen:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_kitchen);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_living:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_living);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_office:
 				changeButton = (ImageButton) locationsView.findViewById(R.id.im_office);
-				changeButton.setBackgroundColor(appContext.getResources().getColor(android.R.color.holo_green_light));
+				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 		}
 	}

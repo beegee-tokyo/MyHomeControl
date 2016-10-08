@@ -36,8 +36,11 @@ void loop() {
 				sendAlarm(true);
 			}
 			actLedFlashStart(0.2);
-			relayOffTimer.detach();
 			if (switchLights) {
+				relayOffTimer.detach();
+				if (debugOn) {
+					sendDebug("Retriggered lights", OTA_HOST);
+				}
 				relayOffTimer.once(onTime, relayOff);
 				digitalWrite(relayPort, HIGH);
 			}
@@ -55,7 +58,11 @@ void loop() {
 
 	if (lightOffTriggered) {
 		lightOffTriggered = false;
+		relayOffTimer.detach();
 		sendAlarm(true);
+		if (debugOn) {
+		  sendDebug("lightOffTriggered", OTA_HOST);
+		}
 	}
 
 	wdt_reset();

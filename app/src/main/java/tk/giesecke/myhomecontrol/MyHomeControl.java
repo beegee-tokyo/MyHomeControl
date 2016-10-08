@@ -22,6 +22,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -90,7 +91,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/* Name of shared preferences */
 	public static final String sharedPrefName = "MyHomeControl";
 	/** Context of this application */
-	static Context appContext;
+	private Context appContext;
 	/** Id of menu, needed to set user selected icons and device names */
 	private Menu abMenu;
 	/** Visible view 0 = security, 1 = solar panel, 2 = aircon */
@@ -98,7 +99,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Flag for debug output */
 	private boolean showDebug = false;
 	/** The view of the main UI */
-	static View appView;
+	private View appView;
+	/** Text view for the date */
+	private TextView chartTitle;
 
 	/** Shared preferences value for last shown view */
 	private final String prefsLastView = "lastView";
@@ -192,23 +195,23 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Security view */
 	private RelativeLayout secView = null;
 	/** TextView for status message display in security view */
-	private static TextView secStatus;
+	private TextView secStatus;
 	/** ImageView to show status of alarm enabled front sensor */
-	static ImageView ivAlarmStatus;
+	private ImageView ivAlarmStatus;
 	/** ImageView to show status of light enabled front sensor */
-	static ImageView ivLightStatus;
+	private ImageView ivLightStatus;
 	/** TableLayout to show status of back alarm system */
-	static TableLayout secBackView;
+	private TableLayout secBackView;
 	/** ImageView to show status of alarm enabled back sensor */
-	static ImageView ivAlarmStatusBack;
+	private ImageView ivAlarmStatusBack;
 	/** ImageView to show status of light enabled back sensor */
-	static ImageView ivLightStatusBack;
+	private ImageView ivLightStatusBack;
 	/** Check box for auto activation of alarm */
-	static CheckBox secAutoAlarmFront;
+	private CheckBox secAutoAlarmFront;
 	/** Check box for auto activation of alarm */
-	static CheckBox secAutoAlarmBack;
+	private CheckBox secAutoAlarmBack;
 	/** Clickable text view to change activation times */
-	static TextView secChangeAlarm;
+	private TextView secChangeAlarm;
 
 	/** Status flag for alarm front sensor */
 	static boolean hasAlarmOnFront = true;
@@ -241,7 +244,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Solar panel view */
 	private RelativeLayout solView = null;
 	/** TextView for status message display in solar panel view */
-	private static TextView solStatus;
+	private TextView solStatus;
 	/** Array with existing log dates on the Arduino */
 	private static final List<String> logDates = new ArrayList<>();
 	/** Pointer to current displayed log in logDates array */
@@ -280,60 +283,60 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/** Carrier control view */
 	private RelativeLayout airCAView = null;
 	/** TextView for status message display in aircon view */
-	private static TextView airStatus;
+	private TextView airStatus;
 	/** Light of button to switch consumption control for FujiDenzo layout */
-	private static View btAutoLightFD;
+	private View btAutoLightFD;
 	/** Light of button to switch consumption control for Carrier layout */
-	private static View btAutoLightCA;
+	private View btAutoLightCA;
 	/** Light of button to switch on/off for FujiDenzo layout */
-	private static View btOnOffLightFD;
+	private View btOnOffLightFD;
 	/** Light of button to switch on/off for Carrier layout */
-	private static View btOnOffLightCA;
+	private View btOnOffLightCA;
 	/** Light of button to switch fan to high speed for FujiDenzo layout */
-	private static View btFanHighLightFD;
+	private View btFanHighLightFD;
 	/** Light of button to switch fan to medium speed for FujiDenzo layout */
-	private static View btFanMedLightFD;
+	private View btFanMedLightFD;
 	/** Light of button to switch fan to low speed for FujiDenzo layout */
-	private static View btFanLowLightFD;
+	private View btFanLowLightFD;
 	/** Light of button to switch to cool mode for FujiDenzo layout */
-	private static View btCoolLightFD;
+	private View btCoolLightFD;
 	/** Light of button to switch to cool mode for Carrier layout */
-	private static View btCoolLightCA;
+	private View btCoolLightCA;
 	/** Light of button to switch to dry mode for FujiDenzo layout */
-	private static View btDryLightFD;
+	private View btDryLightFD;
 	/** Light of button to switch to dry mode for Carrier layout */
-	private static View btDryLightCA;
+	private View btDryLightCA;
 	/** Light of button to switch to fan mode for FujiDenzo layout */
-	private static View btFanLightFD;
+	private View btFanLightFD;
 	/** Light of button to switch to fan mode for Carrier layout */
-	private static View btFanLightCA;
+	private View btFanLightCA;
 	/** Light of button to switch on sweep for Carrier layout */
-	private static View btSweepLightCA;
+	private View btSweepLightCA;
 	/** Light of button to switch on turbo mode for Carrier layout */
-	private static View btTurboLightCA;
+	private View btTurboLightCA;
 	/** Light of button to switch on ion mode for Carrier layout */
-	private static View btIonLightCA;
+	private View btIonLightCA;
 	/** Light of button to switch on auto temp function for Carrier layout */
-	private static View btAutomLightCA;
+	private View btAutomLightCA;
 	/** Button to switch fan speed for Carrier layout */
-	private static Button btFanCA;
+	private Button btFanCA;
 	/** Consumption value display for FujiDenzo layout */
-	private static TextView txtConsValFD;
+	private TextView txtConsValFD;
 	/** Temperature value display for FujiDenzo layout */
-	private static TextView txtTempValFD;
+	private TextView txtTempValFD;
 	/** Status value display for FujiDenzo layout */
-	private static TextView txtAutoStatusValFD;
+	private TextView txtAutoStatusValFD;
 	/** Consumption value display for Carrier layout */
-	private static TextView txtConsValCA;
+	private TextView txtConsValCA;
 	/** Temperature value display for Carrier layout */
-	private static TextView txtTempValCA;
+	private TextView txtTempValCA;
 	/** Status value display for Carrier layout */
-	private static TextView txtAutoStatusValCA;
+	private TextView txtAutoStatusValCA;
 
 	/** Timer button for FujiDenzo layout */
-	private static Button btTimerFD;
+	private Button btTimerFD;
 	/** Timer button for Carrier layout */
-	private static Button btTimerCA;
+	private Button btTimerCA;
 
 	/** Color for activated button */
 	private static int colorRed;
@@ -429,8 +432,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 
 	@Override
+	protected void onNewIntent(Intent intent)
+	{
+		super.onNewIntent(intent);
+
+		intent.putExtra("view", getSharedPreferences(sharedPrefName,0).getInt(prefsLastView,0));
+		// set the intent passed from the service to the original intent
+		setIntent(intent);
+	}
+
+	@Override
 	@SuppressWarnings("deprecation")
 	protected void onCreate(Bundle savedInstanceState) {
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "onCreate started");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_my_home_control);
 		/** Instance of the tool bar */
@@ -487,15 +501,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		IntentFilter intentFilter = new IntentFilter(MessageListener.BROADCAST_RECEIVED);
 		//Map the intent filter to the receiver
 		registerReceiver(activityReceiver, intentFilter);
-	}
 
-	@Override
-	protected void onNewIntent(Intent intent)
-	{
-		super.onNewIntent(intent);
-
-		// set the intent passed from the service to the original intent
-		setIntent(intent);
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "onCreate finished");
 	}
 
 	/**
@@ -506,18 +513,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	protected void onResume() {
 		super.onResume();
 
+		// Tell MQTT listener that we just started and need last status
+		MessageListener.uiStarted = true;
+
 		Intent i = getIntent();
 		Bundle b = i.getExtras();
-		if (b != null) {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Restart with extra: " + b.getInt("view", 9));
-			visibleView = b.getInt("view", visibleView);
-		}
-
 		// Get pointer to shared preferences
 		mPrefs = getSharedPreferences(sharedPrefName,0);
 
-		// Scan for available devices
-		new checkMainDevices().execute();
+		if ((b != null) && (b.getInt("view", 9) != 9)) {
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Restart with extra: " + b.getInt("view", 0));
+			// Get the requested view of call
+			visibleView = b.getInt("view", 0);
+		} else {
+			// Get the last view the user had selected
+			visibleView = mPrefs.getInt(prefsLastView,0);
+		}
 
 		// Get the layouts of all three possible views
 		secView = (RelativeLayout) findViewById(R.id.view_security);
@@ -560,9 +571,30 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperLast = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME_LAST);
 
 		if (!isMyServiceRunning(MessageListener.class)) {
-			// Start background services
-			startService(new Intent(this, StartBackgroundServices.class));
+			// Start service to listen to UDP & MQTT broadcast messages
+			startService(new Intent(this, MessageListener.class));
 		}
+
+		// Check main devices status with a delay of 3 seconds to give UI time to settle
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				checkMainDevices();
+			}
+		}, 3000);
+
+		// Scan for available devices with a delay of 20 seconds to limit traffic during startup
+		final Handler checkDevicesHandler = new Handler();
+		checkDevicesHandler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				new checkDevices().execute();
+				// Tell MQTT listener that UI startup is finished
+				MessageListener.uiStarted = false;
+			}
+		}, 20000);
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "onResume finished");
 	}
 
 	/**
@@ -742,7 +774,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.action_refresh:
 				if (Utilities.isHomeWiFi(this)) {
-					new checkMainDevices().execute();
+					new checkDevices().execute();
 				} else {
 					Toast.makeText(getApplicationContext(), getResources().getString(R.string.not_home), Toast.LENGTH_LONG).show();
 				}
@@ -889,7 +921,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								}
 
 								dlgIconIndex = deviceIcon[dlgDeviceIndex];
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 
 								/** Edit text field for the user selected device name */
 								final EditText userInput = (EditText) airconDialogView.findViewById(R.id.dia_et_location);
@@ -947,35 +979,35 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								break;
 							case R.id.im_bath:
 								dlgIconIndex = 0;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_bed:
 								dlgIconIndex = 1;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_dining:
 								dlgIconIndex = 2;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_entertain:
 								dlgIconIndex = 3;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_kids:
 								dlgIconIndex = 4;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_kitchen:
 								dlgIconIndex = 5;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_living:
 								dlgIconIndex = 6;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 							case R.id.im_office:
 								dlgIconIndex = 7;
-								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView);
+								Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 								break;
 						}
 					}
@@ -1167,6 +1199,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			result.callID = params[3];
 			result.deviceIndex = Integer.parseInt(params[4]);
 
+			Context thisAppContext = getApplicationContext();
+
 			/** A HTTP client to access the ESP device */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
@@ -1201,21 +1235,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					result.comResult = e.getMessage();
 					try {
 						if (result.comResult.contains("EHOSTUNREACH")) {
-							result.comResult = MyHomeControl.appContext.getString(R.string.err_esp);
+							result.comResult = thisAppContext.getString(R.string.err_esp);
 						}
 						if (result.comResult.equalsIgnoreCase("")) {
-							result.comResult = MyHomeControl.appContext.getString(R.string.err_esp);
+							result.comResult = thisAppContext.getString(R.string.err_esp);
 						}
 						return result;
 					} catch (NullPointerException en) {
-						result.comResult = MyHomeControl.appContext.getString(R.string.err_no_esp);
+						result.comResult = thisAppContext.getString(R.string.err_no_esp);
 						return result;
 					}
 				}
 			}
 
 			if (result.comResult.equalsIgnoreCase("")) {
-				result.comResult = MyHomeControl.appContext.getString(R.string.err_esp);
+				result.comResult = thisAppContext.getString(R.string.err_esp);
 			}
 			return result;
 		}
@@ -1317,7 +1351,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// If we are not on home WiFi, send command to MQTT broker
 			if (!Utilities.isHomeWiFi(getApplicationContext()) && !targetDevice.equalsIgnoreCase("chk")) {
 				String mqttTopic = "{\"ip\":\"" + targetDevice + "\","; // Device IP address
-				mqttTopic += "\"cm\":\"" + targetMessage + "\"}"; // The command
+				mqttTopic += "\"cm\":\"" + targetMessage.substring(1) + "\"}"; // The command
 
 				//doPublish(mqttTopic);
 				new doPublishAsync().execute(mqttTopic);
@@ -1364,8 +1398,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						jsonResult = new JSONObject(result.comResult);
 						/** String to hold complete status in viewable form */
 						String message;
+						/** Device ID */
+						String deviceIDString;
+						try {
+							deviceIDString = jsonResult.getString("de");
+						} catch (JSONException e) {
+							deviceIDString = "unknown";
+						}
+
 						// Get device status and light status and add it to viewable status
-						message = Utilities.getDeviceStatus(jsonResult) + Utilities.getLightStatus(jsonResult);
+						if (deviceIDString.equalsIgnoreCase("sf1")) {
+							message = Utilities.getDeviceStatus(jsonResult, appContext,
+									ivAlarmStatus, ivLightStatus,
+									secBackView, secAutoAlarmFront, secChangeAlarm);
+							message += Utilities.getLightStatus(jsonResult);
+						} else {
+							message = Utilities.getDeviceStatus(jsonResult, appContext,
+									ivAlarmStatusBack, ivLightStatusBack,
+									secBackView, secAutoAlarmBack, secChangeAlarm);
+							message += Utilities.getLightStatus(jsonResult);
+						}
 						try {
 							tempString = jsonResult.getString("ssid");
 							message += "SSID: " + tempString + "\n";
@@ -1418,6 +1470,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	private void airconViewUpdate(CommResultWrapper result) {
 
+		Context thisAppContext = getApplicationContext();
 		try {
 			/** JSON object with the result from the ESP device */
 			JSONObject deviceResult = new JSONObject(result.comResult);
@@ -1473,7 +1526,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// TODO here is the place to add more status for other air cons
 
 			// Update UI
-			updateAirStatus(result.deviceIndex);
+			updateAirStatus(result.deviceIndex, thisAppContext);
 		} catch (JSONException e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received invalid JSON = " + result.comResult);
 		}
@@ -1490,7 +1543,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * @param deviceIndex
 	 *            Index of the device to be updated
 	 */
-	private static void updateAirStatus(int deviceIndex) {
+	private void updateAirStatus(int deviceIndex, Context thisAppContext) {
 		/** String for the average consumption value */
 		@SuppressLint("DefaultLocale") String consText = String.format("%.0f", consStatus) + "W";
 		/** String for the temperature setting value */
@@ -1542,10 +1595,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					btTimerFD.setBackgroundColor(colorGreen);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
 							" " +
-							appContext.getResources().getString(R.string.bt_txt_hour);
+							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
 					btTimerFD.setBackgroundColor(colorOrange);
-					timerTime = appContext.getResources().getString(R.string.timer_on);
+					timerTime = thisAppContext.getResources().getString(R.string.timer_on);
 				}
 				btTimerFD.setText(timerTime);
 
@@ -1599,10 +1652,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					btTimerCA.setBackgroundColor(colorGreen);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
 							" " +
-							appContext.getResources().getString(R.string.bt_txt_hour);
+							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
 					btTimerCA.setBackgroundColor(colorOrange);
-					timerTime = appContext.getResources().getString(R.string.timer_on);
+					timerTime = thisAppContext.getResources().getString(R.string.timer_on);
 				}
 				btTimerCA.setText(timerTime);
 				btSweepLightCA.setBackgroundColor(
@@ -2042,6 +2095,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			public void run() {
 				solStatus.setText(result);
 
+				/** The application context */
+				Context thisAppContext = getApplicationContext();
 				if (!showingLog) {
 					/** Today split into 3 integers for the database query */
 					int[] todayDate = Utilities.getCurrentDate();
@@ -2063,7 +2118,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					/** Cursor with new data from the database */
 					Cursor newDataSet = DataBaseHelper.getDay(dataBase, todayDate[2],
 							todayDate[1], todayDate[0] - 2000);
-					ChartHelper.fillSeries(newDataSet);
+					ChartHelper.fillSeries(newDataSet, appView);
 					newDataSet.close();
 					thisLogDates.clear();
 					/** List with years in the database */
@@ -2093,7 +2148,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 					if (syncMonth.equalsIgnoreCase(dbNamesList[0])) {
 						logDatesIndex = thisLogDates.size() - 1;
-						ChartHelper.initChart(true);
+						ChartHelper.initChart(true, thisAppContext, chartTitle);
 					} else {
 						lastLogDatesIndex = thisLogDates.size() - 1;
 					}
@@ -2154,7 +2209,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		solStatus = (TextView) findViewById(R.id.solar_status);
 		appView = getWindow().getDecorView().findViewById(android.R.id.content);
 		ChartHelper.lineChart = (LineChart) findViewById(R.id.graph);
-		ChartHelper.chartTitle = (TextView) findViewById(R.id.tv_plotTitle);
+		chartTitle = (TextView) findViewById(R.id.tv_plotTitle);
 
 		// For aircon view:
 		airFDView = (RelativeLayout) findViewById(R.id.fuji_denzo);
@@ -2236,7 +2291,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	/**
 	 * Scan the local subnet and update the list of devices
 	 */
-	private class checkMainDevices extends AsyncTask<String, Void, Void> {
+	private class checkDevices extends AsyncTask<String, Void, Void> {
 
 		@SuppressLint("CommitPrefEdits")
 		@Override
@@ -2245,11 +2300,24 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			String url = "192.168.0.";
 			for (int i=140; i<150; i++) {
 				url += Integer.toString(i);
-				new ESPbyTCP(url,"/s", "chk");
+				new ESPbyTCP(url,"s", "chk");
 				url = url.substring(0,10);
 			}
 			return null;
 		}
+	}
+
+	/**
+	 * Request status from main devices
+	 */
+	private void checkMainDevices() {
+		// Send status request to devices that are usual available
+		// Check Security front
+		new ESPbyTCP("192.168.0.141","s", "chk");
+		// Check Aircon office
+		new ESPbyTCP("192.168.0.142","s", "chk");
+		// Check Security back
+		new ESPbyTCP("192.168.0.144","s", "chk");
 	}
 
 	/**
@@ -2646,6 +2714,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				solView.setVisibility(View.VISIBLE);
 				debugView.setVisibility(View.INVISIBLE);
 				visibleView = 1;
+				if (ChartHelper.autoRefreshOn) {
+					ChartHelper.initChart(true, appContext, chartTitle);
+				} else {
+					ChartHelper.initChart(false, appContext, chartTitle);
+				}
 				break;
 			case 2: // Aircon control UI
 				statusBarColor = getResources().getColor(android.R.color.holo_blue_dark);
@@ -2882,6 +2955,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		Button prevButton  = (Button) findViewById(R.id.bt_prevLog);
 		/** Button to go to next log */
 		Button nextButton  = (Button) findViewById(R.id.bt_nextLog);
+		/** The application context */
+		Context thisAppContext = getApplicationContext();
 
 		switch (v.getId()) {
 			case R.id.bt_prevLog:
@@ -2911,8 +2986,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
+						ChartHelper.fillSeries(newDataSet, appView);
+						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
 						dataBase.close();
 
@@ -2936,8 +3011,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
+						ChartHelper.fillSeries(newDataSet, appView);
+						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
 						dataBase.close();
 
@@ -2977,8 +3052,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
+						ChartHelper.fillSeries(newDataSet, appView);
+						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
 						dataBase.close();
 
@@ -3007,8 +3082,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet);
-						ChartHelper.initChart(false);
+						ChartHelper.fillSeries(newDataSet, appView);
+						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
 						dataBase.close();
 

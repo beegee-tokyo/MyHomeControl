@@ -76,6 +76,9 @@ IPAddress connectWiFi(const char* ssidName) {
 */
 void resetWiFiCredentials() {
 	wifiManager.resetSettings();
+	delay(3000);
+	ESP.reset();
+	delay(5000);
 }
 
 /**

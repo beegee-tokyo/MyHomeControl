@@ -13,7 +13,7 @@ android {
 	buildTypes {
 		release {
 			minifyEnabled true
-			shrinkResources true
+//			shrinkResources true
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 			pseudoLocalesEnabled true
 		}
@@ -24,6 +24,9 @@ android {
 	}
 	productFlavors {
 	}
+	lintOptions {
+		abortOnError false
+	}
 }
 
 dependencies {
@@ -31,9 +34,9 @@ dependencies {
 	testCompile 'junit:junit:4.12'
 	compile 'com.android.support:appcompat-v7:22.+'
 	compile 'com.android.support:design:22.+'
-	compile 'com.squareup.okio:okio:1.6.0'
-	compile 'com.squareup.okhttp3:okhttp:3.2.0'
-	compile 'com.github.PhilJay:MPAndroidChart:v2.2.4'
+	compile 'com.github.PhilJay:MPAndroidChart:v2.2.5'
 	compile 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
 	compile 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.0'
+	compile 'com.squareup.okio:okio:1.10.0'
+	compile 'com.squareup.okhttp3:okhttp:3.4.1'
 }
