@@ -253,7 +253,6 @@
 		android:visibility="invisible"/>
 
 	<ProgressBar
-		android:id="@+id/pb_solar"
 		style="?android:attr/progressBarStyleSmall"
 		android:layout_width="300dp"
 		android:layout_height="300dp"

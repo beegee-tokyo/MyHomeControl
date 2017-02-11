@@ -22,7 +22,7 @@
 		tools:ignore="GoogleAppIndexingWarning">
 
 		<activity
-			android:name=".MyHomeControl"
+			android:name="tk.giesecke.myhomecontrol.MyHomeControl"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
@@ -34,21 +34,27 @@
 		</activity>
 
 		<activity
-			android:name=".Utilities"
+			android:name="tk.giesecke.myhomecontrol.Utilities"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
 
 		<activity
-			android:name=".ChartHelper"
+			android:name="tk.giesecke.myhomecontrol.ChartHelper"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
 
+		<activity android:name="tk.giesecke.myhomecontrol.SPwidgetConfigureActivity">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+			</intent-filter>
+		</activity>
+
 		<receiver
-			android:name=".AutoStart"
+			android:name="tk.giesecke.myhomecontrol.AutoStart"
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>
@@ -57,11 +63,11 @@
 		</receiver>
 
 		<receiver
-			android:name=".EventReceiver"
+			android:name="tk.giesecke.myhomecontrol.EventReceiver"
 			android:enabled="true">
 		</receiver>
 
-		<receiver android:name=".SecurityWidget">
+		<receiver android:name="tk.giesecke.myhomecontrol.SecurityWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 				<action android:name="android.appwidget.action.APPWIDGET_DELETED"/>
@@ -74,20 +80,6 @@
 				android:resource="@xml/security_widget_info"/>
 		</receiver>
 
-		<service
-			android:name=".SecurityWidgetClick"
-			android:exported="false">
-		</service>
-		<service
-			android:name=".StartBackgroundServices"
-			android:exported="false">
-		</service>
-
-		<service
-			android:name=".SolarSyncDBService"
-			android:exported="false">
-		</service>
-
 		<receiver android:name=".SPwidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -97,12 +89,6 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/spwidget_info"/>
 		</receiver>
-
-		<activity android:name=".SPwidgetConfigureActivity">
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
-			</intent-filter>
-		</activity>
 
 		<receiver android:name=".LightWidget">
 			<intent-filter>
@@ -114,11 +100,6 @@
 				android:resource="@xml/light_widget_info"/>
 		</receiver>
 
-		<service
-			android:name=".LightWidgetClick"
-			android:exported="false">
-		</service>
-
 		<receiver android:name=".AirconWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
@@ -129,6 +110,45 @@
 				android:resource="@xml/aircon_widget_info"/>
 		</receiver>
 
+		<receiver android:name=".PanicButton">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/panic_button_info"/>
+		</receiver>
+
+		<receiver android:name=".LightCtrlWidget">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/light_ctrl_widget_info"/>
+		</receiver>
+
+		<service
+			android:name=".SecurityWidgetClick"
+			android:exported="false">
+		</service>
+
+		<service
+			android:name=".StartBackgroundServices"
+			android:enabled="true">
+		</service>
+
+		<service
+			android:name=".SolarSyncDBService"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".LightWidgetClick"
+			android:exported="false">
+		</service>
+
 		<service
 			android:name=".AirconWidgetClick"
 			android:exported="false">
@@ -136,23 +156,23 @@
 
 		<service
 			android:name=".MessageListener"
-			android:enabled="true"
-			android:exported="false">
+			android:exported="false"
+			android:enabled="true">
 		</service>
-
-		<receiver android:name=".PanicButton" >
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-			</intent-filter>
-
-			<meta-data
-				android:name="android.appwidget.provider"
-				android:resource="@xml/panic_button_info" />
-		</receiver>
 
 		<service
 			android:name=".PanicButtonClick"
-			android:exported="false" >
+			android:exported="false">
+		</service>
+
+		<service
+			android:name=".CheckAvailDevices"
+			android:enabled="true">
+		</service>
+
+		<service
+			android:name=".LightCtrlWidgetClick"
+			android:exported="false">
 		</service>
 
 	</application>

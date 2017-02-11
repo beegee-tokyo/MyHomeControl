@@ -76,6 +76,9 @@ void sendBroadCast() {
 	// Display last timer on time
 	root["ot"] = onTime; //root["onTime"] = onTime;
 
+  // Display last timer on time
+	root["ts"] = timerEnd;
+
 	// Display device id
 	root["de"] = DEVICE_ID; //root["device"] = DEVICE_ID;
 

@@ -10,6 +10,8 @@
 
 /** WiFiManager instance */
 extern WiFiManager wifiManager;
+// Flag if WiFi connection to saved settings was successfull
+extern bool wmIsConnected;
 
 IPAddress connectWiFi(IPAddress statIP, IPAddress statGateWay, IPAddress statNetMask, const char* ssidName);
 void resetWiFiCredentials();

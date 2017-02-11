@@ -69,6 +69,7 @@ otaRunning	.\src\declarations.h	/^bool otaRunning = false;$/;"	v
 otaStatus	.\src\Setup.cpp	/^unsigned int otaStatus = 0;$/;"	v
 outWeatherStatus	.\src\declarations.h	/^String outWeatherStatus = "";$/;"	v
 parseACpacket	.\src\LanSubs.cpp	/^void parseACpacket (JsonObject& jsonIn, String device) {$/;"	f
+parseCAMPacket	.\src\LanSubs.cpp	/^void parseCAMPacket (JsonObject& jsonIn) {$/;"	f
 parseSPMPacket	.\src\LanSubs.cpp	/^void parseSPMPacket (JsonObject& jsonIn) {$/;"	f
 parseSecBackPacket	.\src\LanSubs.cpp	/^void parseSecBackPacket (JsonObject& jsonIn) {$/;"	f
 parseSecFrontPacket	.\src\LanSubs.cpp	/^void parseSecFrontPacket (JsonObject& jsonIn) {$/;"	f
@@ -79,6 +80,7 @@ secBackOffTime	.\src\declarations.h	/^byte secBackOffTime = 8;$/;"	v
 secBackOn	.\src\declarations.h	/^byte secBackOn = 2;$/;"	v
 secBackOnTime	.\src\declarations.h	/^byte secBackOnTime = 22;$/;"	v
 secBackStatus	.\src\LanSubs.cpp	/^String secBackStatus = "";$/;"	v
+secCamStatus	.\src\LanSubs.cpp	/^String secCamStatus = "";$/;"	v
 secFrontAuto	.\src\declarations.h	/^byte secFrontAuto = 0;$/;"	v
 secFrontLight	.\src\declarations.h	/^byte secFrontLight = 0;$/;"	v
 secFrontOffTime	.\src\declarations.h	/^byte secFrontOffTime = 8;$/;"	v
@@ -87,6 +89,7 @@ secFrontOnTime	.\src\declarations.h	/^byte secFrontOnTime = 22;$/;"	v
 secFrontStatus	.\src\LanSubs.cpp	/^String secFrontStatus = "";$/;"	v
 sendCmd	.\src\LanSubs.cpp	/^void sendCmd(IPAddress serverIP, String deviceCmd) {$/;"	f
 sendToMQTT	.\src\LanSubs.cpp	/^void sendToMQTT() {$/;"	f
+sendWEIBroadCast	.\src\LanSubs.cpp	/^void sendWEIBroadCast(String broadCast) {$/;"	f
 sensorReadings	.\src\declarations.h	/^int sensorReadings = 0;$/;"	v
 setup	.\src\Setup.cpp	/^void setup() {$/;"	f
 showMQTTerrorScreen	.\src\DisplayUpdate.cpp	/^void showMQTTerrorScreen() {$/;"	f
@@ -101,6 +104,7 @@ triggerGetDHT	.\src\Subs.cpp	/^void triggerGetDHT() {$/;"	f
 triggerGetStatus	.\src\Subs.cpp	/^void triggerGetStatus() {$/;"	f
 ucg_print_center	.\src\DisplayUpdate.cpp	/^void ucg_print_center(String text, int xPos, int yPos) {$/;"	f
 ucg_print_ln	.\src\DisplayUpdate.cpp	/^void ucg_print_ln(String text, boolean center) {$/;"	f
+udpClientServer	.\src\LanSubs.cpp	/^WiFiUDP udpClientServer;$/;"	v
 udpListener	.\src\declarations.h	/^WiFiUDP udpListener;$/;"	v
 udpMsgLength	.\src\declarations.h	/^int udpMsgLength = 0;$/;"	v
 updateAC	.\src\DisplayUpdate.cpp	/^void updateAC(boolean all) {$/;"	f

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -12,6 +13,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+
+import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -63,8 +66,9 @@ public class SecurityWidgetClick extends IntentService {
 
 					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
 				} else {
-					String urlFront = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
-					String urlBack = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
+					SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
+					String urlFront = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secFrontIndex],"NA");
+					String urlBack = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secBackIndex],"NA");
 					try {
 						InetAddress tcpServer = InetAddress.getByName(urlFront);
 						Socket tcpSocket = new Socket(tcpServer, 6000);

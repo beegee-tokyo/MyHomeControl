@@ -21,6 +21,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
+
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
@@ -44,7 +46,7 @@ public class SolarSyncDBService extends IntentService {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"Background sync of database started");
 
 			/** Access to shared preferences of app widget */
-			SharedPreferences mPrefs = intentContext.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
+			SharedPreferences mPrefs = intentContext.getSharedPreferences(sharedPrefName, 0);
 
 			// Try to sync only if we have connection and are on same WiFi as the spMonitor device
 			if (Utilities.isHomeWiFi(intentContext) && (!MyHomeControl.dataBaseIsEmpty)) {
@@ -135,7 +137,9 @@ public class SolarSyncDBService extends IntentService {
 				.build();
 
 		/** URL to be called */
-		String urlString = "http://" + MyHomeControl.solarUrl + "/sd/spMonitor/query2.php"; // URL to call
+		SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
+		String solarURL = mPrefs.getString( MyHomeControl.deviceNames[ MyHomeControl.spMonitorIndex],"NA");
+		String urlString = "http://" + solarURL + "/sd/spMonitor/query2.php"; // URL to call
 
 		// Check for last entry in the local database
 		/** Instance of DataBaseHelper */

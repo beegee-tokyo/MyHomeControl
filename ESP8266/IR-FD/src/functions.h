@@ -22,9 +22,9 @@ void parseCmd(JsonObject& root);
 void parseSocketCmd();
 
 // Aircon control functions
-void sendCode(int repeat, unsigned int *rawCodes, int rawCount);
-unsigned int getVal(byte testVal, byte maskVal);
-void buildBuffer(unsigned int *newBuffer, byte *cmd);
+// void sendCode(int repeat, unsigned int *rawCodes, int rawCount);
+// unsigned int getVal(byte testVal, byte maskVal);
+// void buildBuffer(unsigned int *newBuffer, byte *cmd);
 void sendCmd();
 void initAC();
 boolean switchSlaveAC(IPAddress ipSlave, byte reqMode);

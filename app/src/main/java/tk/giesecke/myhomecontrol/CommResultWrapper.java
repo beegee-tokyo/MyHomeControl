@@ -3,15 +3,15 @@ package tk.giesecke.myhomecontrol;
 /**
  * Wrapper to send several parameters to onPostExecute of AsyncTask
  */
-public class CommResultWrapper {
+class CommResultWrapper {
 	/** URL to be called */
-	public String httpURL;
+	String httpURL;
 	/** Command to be send */
-	public String comCmd; // Requested command
+	String comCmd; // Requested command
 	/** Returned result from URL */
-	public String comResult; // Result of communication
-	/** Caller id (sec, air or spm) */
-	public String callID;
+	String comResult; // Result of communication
 	/** Device index (for multiple aircons) */
-	public int deviceIndex;
+	int deviceIndex;
+	/** Flag for communication result*/
+	boolean comFailed;
 }

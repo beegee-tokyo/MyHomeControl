@@ -19,7 +19,9 @@
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
 			android:background="?attr/colorPrimary"
-			app:popupTheme="@style/AppTheme.PopupOverlay"/>
+			app:popupTheme="@style/AppTheme.PopupOverlay">
+
+		</android.support.v7.widget.Toolbar>
 
 	</android.support.design.widget.AppBarLayout>
 
@@ -30,5 +32,9 @@
 	<include layout="@layout/view_aircon"/>
 
 	<include layout="@layout/view_devdebug"/>
+
+	<include layout="@layout/view_seccam"/>
+
+	<include layout="@layout/view_lights"/>
 
 </android.support.design.widget.CoordinatorLayout>

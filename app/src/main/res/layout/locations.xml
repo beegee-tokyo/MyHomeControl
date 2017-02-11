@@ -14,7 +14,6 @@
 		android:textAppearance="?android:attr/textAppearanceMedium"/>
 
 	<TextView
-		android:id="@+id/dia_txt_icon"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center_horizontal"

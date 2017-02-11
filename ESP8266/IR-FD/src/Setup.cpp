@@ -52,9 +52,6 @@ void setup() {
 		acTemp = acTemp + 25; // set temperature bits to 25
 	}
 
-	/* Send boot info debug message */
-	sendStatusToDebug();
-
 	/** Set saved AC temperature setting */
 	savedAcTemp = acTemp & TEMP_MASK;
 
@@ -111,10 +108,6 @@ void setup() {
 	// Start sending status update every 5 minutes (5x60=300 seconds)
 	sendUpdateTimer.attach(300, triggerSendUpdate);
 
-	// Send aircon restart message
-	sendBroadCast();
-	inSetup = false;
-
 	// Start FTP server
 	ftpSrv.begin(DEVICE_ID,DEVICE_ID);    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
 
@@ -137,4 +130,18 @@ void setup() {
 	// Start OTA server.
 	ArduinoOTA.setHostname(DEVICE_ID);
 	ArduinoOTA.begin();
+
+  /* Set timer end time as string */
+  int offHour = hour()+onTime;
+  if (offHour >= 24) {
+    offHour-=24;
+  }
+  timerEnd = formatInt(offHour) + ":" + formatInt(minute());
+
+  /* Send boot info debug message */
+  sendStatusToDebug();
+
+  // Send aircon restart message
+	sendBroadCast();
+	inSetup = false;
 }

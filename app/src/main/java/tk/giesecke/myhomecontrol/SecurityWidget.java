@@ -36,7 +36,7 @@ public class SecurityWidget extends AppWidgetProvider {
 			views.setImageViewResource(R.id.iv_sec_widget, R.mipmap.ic_alarm_autooff);
 		}
 
-		// Create an intent to launch the service on widget push
+		// Create an intent to activate the alarm on widget push
 		Intent serviceIntent = new Intent(context, SecurityWidgetClick.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		serviceIntent.putExtra("AlarmStatus", alarmIsActive);

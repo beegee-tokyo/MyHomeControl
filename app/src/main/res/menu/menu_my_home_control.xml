@@ -4,6 +4,15 @@
 	  tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	  tools:ignore="AlwaysShowAction">
 
+	<!-- Menu ID 0 => lights -->
+	<item
+		android:id="@+id/action_lightControl"
+		android:icon="@drawable/ic_lights"
+		android:orderInCategory="100"
+		android:title="@string/lights_bedroom"
+		app:showAsAction="always"/>
+
+	<!-- Menu ID 1 => security -->
 	<item
 		android:id="@+id/action_security"
 		android:orderInCategory="100"
@@ -11,6 +20,7 @@
 		android:icon="@drawable/ic_security"
 		app:showAsAction="always"/>
 
+	<!-- Menu ID 2 => solar -->
 	<item
 		android:id="@+id/action_solar"
 		android:orderInCategory="100"
@@ -18,6 +28,7 @@
 		android:icon="@drawable/ic_solar"
 		app:showAsAction="always"/>
 
+	<!-- Menu ID 3 => aircon -->
 	<item
 		android:id="@+id/action_aircon"
 		android:orderInCategory="100"
@@ -25,12 +36,14 @@
 		android:icon="@drawable/ic_aircon"
 		app:showAsAction="always"/>
 
+	<!-- Menu ID 4 => close -->
 	<item
 		android:id="@+id/action_close"
 		android:orderInCategory="100"
 		android:title="@string/action_close"
 		app:showAsAction="always"/>
 
+	<!-- Menu ID 5 => security alarm -->
 	<item
 		android:id="@+id/action_selAlarm"
 		android:icon="@drawable/ic_settings"
@@ -39,6 +52,7 @@
 		android:title="@string/action_selAlarm"
 		app:showAsAction="never"/>
 
+	<!-- Menu ID 6 => sonar alarm -->
 	<item
 		android:id="@+id/action_selWarning"
 		android:icon="@drawable/ic_settings"
@@ -47,6 +61,7 @@
 		android:title="@string/action_selWarning"
 		app:showAsAction="never"/>
 
+	<!-- Menu ID 7 => aircon locations -->
 	<item
 		android:id="@+id/action_locations"
 		android:icon="@drawable/ic_location"
@@ -55,6 +70,7 @@
 		android:visible="false"
 		app:showAsAction="never"/>
 
+	<!-- Menu ID 8 => refresh status -->
 	<item
 		android:id="@+id/action_refresh"
 		android:icon="@drawable/ic_refresh"
@@ -62,6 +78,7 @@
 		android:title="@string/action_refresh"
 		app:showAsAction="never"/>
 
+	<!-- Menu ID 9 => debug messages -->
 	<item
 		android:id="@+id/action_debug"
 		android:icon="@drawable/ic_debug"
@@ -69,12 +86,13 @@
 		android:title="@string/action_debug"
 		app:showAsAction="never"/>
 
+	<!-- Menu ID 10 => debug view -->
 	<item
 		android:id="@+id/action_devDebug"
-		android:icon="@drawable/ic_refresh"
+		android:icon="@drawable/ic_debug"
 		android:orderInCategory="100"
 		android:title="@string/action_devDebug"
-		app:showAsAction="never"
-		android:visible="false"/>
+		app:showAsAction="never"/>
 
 </menu>
+

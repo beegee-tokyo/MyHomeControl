@@ -133,7 +133,7 @@ getVal	.\src\ACSubs.cpp	/^unsigned int getVal(byte testVal, byte maskVal) {$/;"	
 handleCmd	.\src\ACSubs.cpp	/^void handleCmd() {$/;"	f
 inSetup	.\src\declarations.h	/^boolean inSetup = true;$/;"	v
 initAC	.\src\ACSubs.cpp	/^void initAC() {$/;"	f
-ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipAC1;$/;"	v
+ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipAC2;$/;"	v
 ipAddr	.\src\declarations.h	/^	IPAddress ipAddr = ipSpare4;$/;"	v
 irCmd	.\src\declarations.h	/^int irCmd = 9999;$/;"	v
 isInFanMode	.\src\declarations.h	/^boolean isInFanMode = false;$/;"	v

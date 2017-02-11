@@ -54,8 +54,10 @@ public class Utilities extends MyHomeControl {
 			if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
 				String currentSSID = connectionInfo.getSSID();
 				currentSSID = currentSSID.substring(1, currentSSID.length() - 1);
-				String MY_LOCAL_SSID = context.getResources().getString(R.string.MY_LOCAL_SSID);
-				return currentSSID.equalsIgnoreCase(MY_LOCAL_SSID);
+				String primLocalSSID = context.getResources().getString(R.string.LOCAL_SSID);
+				String altLocalSSID = context.getResources().getString(R.string.ALT_LOCAL_SSID);
+				return ((currentSSID.equalsIgnoreCase(primLocalSSID)) || (currentSSID.equalsIgnoreCase(altLocalSSID)));
+//				return currentSSID.equalsIgnoreCase(MY_LOCAL_SSID);
 			}
 		}
 		return false;
@@ -70,6 +72,7 @@ public class Utilities extends MyHomeControl {
 	 * True if we have connection
 	 * False if we do not have connection
 	 */
+	@SuppressWarnings("deprecation")
 	public static boolean[] connectionAvailable(Context thisAppContext) {
 		/** Flags for connections */
 		boolean[] bConnFlags = new boolean[3];

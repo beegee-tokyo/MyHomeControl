@@ -31,13 +31,75 @@
 		android:layout_height="match_parent"
 		android:layout_below="@+id/carrier"/>
 
-	<ProgressBar
-		android:id="@+id/pb_aircon"
-		style="?android:attr/progressBarStyleSmall"
-		android:layout_width="300dp"
-		android:layout_height="300dp"
-		android:layout_centerInParent="true"
-		android:background="@android:color/transparent"
-		android:visibility="invisible"/>
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_centerHorizontal="true"
+		android:layout_above="@+id/aircon_status"
+		android:orientation="horizontal">
+
+		<!--<ImageView-->
+			<!--android:layout_width="wrap_content"-->
+			<!--android:layout_height="wrap_content"-->
+			<!--android:scaleType="fitXY"-->
+			<!--android:src="@drawable/ic_house_frame"-->
+			<!--android:contentDescription="@string/action_refresh"-->
+			<!--android:layout_alignStart="@+id/tv_weather_in"-->
+			<!--android:layout_alignEnd="@+id/tv_weather_in"-->
+			<!--android:layout_alignLeft="@+id/tv_weather_in"-->
+			<!--android:layout_alignRight="@+id/tv_weather_in"-->
+			<!--android:layout_marginLeft="-10dp"-->
+			<!--android:layout_marginRight="-10dp"-->
+			<!--android:layout_alignParentTop="true"/>-->
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_weather_in"
+			android:visibility="visible"
+			android:text="@string/weather_initial"
+			android:gravity="center"
+			android:layout_marginTop="10dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginStart="2dp"
+			android:layout_weight="1"
+			android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+		<!--<ImageView-->
+			<!--android:layout_width="wrap_content"-->
+			<!--android:layout_height="wrap_content"-->
+			<!--android:scaleType="fitXY"-->
+			<!--android:src="@drawable/ic_outside_frame"-->
+			<!--android:contentDescription="@string/action_refresh"-->
+			<!--android:layout_alignStart="@+id/tv_weather_out"-->
+			<!--android:layout_alignEnd="@+id/tv_weather_out"-->
+			<!--android:layout_alignLeft="@+id/tv_weather_out"-->
+			<!--android:layout_alignRight="@+id/tv_weather_out"-->
+			<!--android:layout_marginLeft="-10dp"-->
+			<!--android:layout_marginRight="-10dp"-->
+			<!--android:layout_alignParentTop="true"/>-->
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_weather_out"
+			android:visibility="visible"
+			android:text="@string/weather_initial"
+			android:gravity="center"
+			android:layout_marginTop="10dp"
+			android:layout_marginRight="2dp"
+			android:layout_marginEnd="2dp"
+			android:layout_weight="1"
+			android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+	</LinearLayout>
+
+	<!--<ProgressBar-->
+		<!--style="?android:attr/progressBarStyleSmall"-->
+		<!--android:layout_width="300dp"-->
+		<!--android:layout_height="300dp"-->
+		<!--android:layout_centerInParent="true"-->
+		<!--android:background="@android:color/transparent"-->
+		<!--android:visibility="invisible"/>-->
 
 </RelativeLayout>

@@ -20,10 +20,12 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.StrictMode;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -61,20 +63,24 @@ public class MessageListener extends Service {
 	/** Action for broadcast message to main activity */
 	public static final String BROADCAST_RECEIVED = "BC_RECEIVED";
 
-	/** Flag if UDP listener is restarted after a broadcast was received */
+	/** Flag if UDP/TCP listener is restarted after a broadcast was received */
 	static Boolean shouldRestartSocketListen=true;
 	/** Socket for broadcast datagram */
 	static DatagramSocket socket;
 	/** Socket for TCP messages */
-	private ServerSocket serverSocket;
+	static ServerSocket serverSocket;
 
 	/** Multicast wifiWakeLock to keep WiFi awake until broadcast is received */
 	private WifiManager.MulticastLock wifiWakeLock = null;
 
 	/** MQTT client */
 	public static volatile IMqttAsyncClient mqttClient = null;
-	/** Flag if connection retry has already been initiated */
-	private boolean doConnectStarted = false;
+	/** Flag if MQTT listener is restarted after a broadcast was received */
+	static Boolean shouldRestartMQTTListen=true;
+	/** Flag if MQTT re/connection has started */
+	private boolean mqttIsConnecting = false;
+	/** Counter for Connection lost (32109) - java.io.EOFException */
+	private static int mqttconnLostNum = 0;
 
 	/** Array to calculate average consumption (to avoid too many alerts */
 	private static final ArrayList<Float> avgConsumption = new ArrayList<>();
@@ -84,8 +90,30 @@ public class MessageListener extends Service {
 	/** Flag if user UI has just started */
 	public static boolean uiStarted = false;
 
-	public MessageListener() {
-	}
+	/** Last message from SPM */
+	private String lastSPM = "";
+	/** Last message from AC1 */
+	private String lastAC1= "";
+	/** Last message from AC2 */
+	private String lastAC2 = "";
+	/** Last message from SF1 */
+	private String lastSF1 = "";
+	/** Last message from SB1 */
+	private String lastSB1 = "";
+	/** Last message from LB1 */
+	private String lastLB1 = "";
+	/** Last message from WEO */
+	private String lastWEO = "";
+	/** Last message from WEI */
+	private String lastWEI = "";
+
+	/** Broker status structure */
+	public static int clientsConn = 0; // $SYS/broker/clients/connected
+	public static Double bytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
+	public static Double bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
+	public static Double bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
+	public static Double bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
+	public static final ArrayList<String> mqttClients = new ArrayList<>();
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -124,9 +152,9 @@ public class MessageListener extends Service {
 		boolean hasConnection[] = Utilities.connectionAvailable(this);
 		if (hasConnection[0] && Utilities.isHomeWiFi(this)) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start UDP listener");
+			shouldRestartSocketListen = true;
 			try {
 				// Start listener for UDP broadcast messages
-				shouldRestartSocketListen = true;
 				startListenForUDPBroadcast();
 			} catch (Exception ignore) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Failed to start UDP listener");
@@ -137,7 +165,17 @@ public class MessageListener extends Service {
 			} catch (Exception ignore) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Failed to start TCP listener");
 			}
+		} else {
+			shouldRestartSocketListen = false;
 		}
+
+		/** Receiver for screen on/off broadcast msgs */
+		/** IntentFilter to receive screen on/off & connectivity broadcast msgs */
+		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		filter.addAction(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
+		BroadcastReceiver mReceiver = new EventReceiver();
+		registerReceiver(mReceiver, filter);
 
 		IntentFilter intentf = new IntentFilter();
 		intentf.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -168,6 +206,25 @@ public class MessageListener extends Service {
 			} catch (IOException ignore) {
 			}
 		}
+		if (socket != null) {
+			socket.disconnect();
+			socket.close();
+		}
+		if (mqttClient != null) {
+			try {
+				mqttClient.disconnect();
+			} catch (MqttException ignore) {
+			}
+		}
+		// Restart service with a delay of 5 seconds
+		final Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start/Restart UDP/TCP/MQTT listener");
+				getApplicationContext().startService(new Intent(getApplicationContext(), MessageListener.class));
+			}
+		}, 5000);
 	}
 
 	private BroadcastReceiver connChangeReceiver = new BroadcastReceiver() {
@@ -180,25 +237,97 @@ public class MessageListener extends Service {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Connection Change (MessageListener)");
 
 				boolean bHasConnection[] = Utilities.connectionAvailable(context);
-				if (!bHasConnection[0] && !bHasConnection[1]) { // No connection available?
-					// Stop service to listen to UDP broadcast messages
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Try to stop UDP/MQTT listener WiFi = " + bHasConnection[0]
-							+ " MOBILE = " + bHasConnection[1]);
-					shouldRestartSocketListen = false;
-					if (socket != null) {
+				if (bHasConnection[0] && Utilities.isHomeWiFi(context)) { // WiFi connection available?
+					// Start/Restart service to listen to UDP/MQTT broadcast messages
+					shouldRestartSocketListen = true;
+					shouldRestartMQTTListen = true;
+					// Reconnect listeners
+//					if (mqttClient != null) { // mqttClient initialized?
+//						try {
+//							mqttClient.disconnect();
+//						} catch (MqttException ignore) {
+//						}
+//					}
+					new doConnect().execute();
+					if (socket != null) { // Socket still open?
 						socket.disconnect();
 						socket.close();
+						socket = null;
 					}
-					if (connChangeReceiver != null) {
-						unregisterReceiver(connChangeReceiver);
-						connChangeReceiver = null;
+					startListenForUDPBroadcast();
+					if (serverSocket != null) { // Socket still open?
+						try {
+							serverSocket.close();
+							serverSocket = null;
+						} catch (IOException ignore) {
+						}
 					}
-					stopSelf();
-				} else {
-					if (mqttClient == null && shouldRestartSocketListen) {
-						new doConnect().execute();
+					startListenForTCPMessage();
+				} else if (bHasConnection[1] || bHasConnection[0]) { // Mobile or WiFi connection available?
+					// Start/Restart service to listen to UDP/MQTT broadcast messages
+					shouldRestartSocketListen = false;
+					shouldRestartMQTTListen = true;
+					// Reconnect listeners
+//					if (mqttClient != null) { // mqttClient initialized?
+//						try {
+//							mqttClient.disconnect();
+//						} catch (MqttException ignore) {
+//						}
+//					}
+					new doConnect().execute();
+				} else { // No connection available
+					shouldRestartSocketListen = false;
+					shouldRestartMQTTListen = false;
+//					if (mqttClient != null) { // mqttClient initialized?
+//						try {
+//							mqttClient.disconnect();
+//						} catch (MqttException ignore) {
+//						}
+//					}
+					if (socket != null) { // Socket still open?
+						socket.disconnect();
+						socket.close();
+						socket = null;
 					}
+					if (serverSocket != null) { // Socket still open?
+						try {
+							serverSocket.close();
+							serverSocket = null;
+						} catch (IOException ignore) {
+						}
+					}
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stop Message listener because no connection");
 				}
+//				if (!bHasConnection[0] && !bHasConnection[1]) { // No connection available?
+//					// Stop service to listen to UDP broadcast messages
+//					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Try to stop UDP/TCP/MQTT listener");
+//					shouldRestartSocketListen = false;
+//				} else {
+//					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Try to reconnect UDP/TCP/MQTT listener");
+//					shouldRestartSocketListen = true;
+//					// Reconnect listeners
+//					if (mqttClient != null) { // mqttClient initialized?
+//						try {
+//							mqttClient.disconnect();
+//						} catch (MqttException ignore) {
+//						}
+//					}
+//					new doConnect().execute();
+//					if (socket != null) { // Socket still open?
+//						socket.disconnect();
+//						socket.close();
+//						socket = null;
+//					}
+//					startListenForUDPBroadcast();
+//					if (serverSocket != null) { // Socket still open?
+//						try {
+//							serverSocket.close();
+//							serverSocket = null;
+//						} catch (IOException ignore) {
+//						}
+//					}
+//					startListenForTCPMessage();
+//				}
 			}
 		}
 	};
@@ -215,8 +344,49 @@ public class MessageListener extends Service {
 					InetAddress broadcastIP = InetAddress.getByName("192.168.0.255"); //172.16.238.42 //192.168.1.255
 					/** Port from where we expect the UDP broadcasts */
 					Integer port = UDP_SERVER_PORT;
-					while (shouldRestartSocketListen) {
-						listenUDPBroadCast(broadcastIP, port);
+					boolean runForEver = true;
+					while (runForEver) {
+						if (shouldRestartSocketListen) { // Should we listen to UDP broadcasts???
+							listenUDPBroadCast(broadcastIP, port);
+							// Check if MQTT is still connected
+							if (mqttClient != null && !mqttClient.isConnected() && !mqttIsConnecting) {
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect to MQTT");
+								mqttIsConnecting = true;
+								// Reconnect to MQTT
+								final Handler handler = new Handler();
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
+										new doConnect().execute();
+									}
+								});
+							}
+							// Check if UI started
+							if (uiStarted) {
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Send last status to UI");
+								uiStarted = false;
+								new sendLastMsgs().execute();
+							}
+						} else {
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "shouldRestartSocketListen = false");
+							runForEver = false;
+						}
+					}
+					if (!shouldRestartSocketListen) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stop UDP listener");
+						if (socket != null) {
+							socket.disconnect();
+							socket.close();
+							socket = null;
+						}
+						if (serverSocket != null) {
+							try {
+								serverSocket.close();
+								serverSocket = null;
+							} catch (IOException ignore) {
+							}
+						}
 					}
 				} catch (Exception e) {
 					if (shouldRestartSocketListen) {
@@ -224,12 +394,26 @@ public class MessageListener extends Service {
 						startListenForUDPBroadcast();
 					} else {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stop UDP listener");
+						if (socket != null) {
+							socket.disconnect();
+							socket.close();
+							socket = null;
+						}
+						if (serverSocket != null) {
+							try {
+								serverSocket.close();
+								serverSocket = null;
+							} catch (IOException ignore) {
+							}
+						}
 					}
 				}
 			}
 		});
 
-		UDPBroadcastThread.start();
+		if (shouldRestartSocketListen) {
+			UDPBroadcastThread.start();
+		}
 	}
 
 	/**
@@ -248,6 +432,7 @@ public class MessageListener extends Service {
 				socket = new DatagramSocket(port, broadcastIP);
 			} catch (SocketException e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Cannot open socket " + e.getMessage());
+				shouldRestartSocketListen = false;
 				socket.disconnect();
 				socket.close();
 				socket = null;
@@ -266,93 +451,101 @@ public class MessageListener extends Service {
 		/** IP address of UDP broadcast sender */
 		String senderIP = packet.getAddress().getHostAddress();
 		/** Message attached to UDP broadcast */
- 		String message = new String(packet.getData()).trim();
+		String message = new String(packet.getData()).trim();
 
+		// Check MQTT connection
+		if (mqttClient == null || !mqttClient.isConnected()) {
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "UDP listener detected MQTT disconnect");
+			// Reconnect to MQTT
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
+			new doConnect().execute();
+		}
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Got UDP broadcast from " + senderIP + ", message: " + message);
 
-		Context context = getApplicationContext();
 		// Check if response is a JSON array
 		if (Utilities.isJSONValid(message)) {
-			/** Json object for received data */
-			JSONObject jsonResult;
-			try {
-				jsonResult = new JSONObject(message);
-				try {
-					/** Device ID from UDP broadcast message */
-					String broadCastDevice = jsonResult.getString("de");
-					if (broadCastDevice.startsWith("sf") || broadCastDevice.startsWith("sb")) {
-						// Broadcast from front security
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update security widgets");									/** Flag for alarm on or off */
-
-						boolean alarmIsActive = (jsonResult.getInt("ao") == 1);
-						boolean alarmIsOn = (jsonResult.getInt("al") == 1);
-
-						// Activate/deactivate alarm sound and update widget
-						securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
-					}
-
-					if (broadCastDevice.startsWith("sp")) { // Broadcast from solar panel monitor
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update solar panel widgets");
-
-						/** Value of solar production */
-						float solarPower = jsonResult.getInt("s");
-						/** Value of house consumption */
-						float consPower = jsonResult.getInt("c");
-
-						// Activate/deactivate alarm sound and update widget
-						solarAlarmAndWidgetUpdate(solarPower, consPower, context);
-					}
-					if (broadCastDevice.startsWith("fd")) { // Broadcast from office aircon
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
-
-						/** Flag for alarm switched on or off */
-						boolean timerOn = (jsonResult.getInt("ti") == 1);
-						/** Timer time */
-						int timerTime = jsonResult.getInt("ot");
-
-						// Update widget
-						airconWidgetUpdate(timerOn, timerTime, context);
-
-					}
-				} catch (JSONException ignore) {
-					return;
-				}
-			} catch (JSONException e) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());
-				return;
-			}
+			handleMsgs(message);
 			// Send broadcast to listening activities
 			sendMyBroadcast(message, "UDP");
+
+			SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+			if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
+				toastMsg = message;
+				Handler handler = new Handler(Looper.getMainLooper());
+				handler.post(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(getApplicationContext(),
+								"Received UDP data: " + toastMsg,
+								Toast.LENGTH_SHORT).show();
+					}
+				});
+			}
 		}
 	}
 
 	/**
 	 * Start listener for TCP messages
 	 */
+	private static String toastMsg;
+
 	private void startListenForTCPMessage() {
 		Thread TCPMessageThread = new Thread(new Runnable() {
 			@SuppressWarnings("InfiniteLoopStatement")
 			public void run() {
 				try {
-					if (serverSocket == null) {
-						serverSocket = new ServerSocket();
-						serverSocket.setReuseAddress(true);
-						serverSocket.bind(new InetSocketAddress(9999));
-					}
-					while (shouldRestartSocketListen) { //(serverSocket != null) {
-						// LISTEN FOR INCOMING CLIENTS
-						Socket client = serverSocket.accept();
-						try {
-							BufferedReader in = new BufferedReader(
-									new InputStreamReader(client.getInputStream()));
-							String inMsg;
-							while ((inMsg = in.readLine()) != null) {
-								// Send broadcast to listening activities
-								sendMyBroadcast(inMsg, "DEBUG");
-								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received TCP data: " + inMsg);
+					boolean runForEver = true;
+					while (runForEver) {
+						if (shouldRestartSocketListen) {
+							if (serverSocket == null) {
+								serverSocket = new ServerSocket();
+								serverSocket.setReuseAddress(true);
+								serverSocket.bind(new InetSocketAddress(9999));
 							}
-						} catch (Exception e) {
-							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Receiving TCP data failed " + e.getMessage());
+							// LISTEN FOR INCOMING CLIENTS
+							Socket client = serverSocket.accept();
+							try {
+								BufferedReader in = new BufferedReader(
+										new InputStreamReader(client.getInputStream()));
+								String inMsg;
+								while ((inMsg = in.readLine()) != null) {
+									// Send broadcast to listening activities
+									sendMyBroadcast(inMsg, "DEBUG");
+									// Check MQTT connection
+									if (mqttClient == null || !mqttClient.isConnected()) {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP listener detected MQTT disconnect");
+										// Reconnect to MQTT
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
+										new doConnect().execute();
+									}
+									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received TCP data: " + inMsg);
+									SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+									if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
+										toastMsg = inMsg;
+										Handler handler = new Handler(Looper.getMainLooper());
+										handler.post(new Runnable() {
+											@Override
+											public void run() {
+												Toast.makeText(getApplicationContext(),
+														"Received TCP data: " + toastMsg,
+														Toast.LENGTH_SHORT).show();
+											}
+										});
+									}
+								}
+							} catch (Exception e) {
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Receiving TCP data failed " + e.getMessage());
+							}
+						} else {
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "shouldRestartSocketListen = false");
+							if (serverSocket != null) {
+								try {
+									serverSocket.close();
+								} catch (IOException ignore) {
+								}
+								serverSocket = null;
+								runForEver = false;
+							}
 						}
 					}
 				} catch (Exception e) {
@@ -361,6 +554,7 @@ public class MessageListener extends Service {
 							serverSocket.close();
 						} catch (IOException ignore) {
 						}
+						serverSocket = null;
 					}
 					if (shouldRestartSocketListen) {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Restart TCP listener after error " + e.getMessage());
@@ -370,7 +564,9 @@ public class MessageListener extends Service {
 			}
 		});
 
-		TCPMessageThread.start();
+		if (shouldRestartSocketListen) {
+			TCPMessageThread.start();
+		}
 	}
 
 	// MQTT stuff starts here
@@ -383,15 +579,31 @@ public class MessageListener extends Service {
 		@Override
 		protected Boolean doInBackground(String... params) {
 			boolean connected = true;
-			if (shouldRestartSocketListen) {
+			if (shouldRestartMQTTListen) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "doConnect()");
 				if ((mqttClient != null) && (mqttClient.isConnected())) {
 					return true;
 				}
 				String deviceId = Utilities.getDeviceName();
-				String subscriberID = "/" + deviceId.toUpperCase();
+				String subscriberID = "/DEV/" + deviceId.toUpperCase();
 				String mqttIP = getResources().getString(R.string.MQTT_IP);
-				String mqttUser = getResources().getString(R.string.MQTT_USER);
+				SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+				int currMqttUser = mPrefs.getInt("MQTT_User",0);
+				String mqttUser;
+				switch (currMqttUser) {
+					case 1:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_2);
+						break;
+					case 2:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_3);
+						break;
+					case 3:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_4);
+						break;
+					default:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_1);
+						break;
+				}
 				String mqttPw = getResources().getString(R.string.MQTT_PW);
 				IMqttToken token;
 				MqttConnectOptions options = new MqttConnectOptions();
@@ -400,39 +612,25 @@ public class MessageListener extends Service {
 				options.setPassword(mqttPw.toCharArray());
 				options.setConnectionTimeout(60);
 				options.setAutomaticReconnect(true);
-
+				options.setKeepAliveInterval(300);
+				byte[] lastWill;
 				try {
-					options.setKeepAliveInterval(300);
-					byte[] lastWill;
 					lastWill = "Dead".getBytes("UTF-8");
 					options.setWill(subscriberID, lastWill, 2, true);
+				} catch (UnsupportedEncodingException ignore) {
+				}
 
+				try {
 					mqttClient = new MqttAsyncClient(mqttIP, deviceId, new MemoryPersistence());
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "mqttClient.connect()");
 					token = mqttClient.connect(options);
 					token.waitForCompletion(60000);
 					mqttClient.setCallback(new MqttEventCallback());
-					token = mqttClient.subscribe("/SPM", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/AC1", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/AC2", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/WEI", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/WEO", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/SEF", 0);
-					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("/SEB", 0);
-					token.waitForCompletion(10000);
-					// Send one time topic to announce device as subscriber
-					deviceId = "/" + deviceId.toUpperCase();
-					byte[] encodedPayload;
-					encodedPayload = "Subscriber".getBytes("UTF-8");
-					token = mqttClient.publish(deviceId, encodedPayload, 2, true);
-					token.waitForCompletion(5000);
-				} catch (MqttSecurityException | UnsupportedEncodingException e) {
+				} catch (MqttSecurityException e) {
 					connected = false;
+				} catch (ExceptionInInitializerError e) {
+					connected = false;
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
 				} catch (MqttException e) {
 					switch (e.getReasonCode()) {
 						case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
@@ -443,6 +641,12 @@ public class MessageListener extends Service {
 							break;
 						case MqttException.REASON_CODE_CONNECTION_LOST:
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+							if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+								mqttconnLostNum ++;
+								if (mqttconnLostNum >= 1000) { // Same error occured more than 1000 times
+									stopSelf();
+								}
+							}
 							break;
 						case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
@@ -455,6 +659,9 @@ public class MessageListener extends Service {
 							break;
 					}
 					connected = false;
+				}
+				if (!mqttClients.contains(Utilities.getDeviceName().toUpperCase())){
+					mqttClients.add(Utilities.getDeviceName().toUpperCase());
 				}
 			} else {
 				connected = false;
@@ -470,13 +677,101 @@ public class MessageListener extends Service {
 		 */
 		protected void onPostExecute(Boolean isConnected) {
 			if (isConnected) {
-				doConnectStarted = false;
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT connection successful");
+				sendMyBroadcast("MQTT connected", "STATUS");
+				mqttIsConnecting = false;
+				IMqttToken token;
+				SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+				int currMqttUser = mPrefs.getInt("MQTT_User",0);
+				String mqttUser;
+				switch (currMqttUser) {
+					case 1:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_2);
+						break;
+					case 2:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_3);
+						break;
+					case 3:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_4);
+						break;
+					default:
+						mqttUser = getResources().getString(R.string.MQTT_USER_SUB_1);
+						break;
+				}
+				try {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /SPM");
+					token = mqttClient.subscribe("/SPM", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /AC1");
+					token = mqttClient.subscribe("/AC1", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /AC2");
+					token = mqttClient.subscribe("/AC2", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /WEI");
+					token = mqttClient.subscribe("/WEI", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /WEO");
+					token = mqttClient.subscribe("/WEO", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /SEF");
+					token = mqttClient.subscribe("/SEF", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /SEB");
+					token = mqttClient.subscribe("/SEB", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /LB1");
+					token = mqttClient.subscribe("/LB1", 0);
+					token.waitForCompletion(10000);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Subscribe to /DEV/#");
+					token = mqttClient.subscribe("/DEV/#", 0);
+					token.waitForCompletion(10000);
+
+					// Send one time topic to announce device as subscriber
+					String deviceId = Utilities.getDeviceName();
+					deviceId = "/DEV/" + deviceId.toUpperCase();
+					byte[] encodedPayload;
+					encodedPayload = mqttUser.getBytes("UTF-8");
+					MqttMessage message = new MqttMessage(encodedPayload);
+					message.setRetained(true);
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Publishing own device info");
+					token = mqttClient.publish(deviceId, message);
+					token.waitForCompletion(10000);
+				} catch (MqttException e) {
+					switch (e.getReasonCode()) {
+						case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CONNECTION_LOST:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+							if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+								mqttconnLostNum ++;
+								if (mqttconnLostNum >= 1000) { // Same error occured more than 1000 times
+									stopSelf();
+								}
+							}
+							break;
+						case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
+							break;
+						default:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+							break;
+					}
+				} catch (UnsupportedEncodingException ignore) {
+				}
 			} else { // retry in 30 seconds
 				boolean bHasConnection[] = Utilities.connectionAvailable(getApplicationContext());
-					if (bHasConnection[0] || bHasConnection[1]) {
-						new doConnect().execute();
-					}
+				if (bHasConnection[0] || bHasConnection[1]) {
+					mqttIsConnecting = true;
+					new doConnect().execute();
+				}
 			}
 		}
 	}
@@ -486,17 +781,19 @@ public class MessageListener extends Service {
 		@Override
 		public void connectionLost(Throwable arg0) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT lost connection:" + arg0);
-			if (!doConnectStarted) {
-				try {
-					mqttClient.disconnect();
-				} catch (MqttException ignore) {
+			// Send broadcast to listening activities
+			sendMyBroadcast("MQTT disconnected", "STATUS");
+			// Reconnect to MQTT with a delay of 5 seconds
+			final Handler handler = new Handler();
+			handler.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
+					new doConnect().execute();
 				}
-				boolean bHasConnection[] = Utilities.connectionAvailable(getApplicationContext());
-				if (bHasConnection[0] || bHasConnection[1]) {
-					if (shouldRestartSocketListen) {
-						new doConnect().execute();
-					}
-				}
+			}, 5000);
+			if (mqttClients.contains(Utilities.getDeviceName().toUpperCase())){
+				mqttClients.remove(Utilities.getDeviceName().toUpperCase());
 			}
 		}
 
@@ -508,7 +805,8 @@ public class MessageListener extends Service {
 		@Override
 		@SuppressLint("NewApi")
 		public void messageArrived(final String topic, final MqttMessage msg) throws Exception {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Message arrived from topic " + topic);
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT arrived from topic " + topic);
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT topic " + new String(msg.getPayload()));
 			Handler h = new Handler(getMainLooper());
 			h.post(new Runnable() {
 				@Override
@@ -519,6 +817,78 @@ public class MessageListener extends Service {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Empty payload");
 						return;
 					}
+
+					// Check if topic is a broker status
+					if (topic.startsWith("$SYS")) {
+						if (topic.contains("load/bytes/received/1min")) {
+							bytesLoadRcvd = Double.parseDouble(receivedMessage);
+						} else if (topic.contains("load/bytes/sent/1min")) {
+							bytesLoadSend = Double.parseDouble(receivedMessage);
+						} else if (topic.contains("messages/received/1min")) {
+							bytesMsgsRcvd = Double.parseDouble(receivedMessage);
+						} else if (topic.contains("messages/sent/1min")) {
+							bytesMsgsSend = Double.parseDouble(receivedMessage);
+						} else if (topic.contains("clients/connected")) {
+							clientsConn = Integer.parseInt(receivedMessage);
+						}
+						sendMyBroadcast("BrokerStatus", "BROKER");
+						return;
+					}
+					// Check if topic is a device registration
+					String deviceId = Utilities.getDeviceName();
+					String subscriberID = "/DEV/" + deviceId.toUpperCase();
+					if (topic.startsWith("/DEV/")) {
+						if (!topic.equalsIgnoreCase(subscriberID)) { // check if it is our own registration
+							if (!receivedMessage.equalsIgnoreCase("Dead")) { // Client is disconnected
+								SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+								int currMqttUser = mPrefs.getInt("MQTT_User",0);
+								String mqttUser = "";
+								switch (currMqttUser) {
+									case 1:
+										if (receivedMessage.equalsIgnoreCase(getResources().getString(R.string.MQTT_USER_SUB_1))) {
+											mqttUser = getResources().getString(R.string.MQTT_USER_SUB_2);
+											mPrefs.edit().putInt("MQTT_User",2).apply();
+										}
+										break;
+									case 2:
+										if (receivedMessage.equalsIgnoreCase(getResources().getString(R.string.MQTT_USER_SUB_2))) {
+											mqttUser = getResources().getString(R.string.MQTT_USER_SUB_3);
+											mPrefs.edit().putInt("MQTT_User",3).apply();
+										}
+										break;
+									case 3:
+										if (receivedMessage.equalsIgnoreCase(getResources().getString(R.string.MQTT_USER_SUB_3))) {
+											mqttUser = getResources().getString(R.string.MQTT_USER_SUB_4);
+											mPrefs.edit().putInt("MQTT_User",4).apply();
+										}
+										break;
+									default:
+										if (receivedMessage.equalsIgnoreCase(getResources().getString(R.string.MQTT_USER_SUB_4))) {
+											mqttUser = getResources().getString(R.string.MQTT_USER_SUB_1);
+											mPrefs.edit().putInt("MQTT_User",1).apply();
+										}
+										break;
+								}
+								if (!mqttUser.equalsIgnoreCase("")) { // Another device is using the same ID
+									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener because of double use!");
+									new doConnect().execute();
+								}
+							}
+						}
+						// Add/delete device to/from client list
+						if (receivedMessage.equalsIgnoreCase("Dead")) { // Client is disconnected
+							if (mqttClients.contains(topic.substring(5).toUpperCase())){
+								mqttClients.remove(topic.substring(5).toUpperCase());
+							}
+						} else { // Client is connected
+							if (!mqttClients.contains(topic.substring(5).toUpperCase())){
+								mqttClients.add(topic.substring(5).toUpperCase());
+							}
+						}
+						sendMyBroadcast("BrokerStatus", "BROKER");
+						return;
+					}
+
 					// Check if screen is locked
 					/** Keyguard manager instance */
 					KeyguardManager myKM = (KeyguardManager) getApplicationContext().getSystemService(Context.KEYGUARD_SERVICE);
@@ -553,81 +923,140 @@ public class MessageListener extends Service {
 						if (receivedMessage.length() == 0) { // Empty message
 							return;
 						}
+
 						// Update widgets
-						/** Application context */
-						Context context = getApplicationContext();
-						// Check if response is a JSON array
-						if (Utilities.isJSONValid(receivedMessage)) {
-							try {
-								JSONObject jsonResult = new JSONObject(receivedMessage);
-								try {
-									/** Device name of sender */
-									String broadCastDevice;
-									broadCastDevice = jsonResult.getString("de");
-									if (broadCastDevice.startsWith("sf")) { // Broadcast from front security front yard
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update front yard security widgets");
+						handleMsgs(receivedMessage);
 
-										/** Flag for alarm switched on or off */
-										boolean alarmIsActive = (jsonResult.getInt("ao") == 1);
-										/** Flag for alarm on or off */
-										boolean alarmIsOn = (jsonResult.getInt("al") == 1);
-
-										// Activate/deactivate alarm sound and update widget
-										securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
-									}
-									if (broadCastDevice.startsWith("sb")) { // Broadcast from security back yard
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update back yard security widgets");
-
-										/** Flag for alarm switched on or off */
-										boolean alarmIsActive = (jsonResult.getInt("ao") == 1);
-										/** Flag for alarm on or off */
-										boolean alarmIsOn = (jsonResult.getInt("al") == 1);
-
-										// Activate/deactivate alarm sound and update widget
-										securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
-									}
-									if (broadCastDevice.startsWith("sp")) { // Broadcast from solar panel monitor
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update solar panel widgets");
-
-										/** Value of solar production */
-										float solarPower = jsonResult.getInt("s");
-										/** Value of house consumption */
-										float consPower = jsonResult.getInt("c");
-
-										// Activate/deactivate alarm sound and update widget
-										solarAlarmAndWidgetUpdate(solarPower, consPower, context);
-									}
-									if (broadCastDevice.startsWith("fd")) { // Broadcast from office aircon
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
-
-										/** Flag for alarm switched on or off */
-										boolean timerOn = (jsonResult.getInt("ti") == 1);
-										/** Timer time */
-										int timerTime = jsonResult.getInt("ot");
-
-										// Update widget
-										airconWidgetUpdate(timerOn, timerTime, context);
-
-									}
-									if (broadCastDevice.startsWith("ca")) { // Broadcast from living room aircon
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update living room aircon widgets");
-									}
-								} catch (JSONException ignore) {
-								}
-							} catch (JSONException e) {
-								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String failed " + e.getMessage());
-							}
-						}
-
-						// Forward to all local listeners
+//						// Forward to all local listeners
 						sendMyBroadcast(receivedMessage, "MQTT");
+
+						// Show toast on screen if debug is enabled
+						SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+						if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
+							toastMsg = receivedMessage;
+							Handler handler = new Handler(Looper.getMainLooper());
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									Toast.makeText(getApplicationContext(),
+											"Received TCP data: " + toastMsg,
+											Toast.LENGTH_SHORT).show();
+								}
+							});
+						}
 					}
 				}
 			});
 		}
 	}
 
-	// send broadcast from activity to all receivers listening to the action "BROADCAST_RECEIVED"
+	public static void subscribeBrokerStatus() {
+		if (mqttClient != null) {
+			// Clear old status
+			clientsConn = 0; // $SYS/broker/clients/connected
+			bytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
+			bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
+			bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
+			bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
+			mqttClients.clear();
+
+			IMqttToken token;
+			try {
+				token = mqttClient.unsubscribe("/DEV/#");
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("$SYS/broker/load/bytes/received/1min", 0);
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("$SYS/broker/load/bytes/sent/1min", 0);
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("$SYS/broker/load/messages/received/1min", 0);
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("$SYS/broker/load/messages/sent/1min", 0);
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("$SYS/broker/clients/connected", 0);
+				token.waitForCompletion(10000);
+				token = mqttClient.subscribe("/DEV/#", 0);
+				token.waitForCompletion(10000);
+			} catch (MqttException e) {
+				switch (e.getReasonCode()) {
+					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_CONNECTION_LOST:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+						if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+							mqttconnLostNum ++;
+						}
+						break;
+					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
+						break;
+					default:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+						break;
+				}
+			}
+		}
+	}
+
+	public static void unSubscribeBrokerStatus() {
+		if (mqttClient != null) {
+			IMqttToken token;
+			try {
+//				token = mqttClient.unsubscribe("");
+//				token.waitForCompletion(10000);
+
+				token = mqttClient.unsubscribe("$SYS/broker/clients/connected");
+				token.waitForCompletion(10000);
+				token = mqttClient.unsubscribe("$SYS/broker/load/bytes/received/1min");
+				token.waitForCompletion(10000);
+				token = mqttClient.unsubscribe("$SYS/broker/load/bytes/sent/1min");
+				token.waitForCompletion(10000);
+				token = mqttClient.unsubscribe("$SYS/broker/load/messages/received/1min");
+				token.waitForCompletion(10000);
+				token = mqttClient.unsubscribe("$SYS/broker/load/messages/sent/1min");
+				token.waitForCompletion(10000);
+			} catch (MqttException e) {
+				switch (e.getReasonCode()) {
+					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_CONNECTION_LOST:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+						if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+							mqttconnLostNum ++;
+						}
+						break;
+					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
+						break;
+					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
+						break;
+					default:
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+						break;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Send received message to all listing threads
+	 *
+	 * @param msgReceived
+	 *            Flag if alarm is active
+	 * @param fromSender
+	 *            Flag if alarm is on
+	 */
 	private void sendMyBroadcast(String msgReceived, String fromSender) {
 		/** Intent for activity internal broadcast message */
 		Intent broadCastIntent = new Intent();
@@ -635,6 +1064,128 @@ public class MessageListener extends Service {
 		broadCastIntent.putExtra("from", fromSender);
 		broadCastIntent.putExtra("message", msgReceived);
 		sendBroadcast(broadCastIntent);
+	}
+
+	/**
+	 * Handle received message
+	 *
+	 * @param message
+	 *          String with received message as JSON
+	 */
+	private void handleMsgs(String message) {
+		Context context = getApplicationContext();
+		/** Json object for received data */
+		JSONObject jsonResult;
+		try {
+			jsonResult = new JSONObject(message);
+			/** Device ID from UDP broadcast message */
+			String broadCastDevice = jsonResult.getString("de");
+			switch (broadCastDevice) {
+				case "spm":
+					lastSPM = message;
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update solar panel widgets");
+
+					/** Value of solar production */
+					float solarPower = jsonResult.getInt("s");
+					/** Value of house consumption */
+					float consPower = jsonResult.getInt("c");
+
+					// Activate/deactivate alarm sound and update widget
+					solarAlarmAndWidgetUpdate(solarPower, consPower, context);
+					break;
+				case "fd1":
+					lastAC1 = message;
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
+
+					/** Flag for alarm switched on or off */
+					boolean timerOn = (jsonResult.getInt("ti") == 1);
+					/** Timer time */
+					int timerTime = jsonResult.getInt("ot");
+					/** Timer end time */
+					String timerEnd = jsonResult.getString("ts");
+
+					// Update widget
+					airconWidgetUpdate(timerOn, timerTime, timerEnd, context);
+					break;
+				case "ca1":
+					lastAC2 = message;
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
+					// TODO add aircon 2 widget */
+					break;
+				case "sf1":
+					lastSF1 = message;
+					// Broadcast from front security
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update security widgets");									/** Flag for alarm on or off */
+
+					boolean alarmIsActive = (jsonResult.getInt("ao") == 1);
+					boolean alarmIsOn = (jsonResult.getInt("al") == 1);
+
+					// Activate/deactivate alarm sound and update widget
+					securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
+					break;
+				case "sb1":
+					lastSB1 = message;
+					// Broadcast from front security
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update security widgets");									/** Flag for alarm on or off */
+
+					alarmIsActive = (jsonResult.getInt("ao") == 1);
+					alarmIsOn = (jsonResult.getInt("al") == 1);
+
+					// Activate/deactivate alarm sound and update widget
+					securityAlarmAndWidgetUpdate(alarmIsActive, alarmIsOn, broadCastDevice, context);
+					break;
+				case "lb1":
+					lastLB1 = message;
+					// Broadcast from front security
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update light control widgets");									/** Flag for alarm on or off */
+
+					int brightnessValue = 0;
+					if (jsonResult.has("br")) {
+						brightnessValue = jsonResult.getInt("br");
+						if (brightnessValue == 140) {
+							brightnessValue = 1; // Bulbs are full on
+						} else if (brightnessValue > 222) {
+							brightnessValue = 3; // Bulbs are full off
+						} else {
+							brightnessValue = 2; // Bulbs are dimmed on
+						}
+					}
+					// Update widget
+					lightControlWidgetUpdate(brightnessValue, broadCastDevice, context);
+					break;
+				case "weo":
+					lastWEO = message;
+					break;
+				case "wei":
+					lastWEI = message;
+					break;
+			}
+		} catch (JSONException e) {
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String <"+ message +"> failed " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Connect to MQTT broker and subscribe to topics
+	 */
+	private class sendLastMsgs extends AsyncTask<String, Void, Void> {
+
+		protected Void doInBackground(String... params) {
+			sendMyBroadcast(lastSPM, "LAST");
+			handleMsgs(lastSPM);
+			sendMyBroadcast(lastAC1, "LAST");
+			handleMsgs(lastAC1);
+			sendMyBroadcast(lastAC2, "LAST");
+			sendMyBroadcast(lastSF1, "LAST");
+			handleMsgs(lastSF1);
+			sendMyBroadcast(lastSB1, "LAST");
+			handleMsgs(lastSB1);
+			sendMyBroadcast(lastLB1, "LAST");
+			handleMsgs(lastLB1);
+			sendMyBroadcast(lastWEO, "LAST");
+			sendMyBroadcast(lastWEI, "LAST");
+			return null;
+		}
 	}
 
 	/**
@@ -731,6 +1282,38 @@ public class MessageListener extends Service {
 			}
 //		} else {
 //			// TODO missing widget for back yard security
+		}
+	}
+
+	/**
+	 * Update security widgets
+	 *
+	 * @param lightStatus
+	 *            Status of Bulbs
+	 * @param device
+	 *            Name of security device
+	 * @param context
+	 *            Application context
+	 */
+	private static void lightControlWidgetUpdate(int lightStatus,
+	                                             String device,
+	                                             Context context) {
+		// Update light control widget
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update lights control widget");
+
+		/** App widget manager for all widgets of this app */
+		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+		/** Component name of this widget */
+		ComponentName thisAppWidget;
+		if (device.equalsIgnoreCase("lb1")) {
+			thisAppWidget = new ComponentName(context.getPackageName(),
+					LightCtrlWidget.class.getName());
+			/** List of all active widgets */
+			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+
+			for (int appWidgetId : appWidgetIds) {
+				LightCtrlWidget.updateAppWidget(context, appWidgetManager, appWidgetId, lightStatus);
+			}
 		}
 	}
 
@@ -876,7 +1459,7 @@ public class MessageListener extends Service {
 	 * @param context
 	 *            Application context
 	 */
-	private static void airconWidgetUpdate(boolean timerOn, int timerTime, Context context) {
+	private static void airconWidgetUpdate(boolean timerOn, int timerTime, String stopTime, Context context) {
 		// Update aircon panel widgets if any
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Aircon Widget");
 		/** App widget manager for all widgets of this app */
@@ -889,7 +1472,7 @@ public class MessageListener extends Service {
 
 		for (int appWidgetId : appWidgetIds) {
 			AirconWidget.updateAppWidget(context, appWidgetManager,
-					appWidgetId, timerTime, timerOn);
+					appWidgetId, timerTime, stopTime, timerOn);
 		}
 	}
 

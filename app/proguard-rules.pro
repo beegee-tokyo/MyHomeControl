@@ -17,4 +17,6 @@
 #}
 -keepattributes EnclosingMethod
 -keepattributes InnerClasses
--dontoptimize
+#-dontoptimize
+-dontwarn
+-ignorewarnings

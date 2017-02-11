@@ -1,7 +1,7 @@
 #ifndef declarations_h
 #define declarations_h
 
-#include <ESP8266WiFi.h>
+#include <globals.h>
 
 /** WiFi client class to receive messages from mqtt broker */
 WiFiClient mqttReceiver;

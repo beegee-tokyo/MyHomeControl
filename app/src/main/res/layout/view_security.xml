@@ -37,8 +37,8 @@
 			android:layout_height="wrap_content">
 
 			<ImageView
-				android:layout_width="120dp"
-				android:layout_height="120dp"
+				android:layout_width="80dp"
+				android:layout_height="80dp"
 				android:id="@+id/dot_alarm_status"
 				android:src="@mipmap/ic_alarm_autooff"
 				android:contentDescription="@string/dot_txt_alarm_status"
@@ -47,8 +47,8 @@
 				android:clickable="true"/>
 
 			<ImageView
-				android:layout_width="120dp"
-				android:layout_height="120dp"
+				android:layout_width="80dp"
+				android:layout_height="80dp"
 				android:id="@+id/dot_light"
 				android:src="@mipmap/ic_light_autooff"
 				android:contentDescription="@string/dot_txt_light"
@@ -65,7 +65,6 @@
 				<ImageView
 					android:layout_width="120dp"
 					android:layout_height="120dp"
-					android:id="@+id/dot_alarm_off"
 					android:src="@mipmap/ic_dot"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"/>
@@ -73,7 +72,6 @@
 				<ImageView
 					android:layout_width="120dp"
 					android:layout_height="120dp"
-					android:id="@+id/dot_alarm_on"
 					android:src="@mipmap/ic_dot_red"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"
@@ -93,7 +91,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_alarm_status"
-				android:id="@+id/tv_alarm_status"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"/>
 
@@ -102,7 +99,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_light"
-				android:id="@+id/tv_light"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"/>
 
@@ -111,7 +107,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_alarm"
-				android:id="@+id/tv_alarm"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"
 				android:visibility="gone"/>
@@ -170,8 +165,8 @@
 			android:layout_height="wrap_content">
 
 			<ImageView
-				android:layout_width="120dp"
-				android:layout_height="120dp"
+				android:layout_width="80dp"
+				android:layout_height="80dp"
 				android:id="@+id/dot_alarm_status_back"
 				android:src="@mipmap/ic_alarm_autooff"
 				android:contentDescription="@string/dot_txt_alarm_status"
@@ -180,8 +175,8 @@
 				android:clickable="true"/>
 
 			<ImageView
-				android:layout_width="120dp"
-				android:layout_height="120dp"
+				android:layout_width="80dp"
+				android:layout_height="80dp"
 				android:id="@+id/dot_light_back"
 				android:src="@mipmap/ic_light_autooff"
 				android:contentDescription="@string/dot_txt_light"
@@ -197,7 +192,6 @@
 				<ImageView
 					android:layout_width="120dp"
 					android:layout_height="120dp"
-					android:id="@+id/dot_alarm_off_back"
 					android:src="@mipmap/ic_dot"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"/>
@@ -205,7 +199,6 @@
 				<ImageView
 					android:layout_width="200dp"
 					android:layout_height="200dp"
-					android:id="@+id/dot_alarm_on_back"
 					android:src="@mipmap/ic_dot_red"
 					android:contentDescription="@string/dot_txt_alarm"
 					android:layout_centerInParent="true"
@@ -224,7 +217,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_alarm_status"
-				android:id="@+id/tv_alarm_status_back"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"/>
 
@@ -233,7 +225,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_light"
-				android:id="@+id/tv_light_back"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"/>
 
@@ -242,7 +233,6 @@
 				android:layout_height="wrap_content"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:text="@string/dot_txt_alarm"
-				android:id="@+id/tv_alarm_back"
 				android:gravity="center_horizontal"
 				android:layout_weight="1"
 				android:visibility="gone"/>
@@ -270,12 +260,54 @@
 		android:layout_below="@+id/tv_change_alarm"/>
 
 	<ProgressBar
-		android:id="@+id/pb_security"
 		style="?android:attr/progressBarStyleSmall"
 		android:layout_width="300dp"
 		android:layout_height="300dp"
 		android:layout_centerInParent="true"
 		android:background="@android:color/transparent"
 		android:visibility="invisible"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/tv_change_alarm"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentEnd="true"
+		android:id="@+id/ib_snapshot_front"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_camera"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/tv_change_alarm"
+		android:layout_alignParentRight="false"
+		android:layout_alignParentEnd="false"
+		android:id="@+id/ib_snapshot_last"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_gallery"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toLeftOf="@+id/ib_snapshot_front"
+		android:layout_toStartOf="@+id/ib_snapshot_front"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/tv_change_alarm"
+		android:layout_alignParentRight="false"
+		android:layout_alignParentEnd="false"
+		android:id="@+id/ib_snapshot_gallery"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_mapmode"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toLeftOf="@+id/ib_snapshot_last"
+		android:layout_toStartOf="@+id/ib_snapshot_last"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
 
 </RelativeLayout>

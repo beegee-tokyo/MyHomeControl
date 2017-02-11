@@ -21,6 +21,11 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+
+import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
 
 /**
  * Handles clicks on specific parts of the aircon widget
@@ -76,6 +81,11 @@ public class AirconWidgetClick extends IntentService {
 				}
 			}
 			mPrefs.edit().putInt("acTimerTime", timerTime).apply();
+			Calendar calendar = Calendar.getInstance();
+			calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY)+2);
+			SimpleDateFormat df = new SimpleDateFormat("HH:mm", Locale.GERMANY);
+			String timerEnd = df.format(calendar.getTime());
+			mPrefs.edit().putString("acTimerEnd", timerEnd).apply();
 
 			/** App widget manager for all widgets of this app */
 			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
@@ -86,7 +96,7 @@ public class AirconWidgetClick extends IntentService {
 			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
 			for (int appWidgetId : appWidgetIds) {
-				AirconWidget.updateAppWidget(this,appWidgetManager,appWidgetId, timerTime, isRunning);
+				AirconWidget.updateAppWidget(this,appWidgetManager,appWidgetId, timerTime, timerEnd, isRunning);
 			}
 		}
 	}
@@ -108,7 +118,8 @@ public class AirconWidgetClick extends IntentService {
 			return true;
 		}
 
-		String url = getApplicationContext().getResources().getString(R.string.AIRCON_URL_1);
+		SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
+		String url = mPrefs.getString( MyHomeControl.deviceNames[ MyHomeControl.aircon1Index],"NA");
 		try {
 			InetAddress tcpServer = InetAddress.getByName(url);
 			Socket tcpSocket = new Socket(tcpServer, 6000);
@@ -139,7 +150,7 @@ public class AirconWidgetClick extends IntentService {
 		if (MessageListener.mqttClient != null) { // If service is not (yet) active, don't publish
 			IMqttToken token;
 			MqttConnectOptions options = new MqttConnectOptions();
-			String mqttUser = widgetContext.getResources().getString(R.string.MQTT_USER);
+			String mqttUser = widgetContext.getResources().getString(R.string.MQTT_USER_SUB_1);
 			String mqttPw = widgetContext.getResources().getString(R.string.MQTT_PW);
 			options.setCleanSession(true);
 			options.setUserName(mqttUser);

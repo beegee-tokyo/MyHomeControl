@@ -29,5 +29,5 @@ bool readStatus();
 // Communication functions
 void sendAlarm(boolean makeShort);
 void socketServer(WiFiClient tcpClient);
-
+void triggerPic();
 #endif

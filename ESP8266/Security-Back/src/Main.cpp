@@ -26,16 +26,15 @@ void loop() {
 	*	- the detection led stops flashing
 	*	- msgText is set to no detection message
 	*/
-
 	if (pirTriggered) {
 		pirTriggered = false;
 		if (hasDetection) { // Detection of movement
 			if (alarmOn) {
-				melodyPoint = 0; // Reset melody pointer to 0
-				alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
+			// 	melodyPoint = 0; // Reset melody pointer to 0
+			// 	alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
 				sendAlarm(true);
 			}
-			actLedFlashStart(0.2);
+			// actLedFlashStart(0.2);
 			if (switchLights) {
 				relayOffTimer.detach();
 				if (debugOn) {
@@ -44,24 +43,30 @@ void loop() {
 				relayOffTimer.once(onTime, relayOff);
 				digitalWrite(relayPort, HIGH);
 			}
+			// if (alarmOn || switchLights) {
+			// 	triggerPic(); // Trigger picture from security camera
+			// }
+			if (debugOn) {
+				sendDebug("Detection interrupt from PIR pin", OTA_HOST);
+			}
 		} else { // No detection
-			actLedFlashStop();
+			// actLedFlashStop();
 			if (alarmOn) { // If alarm is active, continue to flash slowly
-				actLedFlashStart(1);
+				// actLedFlashStart(1);
 				sendAlarm(true);
 			}
-		}
-		if (debugOn) {
-			sendDebug("Interrupt from PIR pin", OTA_HOST);
+			if (debugOn) {
+				sendDebug("No detection interrupt from PIR pin", OTA_HOST);
+			}
 		}
 	}
 
 	if (lightOffTriggered) {
 		lightOffTriggered = false;
-		relayOffTimer.detach();
+		// relayOffTimer.detach();
 		sendAlarm(true);
 		if (debugOn) {
-		  sendDebug("lightOffTriggered", OTA_HOST);
+			sendDebug("lightOffTriggered", OTA_HOST);
 		}
 	}
 
@@ -104,12 +109,19 @@ void loop() {
 
 	wdt_reset();
 	if (heartBeatTriggered) {
+		if (!wmIsConnected) { // Connection to WiFi failed, retry to connect
+			// Try to connect to WiFi with captive portal
+			ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Back");
+		}
+		if (!gotTime) { // Got no time from the NTP server, retry to get it
+			setTime(getNtpTime());
+		}
 		heartBeatTriggered = false;
 		// Stop the tcp socket server
 		tcpServer.stop();
-		// Give a "I am alive" signal
-		sendAlarm(true);
 		// Restart the tcp socket server to listen on port 6000
 		tcpServer.begin();
+		// Give a "I am alive" signal
+		sendAlarm(true);
 	}
 }

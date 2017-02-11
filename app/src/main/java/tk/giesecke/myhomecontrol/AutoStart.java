@@ -6,12 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 
 public class AutoStart extends BroadcastReceiver {
-	public AutoStart() {
-	}
+//	public AutoStart() {
+//	}
 
 	@SuppressLint("UnsafeProtectedBroadcastReceiver")
 	@Override
 	public void onReceive(Context context, Intent intent) {
+
 		// Start background services
 		context.startService(new Intent(context, StartBackgroundServices.class));
 	}

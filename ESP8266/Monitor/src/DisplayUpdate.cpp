@@ -273,16 +273,18 @@ void updateAC(boolean all) {
 			ucg.print("A1");
 
 			ucg.setFont(ucg_font_helvB08_tr);
-			ucg.setPrintPos(22,117);
-			if (ac1Mode == 2) {
-				ucg.setColor(0, 255, 255);
-				ucg.print("C");
-			} else if (ac1Mode == 1) {
-				ucg.setColor(0, 255, 0);
-				ucg.print("D");
-			} else {
-				ucg.setColor(0, 255, 255);
-				ucg.print("F");
+			if (ac1On == 1) {
+				ucg.setPrintPos(22,117);
+				if (ac1Mode == 2) {
+					ucg.setColor(0, 255, 255);
+					ucg.print("C");
+				} else if (ac1Mode == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.print("D");
+				} else {
+					ucg.setColor(0, 255, 255);
+					ucg.print("F");
+				}
 			}
 
 			ucg.setPrintPos(22,127);
@@ -315,16 +317,18 @@ void updateAC(boolean all) {
 			ucg.print("A2");
 
 			ucg.setFont(ucg_font_helvB08_tr);
-			ucg.setPrintPos(57,117);
-			if (ac2Mode == 2) {
-				ucg.setColor(0, 255, 255);
-				ucg.print("C");
-			} else if (ac2Mode == 1) {
-				ucg.setColor(0, 255, 0);
-				ucg.print("D");
-			} else {
-				ucg.setColor(0, 255, 255);
-				ucg.print("F");
+			if (ac2On == 1) {
+				ucg.setPrintPos(57,117);
+				if (ac2Mode == 2) {
+					ucg.setColor(0, 255, 255);
+					ucg.print("C");
+				} else if (ac2Mode == 1) {
+					ucg.setColor(0, 255, 0);
+					ucg.print("D");
+				} else {
+					ucg.setColor(0, 255, 255);
+					ucg.print("F");
+				}
 			}
 
 			ucg.setPrintPos(57,127);

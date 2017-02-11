@@ -15,14 +15,14 @@ public class AirconWidget extends AppWidgetProvider {
 
 	@SuppressWarnings("deprecation")
 	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
-								int appWidgetId, int timerTime, boolean isRunning) {
+								int appWidgetId, int timerTime, String timerEnd, boolean isRunning) {
 
 		// Construct the RemoteViews object
 		RemoteViews rvACview = new RemoteViews(context.getPackageName(), R.layout.aircon_widget);
 
 		if (isRunning) {
 			rvACview.setInt(R.id.bt_ac_wid_timer, "setBackgroundResource", R.drawable.orange_round_button);
-			rvACview.setTextViewText(R.id.bt_ac_wid_timer, context.getResources().getString(R.string.timer_on));
+			rvACview.setTextViewText(R.id.bt_ac_wid_timer, timerEnd);
 		} else {
 			rvACview.setInt(R.id.bt_ac_wid_timer, "setBackgroundResource", R.drawable.green_round_button);
 			String newButtonText = Integer.toString(timerTime)
@@ -60,7 +60,7 @@ public class AirconWidget extends AppWidgetProvider {
 
 		/** Intent to start app if widget is pushed */
 		Intent appIntent = new Intent(context, MyHomeControl.class);
-		appIntent.putExtra("view", 2);
+		appIntent.putExtra("view", MyHomeControl.view_aircon_id);
 		/** Pending intent to start app if widget is pushed */
 		PendingIntent pendingAppIntent = PendingIntent.getActivity(context, 2,
 				appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -77,10 +77,11 @@ public class AirconWidget extends AppWidgetProvider {
 		SharedPreferences mPrefs = context.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 		int timerTime = mPrefs.getInt("acTimerTime", 1);
 		boolean isRunning = mPrefs.getBoolean("acTimerOn", false);
+		String timerEnd = mPrefs.getString("acTimerEnd", "??:??");
 
 		// There may be multiple widgets active, so update all of them
 		for (int appWidgetId : appWidgetIds) {
-			updateAppWidget(context, appWidgetManager, appWidgetId, timerTime, isRunning);
+			updateAppWidget(context, appWidgetManager, appWidgetId, timerTime, timerEnd, isRunning);
 		}
 	}
 

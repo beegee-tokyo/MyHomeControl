@@ -18,13 +18,13 @@ import java.util.ArrayList;
 class DataBaseHelper extends SQLiteOpenHelper {
 
 	/** Name of the database of current month*/
-	public static final String DATABASE_NAME="spMonitor";
+	static final String DATABASE_NAME="spMonitor";
 	/** Name of the database of */
-	public static final String DATABASE_NAME_LAST="spLast";
+	static final String DATABASE_NAME_LAST="spLast";
 	/** Name of the table */
 	private static final String TABLE_NAME = "s";
 
-	public DataBaseHelper(Context context, String dbName) {
+	DataBaseHelper(Context context, String dbName) {
 		super(context, dbName, null, 1);
 	}
 
@@ -54,7 +54,7 @@ class DataBaseHelper extends SQLiteOpenHelper {
 	 *            format: yy,mm,dd,hh:mm,light,solar,consumption
 	 *            e.g.: "15,08,13,13:54,35000,613.456,-120.22"
 	 */
-	public static void addDay(SQLiteDatabase db, String recordLine) {
+	static void addDay(SQLiteDatabase db, String recordLine) {
 
 		/* Parse the string into its single values */
 		String[] valuesPerLine = recordLine.split(",");
@@ -102,9 +102,13 @@ class DataBaseHelper extends SQLiteOpenHelper {
 	 *            cursor[6] = consumed power
 	 *            cursor[7] = light value
 	 */
-	public static Cursor getDay(SQLiteDatabase db, int dayNumber, int monthSelected, int yearSelected) {
-		return db.rawQuery("select * from " + TABLE_NAME + " where day= " + String.valueOf(dayNumber) + " and month= "
-				+ String.valueOf(monthSelected) + " and year= " + String.valueOf(yearSelected), null);
+	static Cursor getDay(SQLiteDatabase db, int dayNumber, int monthSelected, int yearSelected) {
+		try {
+			return db.rawQuery("select * from " + TABLE_NAME + " where day= " + String.valueOf(dayNumber) + " and month= "
+					+ String.valueOf(monthSelected) + " and year= " + String.valueOf(yearSelected), null);
+		} catch (IllegalStateException e) {
+			return null;
+		}
 	}
 
 	/**
@@ -135,31 +139,35 @@ class DataBaseHelper extends SQLiteOpenHelper {
 	 * @return <code>ArrayList<Integer></code>
 	 *            array list with all entries found
 	 */
-	public static ArrayList<Integer> getEntries(SQLiteDatabase db,
-												String requestField, int requestLimiterMonth, int requestLimiterYear) {
+	static ArrayList<Integer> getEntries(SQLiteDatabase db,
+	                                     String requestField, int requestLimiterMonth, int requestLimiterYear) {
 
 		/** Array list holding the found values */
 		ArrayList<Integer> returnArray = new ArrayList<>();
 
-		/** Limiter for row search */
-		String queryRequest = "select distinct " + requestField + " from " + TABLE_NAME;
-		if (requestField.equalsIgnoreCase("day")) {
-			queryRequest += " where month = " + String.valueOf(requestLimiterMonth) +
-					" and year = " + String.valueOf(requestLimiterYear);
-		} else if (requestField.equalsIgnoreCase("month")) {
-			queryRequest += " where year = " + String.valueOf(requestLimiterYear);
-		}
+		try {
+			/** Limiter for row search */
+			String queryRequest = "select distinct " + requestField + " from " + TABLE_NAME;
+			if (requestField.equalsIgnoreCase("day")) {
+				queryRequest += " where month = " + String.valueOf(requestLimiterMonth) +
+						" and year = " + String.valueOf(requestLimiterYear);
+			} else if (requestField.equalsIgnoreCase("month")) {
+				queryRequest += " where year = " + String.valueOf(requestLimiterYear);
+			}
 
-		/** Cursor holding the records of a day */
-		Cursor allRows = db.rawQuery(queryRequest, null);
+			/** Cursor holding the records of a day */
+			Cursor allRows = db.rawQuery(queryRequest, null);
 
-		allRows.moveToFirst();
-		for (int i=0; i<allRows.getCount(); i++) {
-			returnArray.add(allRows.getInt(0));
-			allRows.moveToNext();
+			allRows.moveToFirst();
+			for (int i=0; i<allRows.getCount(); i++) {
+				returnArray.add(allRows.getInt(0));
+				allRows.moveToNext();
+			}
+			allRows.close();
+			return returnArray;
+		} catch (IllegalStateException e) {
+			return returnArray;
 		}
-		allRows.close();
-		return returnArray;
 	}
 
 	/**
@@ -179,7 +187,11 @@ class DataBaseHelper extends SQLiteOpenHelper {
 	 *            cursor[6] = consumed power
 	 *            cursor[7] = light value
 	 */
-	public static Cursor getLastRow(SQLiteDatabase db) {
-		return db.rawQuery("select * from " + TABLE_NAME + " order by id desc LIMIT 1", null);
+	static Cursor getLastRow(SQLiteDatabase db) {
+		try {
+			return db.rawQuery("select * from " + TABLE_NAME + " order by id desc LIMIT 1", null);
+		} catch (IllegalStateException e) {
+			return null;
+		}
 	}
 }

@@ -5,9 +5,10 @@
 /** Output to activate Relay */
 #define relayPort 5
 /** Output to loudspeaker or piezo */
-#define speakerPin 15
+// #define speakerPin 15
+#define speakerPin 12
 /** Definition of data pin for DHT sensor */
-#define DHTPIN  14
+#define DHTPIN 14
 /** Definition of DHT sensor type */
 #define DHTTYPE DHT11
 
@@ -18,10 +19,10 @@ When doing breadboard test, enable this define
 
 #ifdef BREADBOARD
 	#define DEVICE_ID "sbb" // ID for security in front yard
-	#define OTA_HOST "secbb" // Host name for OTA updates
+	#define OTA_HOST "sbb" // Host name for OTA updates
 #else
 	#define DEVICE_ID "sb1" // ID for security in front yard
-	#define OTA_HOST "secb" // Host name for OTA updates
+	#define OTA_HOST "sb1" // Host name for OTA updates
 #endif
 
 /** Build time */
@@ -29,7 +30,7 @@ extern const char compileDate [];
 /** WiFiServer class to create TCP socket server on port 6000 */
 extern WiFiServer tcpServer;
 /** FTPServer class to create simple ftp server */
-extern FtpServer  ftpSrv;
+extern FtpServer ftpSrv;
 /** IP address of this module */
 extern IPAddress ipAddr;
 
@@ -48,6 +49,8 @@ extern boolean panicOn;
 extern bool debugOn;
 /** Relay on delay time in seconds */
 extern int onTime;
+/** Flag for WiFi connection */
+extern bool wmIsConnected;
 
 /** Alarm melody */
 extern long melody [];

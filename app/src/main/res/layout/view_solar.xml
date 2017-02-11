@@ -84,7 +84,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:text="@string/action_refresh"
-		android:id="@+id/bt_sync"
 		android:onClick="onClick"
 		android:textColor="@android:color/holo_orange_light"
 		android:background="@color/bg_very_dark_grey"
@@ -285,7 +284,6 @@
 	</ScrollView>
 
 	<ProgressBar
-		android:id="@+id/pb_solar"
 		style="?android:attr/progressBarStyleSmall"
 		android:layout_width="300dp"
 		android:layout_height="300dp"

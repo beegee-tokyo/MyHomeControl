@@ -21,7 +21,7 @@ extern FtpServer ftpSrv;
 /** IP address of this module */
 extern IPAddress ipAddr;
 
-/** Received command (from lan or serial connection) */
+// /** Received command (from lan or serial connection) */
 extern int irCmd;
 
 /** Definition of available commands */
@@ -175,6 +175,11 @@ extern int startOfDay;
 extern int endOfDay;
 /** Time in hours for timer function */
 extern uint32_t onTime;
+/** Timer off time as hh:mm */
+extern String timerEnd;
+/** Up counter for timer function */
+extern uint32_t timerCounter;
+
 
 /** Flag for OTA update running */
 extern boolean otaRunning;
@@ -193,3 +198,8 @@ extern double consPower;
 extern double avgConsPower[];
 /** Last temperature set by user before switching to DRY mode */
 extern byte savedAcTemp;
+/** Last temperature saved by switching to DRY mode */
+extern bool savedAcTempByDry;
+
+/** Port for red LED */
+extern uint8_t actLED;

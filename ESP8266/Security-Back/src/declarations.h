@@ -11,7 +11,7 @@ const char compileDate[] = __DATE__ " " __TIME__;
 WiFiServer tcpServer(6000);
 
 /** FTPServer class to create simple ftp server */
-FtpServer  ftpSrv;
+FtpServer ftpSrv;
 
 /** IP address of this module */
 #ifdef BREADBOARD

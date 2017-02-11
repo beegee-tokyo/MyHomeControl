@@ -9,7 +9,7 @@ When doing breadboard test, enable this define
 #ifdef BREADBOARD
 	IPAddress ipAddr = ipSpare4;
 #else
-	IPAddress ipAddr = ipAC1;
+	IPAddress ipAddr = ipAC2;
 #endif
 
 /** WiFiClient class to create TCP communication */

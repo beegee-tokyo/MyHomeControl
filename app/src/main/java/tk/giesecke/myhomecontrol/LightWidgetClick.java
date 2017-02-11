@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 
@@ -14,6 +15,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
 
 
 /**
@@ -60,8 +63,9 @@ public class LightWidgetClick extends IntentService {
 
 					AirconWidgetClick.doPublish(mqttTopic, getApplicationContext());
 				} else {
-					String urlFront = getApplicationContext().getResources().getString(R.string.SECURITY_URL_FRONT_1); // = "http://192.168.xxx.xx1";
-					String urlBack = this.getResources().getString(R.string.SECURITY_URL_BACK_1); // = "http://192.168.xxx.xx4";
+					SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
+					String urlFront = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secFrontIndex],"NA");
+					String urlBack = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secBackIndex],"NA");
 					try {
 						InetAddress tcpServer = InetAddress.getByName(urlFront);
 						Socket tcpSocket = new Socket(tcpServer, 6000);
@@ -110,7 +114,7 @@ public class LightWidgetClick extends IntentService {
 		/** ID of widget */
 		final int appWidgetId;
 
-		public changeBackWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+		changeBackWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
 			this.context = context;
 			this.appWidgetManager = appWidgetManager;
 			this.appWidgetId = appWidgetId;

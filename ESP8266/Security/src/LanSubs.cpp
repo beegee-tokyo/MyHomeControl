@@ -7,7 +7,7 @@ static const char* host = "secf";
  * Send broadcast message over UDP into local network
  *
  * @param makeShort
- *              If true send short status, else send long status
+ *		If true send short status, else send long status
  */
 void sendAlarm(boolean makeShort) {
 	comLedFlashStart(0.2);
@@ -38,8 +38,9 @@ void sendAlarm(boolean makeShort) {
 		if (debugOn) {
 			sendDebug("UDP write multicast failed", OTA_HOST);
 		}
-		reConnectWiFi();
+		// reConnectWiFi();
 		// connectWiFi();
+		wmIsConnected = false;
 		return;
 	}
 	String broadCast;
@@ -60,20 +61,20 @@ void sendAlarm(boolean makeShort) {
  * Answer request on tcp socket server
  * Commands:
  * 	a=0 to switch off alarm
- *		a=1 to switch on alarm
- * 	a=2 to switch on the defined hour on/off alarm
+ *	a=1 to switch on alarm
+ *	a=2 to switch on the defined hour on/off alarm
  * 	a=3 to switch off the defined hour on/off alarm
  * 	a=4 to switch on automatic light
  * 	a=5 to switch off automatic light
- *		s   to get short status message
- *		p   to switch on alarm sound (panic button function)
- *		i   to get detailed status information
- *		b   to switch on the lights for 2 minutes
- *		r   to reset saved WiFi configuration
- *		d   to enable TCP debug
+ *		s	to get short status message
+ *		p	to switch on alarm sound (panic button function)
+ *		i	to get detailed status information
+ *		b	to switch on the lights for 2 minutes
+ *		r	to reset saved WiFi configuration
+ *		d	to enable TCP debug
  *
  * @param httpClient
- *              Connected WiFi client
+ *		Connected WiFi client
  */
 void socketServer(WiFiClient tcpClient) {
 
@@ -158,14 +159,16 @@ void socketServer(WiFiClient tcpClient) {
 		// PANIC!!!! set the alarm off
 	} else if (req.substring(0, 1) == "p") {
 		if (panicOn) {
-			alarmTimer.detach();
-			analogWrite(speakerPin, 0);
-			digitalWrite(speakerPin, LOW); // Switch off speaker
+			// alarmTimer.detach();
+			// analogWrite(speakerPin, 0);
+			// digitalWrite(speakerPin, LOW); // Switch off speaker
+			digitalWrite(speakerPin, HIGH); // Switch off piezo
 			digitalWrite(relayPort, LOW); // Switch off lights
 			panicOn = false;
 		} else {
-			melodyPoint = 0; // Reset melody pointer to 0
-			alarmTimer.attach_ms(melodyTuneTime, playAlarmSound); // Start alarm sound
+			// melodyPoint = 0; // Reset melody pointer to 0
+			// alarmTimer.attach_ms(melodyTuneTime, playAlarmSound); // Start alarm sound
+			digitalWrite(speakerPin, LOW); // Switch on piezo
 			digitalWrite(relayPort, HIGH); // Switch on lights
 			panicOn = true;
 		}
@@ -215,7 +218,6 @@ void socketServer(WiFiClient tcpClient) {
 */
 void sendLightStatus(boolean switchOn) {
 	comLedFlashStart(0.1);
-	digitalWrite(comLED, LOW);
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpClient;
 
@@ -224,6 +226,7 @@ void sendLightStatus(boolean switchOn) {
 		Serial.println("connection to backyard security " + String(ipSecBack[0]) + "." + String(ipSecBack[1]) + "." + String(ipSecBack[2]) + "." + String(ipSecBack[3]) + " failed");
 		tcpClient.stop();
 		comLedFlashStop();
+		wmIsConnected = false;
 		return;
 	}
 
@@ -232,6 +235,27 @@ void sendLightStatus(boolean switchOn) {
 	} else {
 		tcpClient.print("a=5");
 	}
+
+	tcpClient.flush();
+	tcpClient.stop();
+	comLedFlashStop();
+}
+
+void triggerPic() {
+	comLedFlashStart(0.1);
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpClient;
+
+	const int httpPort = 6000;
+	if (!tcpClient.connect(ipCam1, httpPort)) {
+		Serial.println("connection to frontyard camera " + String(ipCam1[0]) + "." + String(ipCam1[1]) + "." + String(ipCam1[2]) + "." + String(ipCam1[3]) + " failed");
+		tcpClient.stop();
+		comLedFlashStop();
+		wmIsConnected = false;
+		return;
+	}
+
+	tcpClient.print("t");
 
 	tcpClient.flush();
 	tcpClient.stop();

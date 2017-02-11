@@ -143,3 +143,6 @@ extern byte displayLayout;
 
 /** Length of received UDP broadcast message */
 extern int udpMsgLength;
+
+/** Port for blue LED */
+extern uint8_t comLED;

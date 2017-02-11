@@ -8,9 +8,26 @@ byte packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
 bool gotTime = false;
 
 /**
+ * Try to get time from NTP server
+ * @return <code>bool</code>
+ *		true if time was updated
+ */
+bool tryGetTime() {
+	time_t dayTime = 0;
+	for (uint8_t trials = 0; trials < 10; trials++) {
+		dayTime = getNtpTime();
+		if (dayTime != 0) {
+			setTime(dayTime);
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Prepares request to NTP server
  * @return <code>time_t</code>
- *			Current time as time_t structure or NULL if failed
+ *			Current time as time_t structure or 0 if failed
  */
 time_t getNtpTime()
 {
@@ -22,13 +39,13 @@ time_t getNtpTime()
 	udpNTP.begin(5000);
 
 	while (udpNTP.parsePacket() > 0) ; // discard any previously received packets
-	Serial.println("Transmit NTP Request");
+	// Serial.println("Transmit NTP Request");
 	sendNTPpacket(udpNTP);
 	uint32_t beginWait = millis();
 	while (millis() - beginWait < 1500) {
 		int size = udpNTP.parsePacket();
 		if (size >= NTP_PACKET_SIZE) {
-			Serial.println("Receive NTP Response");
+			// Serial.println("Receive NTP Response");
 			udpNTP.read(packetBuffer, NTP_PACKET_SIZE);	// read packet into the buffer
 			unsigned long secsSince1900;
 			// convert four bytes starting at location 40 to a long integer
@@ -41,7 +58,7 @@ time_t getNtpTime()
 			return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
 		}
 	}
-	Serial.println("No NTP Response :-(");
+	// Serial.println("No NTP Response :-(");
 	udpNTP.stop();
 	gotTime = false;
 	return 0; // return 0 if unable to get the time
@@ -77,6 +94,11 @@ void sendNTPpacket(WiFiUDP udpNTP)
 	udpNTP.endPacket();
 }
 
+/**
+ * Generate a string with formatted time and date
+ * @return <code>String</code>
+ *			String with current time as hh:mm dd.mm.yy
+ */
 String digitalClockDisplay() {
 	// digital clock display of the time as string
 	String dateTime = String(hour()) + ":";
@@ -87,11 +109,17 @@ String digitalClockDisplay() {
 	return dateTime;
 }
 
+/**
+ * Generate a string from a integer with leading zero if integer is smaller than 10
+ * @param int
+ *			Integer to be converted
+ * @return <code>String</code>
+ *			Integer as String
+ */
 String getDigits(int digits) {
-	String digitsStr = "";
-	// utility for digital clock display: prints preceding colon and leading 0
-	if (digits < 10)
-		digitsStr += "0";
-	digitsStr += String(digits);
-	return digitsStr;
+	if (digits < 10) {
+		return "0" + String(digits);
+	} else {
+		return String(digits);
+	}
 }

@@ -12,6 +12,9 @@ IPAddress lastStatNetMask;
 const char* lastSsidName;
 // Flag if original connection was with static or dynamic IP address
 bool wasStatic = false;
+// Flag if WiFi connection to saved settings was successfull
+bool wmIsConnected = false;
+
 /**
 	connectWiFi
 	Connect to WiFi AP or start captive portal if no WiFi credentials are saved
@@ -28,11 +31,17 @@ IPAddress connectWiFi(IPAddress statIP, IPAddress statGateWay, IPAddress statNet
 	wifiManager.setConfigPortalTimeout(180);
 	// Try to connect to known network
 	if (!wifiManager.autoConnect(ssidName)) {
-		// If timeout occured try to reset the ESP
-		delay(3000);
-		ESP.reset();
-		delay(5000);
+		// TODO new feature: instead of resetting here, return IPAddress of NULL and set flag for failed connection
+		// Set flag for failed connection
+		wmIsConnected = false;
+		return ipFailed;
+		// // If timeout occured try to reset the ESP
+		// delay(3000);
+		// ESP.reset();
+		// delay(5000);
 	}
+	// Set flag for successfull connection
+	wmIsConnected = true;
 	doubleLedFlashStop();
 	// Save ip, gateway, netmask and ssid name for reconnection
 	lastStatIP = statIP;
@@ -58,10 +67,14 @@ IPAddress connectWiFi(const char* ssidName) {
 	wifiManager.setConfigPortalTimeout(180);
 	// Try to connect to known network
 	if (!wifiManager.autoConnect(ssidName)) {
-		// If timeout occured try to reset the ESP
-		delay(3000);
-		ESP.reset();
-		delay(5000);
+		// TODO new feature: instead of resetting here, return IPAddress of NULL and set flag for failed connection
+		// Set flag for failed connection
+		wmIsConnected = false;
+		return ipFailed;
+		// // If timeout occured try to reset the ESP
+		// delay(3000);
+		// ESP.reset();
+		// delay(5000);
 	}
 	doubleLedFlashStop();
 	// Save ssid name for reconnection
@@ -130,6 +143,11 @@ void sendDebug(String debugMsg, String senderID) {
 	doubleLedFlashStart(0.5);
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpClient;
+
+	// ipDebug[0] = 192;
+	// ipDebug[1] = 168;
+	// ipDebug[2] = 0;
+	// ipDebug[3] = 150;
 
 	const int httpPort = 9999;
 	if (!tcpClient.connect(ipDebug, httpPort)) {

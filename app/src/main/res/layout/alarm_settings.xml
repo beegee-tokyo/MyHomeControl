@@ -16,7 +16,6 @@
 			android:layout_height="wrap_content"
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:text="@string/tv_sec_alarm_on"
-			android:id="@+id/tv_Alarm_on"
 			android:gravity="center"
 			android:layout_weight="1"
 			android:layout_gravity="center_horizontal"/>
@@ -26,7 +25,6 @@
 			android:layout_height="wrap_content"
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:text="@string/tv_sec_alarm_off"
-			android:id="@+id/tv_Alarm_off"
 			android:gravity="center"
 			android:layout_weight="1"
 			android:layout_gravity="center_horizontal"/>

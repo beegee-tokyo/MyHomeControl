@@ -36,7 +36,7 @@
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:textAppearance="@android:style/TextAppearance.Medium"
 		android:text="@string/sec_front"
 		android:id="@+id/tv_status_front"
 		android:layout_alignParentStart="true"
@@ -45,7 +45,7 @@
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:textAppearance="?android:attr/textAppearanceLarge"
+		android:textAppearance="@android:style/TextAppearance.Medium"
 		android:text="@string/sec_back"
 		android:id="@+id/tv_status_back"
 		android:layout_alignParentEnd="true"
@@ -53,8 +53,8 @@
 		tools:ignore="RelativeOverlap"/>
 
 	<ImageView
-		android:layout_width="100dp"
-		android:layout_height="100dp"
+		android:layout_width="70dp"
+		android:layout_height="70dp"
 		android:id="@+id/dot_alarm_status"
 		android:src="@mipmap/ic_alarm_autooff"
 		android:contentDescription="@string/dot_txt_alarm_status"
@@ -71,7 +71,6 @@
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/dot_txt_alarm_status"
-		android:id="@+id/tv_alarm_status"
 		android:layout_gravity="center"
 		android:layout_alignTop="@+id/dot_alarm_status"
 		android:layout_alignBottom="@+id/dot_alarm_status"
@@ -79,8 +78,8 @@
 		android:gravity="center"/>
 
 	<ImageView
-		android:layout_width="100dp"
-		android:layout_height="100dp"
+		android:layout_width="70dp"
+		android:layout_height="70dp"
 		android:id="@+id/dot_alarm_status_back"
 		android:src="@mipmap/ic_alarm_autooff"
 		android:contentDescription="@string/dot_txt_alarm_status"
@@ -95,8 +94,7 @@
 		android:layout_alignEnd="@+id/tv_status_back"/>
 
 	<ImageView
-		android:layout_width="100dp"
-		android:layout_height="100dp"
+		android:layout_width="70dp"
 		android:id="@+id/dot_light"
 		android:src="@mipmap/ic_light_autooff"
 		android:contentDescription="@string/dot_txt_light"
@@ -106,14 +104,14 @@
 		android:layout_alignLeft="@+id/tv_status_front"
 		android:layout_alignStart="@+id/tv_status_front"
 		android:layout_alignRight="@+id/tv_status_front"
-		android:layout_alignEnd="@+id/tv_status_front"/>
+		android:layout_alignEnd="@+id/tv_status_front"
+		android:layout_height="70dp"/>
 
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/dot_txt_light"
-		android:id="@+id/tv_light"
 		android:layout_gravity="center"
 		android:layout_alignTop="@+id/dot_light"
 		android:layout_alignBottom="@+id/dot_light"
@@ -121,8 +119,8 @@
 		android:gravity="center"/>
 
 	<ImageView
-		android:layout_width="100dp"
-		android:layout_height="100dp"
+		android:layout_width="80dp"
+		android:layout_height="80dp"
 		android:id="@+id/dot_light_back"
 		android:src="@mipmap/ic_light_autooff"
 		android:contentDescription="@string/dot_txt_light"
@@ -182,12 +180,52 @@
 		android:layout_below="@+id/cb_sec_auto_alarm"/>
 
 	<ProgressBar
-		android:id="@+id/pb_security"
 		style="?android:attr/progressBarStyleSmall"
 		android:layout_width="300dp"
 		android:layout_height="300dp"
 		android:layout_centerInParent="true"
 		android:background="@android:color/transparent"
 		android:visibility="invisible"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:src="@android:drawable/ic_menu_camera"
+		android:layout_toRightOf="@+id/tl_alarm_back"
+		android:layout_toEndOf="@+id/tl_alarm_back"
+		android:layout_marginLeft="17dp"
+		android:layout_marginStart="17dp"
+		android:onClick="onClick"
+		android:id="@+id/ib_snapshot_front"
+		android:layout_below="@+id/cb_sec_auto_alarm"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/ib_snapshot_last"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_gallery"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toEndOf="@+id/ib_snapshot_front"
+		android:layout_toRightOf="@+id/ib_snapshot_front"
+		android:layout_below="@+id/cb_sec_auto_alarm"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_toEndOf="@+id/ib_snapshot_last"
+		android:layout_toRightOf="@+id/ib_snapshot_last"
+		android:layout_below="@+id/cb_sec_auto_alarm"
+		android:id="@+id/ib_snapshot_gallery"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_mapmode"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
 
 </RelativeLayout>

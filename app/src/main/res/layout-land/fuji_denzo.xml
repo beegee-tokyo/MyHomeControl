@@ -166,7 +166,8 @@
 					android:gravity="center"
 					android:text="@string/txt_consumption"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 				<TextView
 					android:id="@+id/txt_cons_val_fd"
@@ -176,7 +177,8 @@
 					android:gravity="center"
 					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 				<TextView
 					android:id="@+id/txt_auto_status_fd"
@@ -186,7 +188,8 @@
 					android:gravity="center"
 					android:text="@string/txt_auto_status"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 				<TextView
 					android:id="@+id/txt_auto_status_val_fd"
@@ -196,17 +199,18 @@
 					android:gravity="center"
 					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 				<TextView
-					android:id="@+id/txt_temp_fd"
 					android:layout_width="wrap_content"
 					android:layout_height="wrap_content"
 					android:layout_weight="1"
 					android:gravity="center"
 					android:text="@string/txt_cool_temp"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 				<TextView
 					android:id="@+id/txt_temp_val_fd"
@@ -216,7 +220,8 @@
 					android:gravity="center"
 					android:text="@string/bt_next_txt"
 					android:textAppearance="?android:attr/textAppearanceSmall"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:textSize="12sp"/>
 
 			</LinearLayout>
 

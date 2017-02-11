@@ -1,8 +1,5 @@
 #include <Setup.h>
 
-/** Up counter for timer function */
-uint32_t timerCounter = 0;
-
 /**
 	triggerGetPower
 	called by Ticker getPowerTimer
@@ -31,7 +28,7 @@ void triggerSendUpdate() {
 */
 void triggerTimerEnd() {
 	timerCounter++;
-	if (timerCounter == onTime) {
+	if (timerCounter >= onTime) {
 		timerEndTriggered = true;
 		timerCounter = 0;
 	}
@@ -341,6 +338,9 @@ void sendStatusToDebug() {
 	} else {
 		debugMsg += "off";
 	}
+
+  // Display timer status of aircon
+	debugMsg += ", Timer ends:" + timerEnd;
 
 	sendDebug(debugMsg, OTA_HOST);
 }

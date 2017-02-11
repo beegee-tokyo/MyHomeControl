@@ -62,7 +62,7 @@ public class SPwidget extends AppWidgetProvider {
 
 		/** Intent to start app if widget is pushed */
 		Intent intent1 = new Intent(context, MyHomeControl.class);
-		intent1.putExtra("view", 1);
+		intent1.putExtra("view", MyHomeControl.view_solar_id);
 		/** Pending intent to start app if widget is pushed */
 		PendingIntent pendingIntent1 = PendingIntent.getActivity(context, 0,
 				intent1, PendingIntent.FLAG_UPDATE_CURRENT);

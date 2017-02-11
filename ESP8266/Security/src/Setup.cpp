@@ -11,11 +11,12 @@ Ticker heartBeatTimer;
  */
 void setup() {
 	initLeds();
-	pinMode(pirPort, INPUT); // PIR signal
+	pinMode(pirPort, INPUT_PULLUP); // PIR signal
 	pinMode(relayPort, OUTPUT); // Relay trigger signal
 	pinMode(speakerPin, OUTPUT); // Loudspeaker/piezo signal
 	digitalWrite(relayPort, LOW); // Turn off Relay
-	digitalWrite(speakerPin, LOW); // Speaker off
+//	digitalWrite(speakerPin, LOW); // Speaker off
+	digitalWrite(speakerPin, HIGH); // Switch Piezo buzzer off
 
 	Serial.begin(115200);
 	Serial.setDebugOutput(false);
@@ -26,11 +27,16 @@ void setup() {
 	// Try to connect to WiFi with captive portal
 	ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Front");
 
-	Serial.println("");
-	Serial.print("Connected to ");
-	Serial.println(ssid);
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
+	if (!wmIsConnected) {
+		Serial.println("WiFi connection failed!");
+		Serial.println("Only audible alert and auto light is available!");
+	} else {
+		Serial.println("");
+		Serial.print("Connected to ");
+		Serial.println(ssid);
+		Serial.print("IP address: ");
+		Serial.println(WiFi.localIP());
+	}
 
 	Serial.print("Build: ");
 	Serial.println(compileDate);
@@ -45,9 +51,10 @@ void setup() {
 	getLDR();
 
 	// Set initial time
-	getNtpTime();
-	getNtpTime();
 	setTime(getNtpTime());
+	if (!gotTime) { // Failed to get time from NTP server, retry once
+		setTime(getNtpTime());
+	}
 
 	// Initialize NTP client
 	setSyncProvider(getNtpTime);
@@ -99,7 +106,7 @@ void setup() {
 	}
 
 	// Start FTP server
-	ftpSrv.begin(DEVICE_ID,DEVICE_ID);    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
+	ftpSrv.begin(DEVICE_ID,DEVICE_ID); //username, password for ftp. set ports in ESP8266FtpServer.h(default 21, 50009 for PASV)
 
 	ArduinoOTA.onStart([]() {
 		sendDebug("OTA start", OTA_HOST);
@@ -120,6 +127,10 @@ void setup() {
 	// Start OTA server.
 	ArduinoOTA.setHostname(OTA_HOST);
 	ArduinoOTA.begin();
+
+	// Send light status to backyard security device
+	getLDR();
+	sendLightStatus(switchLights);
 
 	wdt_enable(WDTO_8S);
 }

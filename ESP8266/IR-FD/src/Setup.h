@@ -9,6 +9,8 @@
 #include <WiFiUdp.h>
 #include <IRremoteESP8266.h>
 #include <IRremoteInt.h>
+// All of the above automatically creates a universal decoder
+// class called "IRdecode" containing only the protocols you want.
 #include <ArduinoJson.h>
 #include <WiFiClient.h>
 #include <FS.h>
@@ -29,5 +31,7 @@
 #include "globals.h"
 /* functions.h contains all function declarations */
 #include "functions.h"
+/* codes.h contains the IR sequences for the aircon */
+#include "codes.h"
 
 #endif

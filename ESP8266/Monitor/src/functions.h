@@ -14,6 +14,8 @@ void parseACpacket (JsonObject& jsonIn, String device);
 void parseSecFrontPacket (JsonObject& jsonIn);
 void parseSecBackPacket (JsonObject& jsonIn);
 void parseSPMPacket (JsonObject& jsonIn);
+void parseCAMPacket (JsonObject& jsonIn);
+void sendWEIBroadCast(String broadCast);
 
 void getHomeInfo(boolean all);
 void getTemperature();

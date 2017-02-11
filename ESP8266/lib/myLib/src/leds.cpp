@@ -7,10 +7,18 @@ Ticker comFlasher;
 /** Timer for flashing both blue and red leds */
 Ticker doubleFlasher;
 
+/** Port for blue LED */
+uint8_t comLED;
+/** Port for red LED */
+uint8_t actLED;
+
 /**
  * Initialize LED pins
  */
-void initLeds() {
+void initLeds(uint8_t reqComLED, uint8_t reqActLED) {
+	comLED = reqComLED;
+	actLED = reqActLED;
+	
 	pinMode(comLED, OUTPUT); // Communication LED blue
 	pinMode(actLED, OUTPUT); // Communication LED red
 	digitalWrite(comLED, HIGH); // Turn off blue LED

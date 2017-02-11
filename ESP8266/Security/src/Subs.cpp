@@ -53,6 +53,7 @@ boolean getLDR() {
 void relayOff() {
 	digitalWrite(relayPort, LOW);
 	lightOffTriggered = true;
+	relayOffTimer.detach();
 }
 
 /**
@@ -82,9 +83,25 @@ void pirTrigger() {
 	if (digitalRead(pirPort) == HIGH) { // Detection of movement
 		pirTriggered = true;
 		hasDetection = true;
+		if (alarmOn) {
+			// melodyPoint = 0; // Reset melody pointer to 0
+			// alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
+			digitalWrite(speakerPin,LOW); // Switch Piezo buzzer on
+		}
+		actLedFlashStart(0.2);
+		// if (switchLights) {
+		// 	relayOffTimer.detach();
+		// 	relayOffTimer.once(onTime, relayOff);
+		// 	digitalWrite(relayPort, HIGH);
+		// }
 	} else { // No detection
 		pirTriggered = true;
 		hasDetection = false;
+		actLedFlashStop();
+		digitalWrite(speakerPin,HIGH); // Switch Piezo buzzer off
+		if (alarmOn) { // If alarm is active, continue to flash slowly
+			actLedFlashStart(1);
+		}
 	}
 }
 
@@ -92,7 +109,7 @@ void pirTrigger() {
  * Create status JSON object
  *
  * @param root
- *              Json object to be filled with the status
+ * 		Json object to be filled with the status
  */
 void createStatus(JsonObject& root, boolean makeShort) {
 	// Create status
@@ -145,8 +162,8 @@ void createStatus(JsonObject& root, boolean makeShort) {
  * Write status to file
  *
  * @return <code>boolean</code>
- *              True if status was saved
- *              False if file error occured
+ *			True if status was saved
+ *			False if file error occured
  */
 bool writeStatus() {
 	// Open config file for writing.
@@ -184,10 +201,10 @@ bool writeStatus() {
  * Write reboot reason to file
  *
  * @param message
- *              Reboot reason as string
+ *			Reboot reason as string
  * @return <code>boolean</code>
- *              True if reboot reason was saved
- *              False if file error occured
+ *			True if reboot reason was saved
+ *			False if file error occured
  */
 bool writeRebootReason(String message) {
 	// Write current status to file
@@ -214,8 +231,8 @@ bool writeRebootReason(String message) {
  * global variables are updated from the content
  *
  * @return <code>boolean</code>
- *              True if status could be read
- *              False if file error occured
+ *			True if status could be read
+ *			False if file error occured
  */
 bool readStatus() {
 	// open file for reading.

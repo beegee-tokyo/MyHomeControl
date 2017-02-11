@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent">
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		app:srcCompat="@mipmap/ic_bulb_unavail"
+		android:id="@+id/ib_light_ctrl_widget"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_centerVertical="true"
+		android:layout_centerHorizontal="true"
+		android:background="@android:color/transparent"/>
+
+	<TextView
+		android:text="@string/lights_bedroom"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/tv_light_ctrl_widget"
+		android:layout_centerHorizontal="true"
+		android:layout_below="@+id/ib_light_ctrl_widget"
+		android:textSize="18sp"/>
+
+</RelativeLayout>

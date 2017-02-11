@@ -3,15 +3,13 @@ package tk.giesecke.myhomecontrol;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.IBinder;
 
 public class StartBackgroundServices extends Service {
-	public StartBackgroundServices() {
-	}
+//	public StartBackgroundServices() {
+//	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -22,25 +20,17 @@ public class StartBackgroundServices extends Service {
 	public void onCreate() {
 		super.onCreate();
 
-		/** Context of application */
-		Context intentContext = getApplicationContext();
-
-		/** IntentFilter to receive screen on/off & connectivity broadcast msgs */
-		IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-		filter.addAction(Intent.ACTION_SCREEN_OFF);
-		filter.addAction(android.net.ConnectivityManager.CONNECTIVITY_ACTION);
-		/** Receiver for screen on/off broadcast msgs */
-		BroadcastReceiver mReceiver = new EventReceiver();
-		registerReceiver(mReceiver, filter);
-
 		// Start service to listen to UDP & MQTT broadcast messages
-		intentContext.startService(new Intent(intentContext, MessageListener.class));
+		startService(new Intent(this, MessageListener.class));
 
-		/** Pending intent for sync every 2 hours */
-		PendingIntent pi = PendingIntent.getService(intentContext, 5002,
-				new Intent(intentContext, SolarSyncDBService.class), PendingIntent.FLAG_UPDATE_CURRENT);
+		// Start discovery of mDNS/NSD services available if not running already
+		startService(new Intent(this, CheckAvailDevices.class));
+
+			/** Pending intent for sync every 2 hours */
+		PendingIntent pi = PendingIntent.getService(this, 5002,
+				new Intent(this, SolarSyncDBService.class), PendingIntent.FLAG_UPDATE_CURRENT);
 		/** Alarm manager for sync every 2 hours */
-		AlarmManager am = (AlarmManager) intentContext.getSystemService(Context.ALARM_SERVICE);
+		AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000,
 				7200000, pi);
 		stopSelf();

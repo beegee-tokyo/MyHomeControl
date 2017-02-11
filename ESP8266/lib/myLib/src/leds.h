@@ -4,11 +4,6 @@
 #include <Arduino.h>
 #include <Ticker.h>
 
-/** Red LED on GPIO0 for visual signal if alarm is on or off */
-#define actLED 0
-/** Blue LED on GPIO2 for communication activities */
-#define comLED 2
-
 /** Timer for flashing red detection/alarm/activity LED */
 extern Ticker actFlasher;
 /** Timer for flashing blue communication LED */
@@ -16,7 +11,7 @@ extern Ticker comFlasher;
 /** Timer for flashing both blue and red leds */
 extern Ticker doubleFlasher;
 
-void initLeds();
+void initLeds(uint8_t reqComLED = 2, uint8_t reqActLED = 0); // defaults to Adafruit Huzzah breakout ports 
 void actLedFlashStart(float flashTime);
 void comLedFlashStart(float flashTime);
 void doubleLedFlashStart(float flashTime);

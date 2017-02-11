@@ -1,5 +1,8 @@
 #include "Setup.h"
 
+/** WiFiUDP class for creating UDP communication */
+WiFiUDP udpClientServer;
+
 /** Status of the solar panel */
 String spmStatus = "";
 /** Status of the office aircon */
@@ -10,6 +13,8 @@ String ac2Status = "";
 String secFrontStatus = "";
 /** Status of the back yard security */
 String secBackStatus = "";
+/** Status of the security camera */
+String secCamStatus = "";
 
 // Timekeepers for last received status message
 /** Time in seconds since last status from AC1 */
@@ -43,6 +48,8 @@ void sendToMQTT() {
 		debugMsg = "/SEF length:" + String(secFrontStatus.length()) + " - " + secFrontStatus;
 		sendDebug(debugMsg, OTA_HOST);
 		debugMsg = "/SEB length:" + String(secBackStatus.length()) + " - " + secBackStatus;
+		sendDebug(debugMsg, OTA_HOST);
+		debugMsg = "/CM1 length:" + String(secCamStatus.length()) + " - " + secCamStatus;
 		sendDebug(debugMsg, OTA_HOST);
 	}
 
@@ -81,6 +88,7 @@ void sendToMQTT() {
     mqttMsg.payload = (char *)&inWeatherStatus[0];
     mqttMsg.length = inWeatherStatus.length();
     mqttClient.publish(&mqttMsg);
+		sendWEIBroadCast(inWeatherStatus);
 	}
 	if (outWeatherStatus.length() != 0) {
     mqttMsg.topic = (char *)"/WEO";
@@ -108,11 +116,17 @@ void sendToMQTT() {
 		secBackStatus = "";
 		secBackOn = 2;
 	}
+	if (secCamStatus.length() != 0) {
+    mqttMsg.topic = (char *)"/CM1";
+    mqttMsg.payload = (char *)&secCamStatus[0];
+    mqttMsg.length = secCamStatus.length();
+    mqttClient.publish(&mqttMsg);
+	}
 
 	spmStatus = "";
 	inWeatherStatus = "";
 	outWeatherStatus = "";
-
+	secCamStatus = "";
 	doubleLedFlashStop();
 }
 
@@ -238,6 +252,8 @@ void messageReceived(String topic, String payload, char * bytes, unsigned int le
 		deviceIP = ipAC1;
 	} else if (deviceID == "ca1") { // living room aircon
 		deviceIP = ipAC2;
+	} else if (deviceID == "cm1") { // front camera
+		deviceIP = ipCam1;
 	} else {
 		actLedFlashStop();
 		return;
@@ -410,6 +426,9 @@ void getUDPbroadcast(int udpMsgLength) {
 		parseSPMPacket(jsonIn);
 		updateSolar(false);
 	}
+	if (device == "cm1") { // Broadcast from security camera
+		parseCAMPacket(jsonIn);
+	}
 	doubleLedFlashStop();
 }
 
@@ -509,4 +528,30 @@ void parseSPMPacket (JsonObject& jsonIn) {
 	spmStatus = "";
 	jsonOut.printTo(spmStatus);
 	// statusUpdated = true;
+}
+
+/**
+	parseSecFrontPacket
+	Parse front security status packet
+*/
+void parseCAMPacket (JsonObject& jsonIn) {
+	secCamStatus = "";
+	jsonIn.printTo(secCamStatus);
+}
+
+/**
+	 sendWEIBroadCast
+	 send updated inside weather status over LAN
+	 - by UTP broadcast over local lan
+*/
+void sendWEIBroadCast(String broadCast) {
+	if (debugOn) {
+		String debugMsg = "Sending broadcast: " + broadCast;
+		sendDebug(debugMsg, OTA_HOST);
+	}
+	// Broadcast per UTP to LAN
+	udpClientServer.beginPacketMulticast(multiIP, 5000, ipAddr);
+	udpClientServer.print(broadCast);
+	udpClientServer.endPacket();
+	udpClientServer.stop();
 }

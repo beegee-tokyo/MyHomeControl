@@ -19,7 +19,7 @@ WiFiServer tcpServer(6000);
 /** FTPServer class to create simple ftp server */
 FtpServer ftpSrv;
 
-/** Received command (from lan or serial connection) */
+// /** Received command (from lan or serial connection) */
 int irCmd = 9999;
 /** Last processed command (from lan or serial connection) */
 int lastCmd = 99;
@@ -101,6 +101,10 @@ int startOfDay = 8;
 int endOfDay = 17;
 /** Time in hours for timer function */
 uint32_t onTime = 1; // default 1 hour
+/** Timer off time as hh:mm */
+String timerEnd = "";
+/** Up counter for timer function */
+uint32_t timerCounter = 0;
 
 /** Flag for OTA update running */
 boolean otaRunning = false;
@@ -131,3 +135,5 @@ double consPower = 0;
 double avgConsPower[10] = {0,0,0,0,0,0,0,0,0,0};
 /** Last temperature set by user before switching to DRY mode */
 byte savedAcTemp = 0;
+/** Last temperature saved by switching to DRY mode */
+bool savedAcTempByDry = false;

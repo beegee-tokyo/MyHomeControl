@@ -3,15 +3,29 @@
     <words>
       <w>activ</w>
       <w>addr</w>
+      <w>attacher</w>
       <w>autooff</w>
       <w>debugview</w>
       <w>devdebug</w>
       <w>edittext</w>
+      <w>inet</w>
+      <w>jsonrpc</w>
       <w>moni</w>
+      <w>mqstat</w>
+      <w>mqttconn</w>
+      <w>occured</w>
+      <w>raop</w>
+      <w>rcvd</w>
       <w>sback</w>
       <w>secb</w>
+      <w>seccam</w>
       <w>secf</w>
+      <w>seekbar</w>
       <w>sfront</w>
+      <w>snackbar</w>
+      <w>udisks</w>
+      <w>unsubscribe</w>
+      <w>xbmc</w>
     </words>
   </dictionary>
 </component>

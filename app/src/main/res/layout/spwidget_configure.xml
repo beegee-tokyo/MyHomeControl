@@ -16,7 +16,6 @@
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/tv_alarm_txt"
-		android:id="@+id/tv_alarm_txt"
 		android:layout_toRightOf="@+id/v_sep"
 		android:layout_toEndOf="@+id/v_sep"/>
 

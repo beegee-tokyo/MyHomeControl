@@ -30,5 +30,5 @@ bool readStatus();
 void sendAlarm(boolean makeShort);
 void socketServer(WiFiClient tcpClient);
 void sendLightStatus(boolean switchOn);
-
+void triggerPic();
 #endif

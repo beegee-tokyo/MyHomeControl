@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/view_seccam"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:background="@android:color/transparent">
+
+	<ImageView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:background="@color/colorAccent"
+		android:layout_alignParentTop="true"
+		android:layout_alignRight="@+id/iv_snapshot"
+		android:layout_alignEnd="@+id/ib_snapshot_front2"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_alignStart="@+id/ib_snapshot_gallery2"
+		android:layout_alignLeft="@+id/ib_snapshot_gallery2"
+		android:layout_alignBottom="@+id/ib_snapshot_front2"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/ib_snapshot_front2"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_camera"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toEndOf="@+id/ib_snapshot_last2"
+		android:layout_toRightOf="@+id/ib_snapshot_last2"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/ib_snapshot_last2"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_gallery"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_centerHorizontal="true"/>
+
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:id="@+id/ib_snapshot_gallery2"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_mapmode"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toLeftOf="@+id/ib_snapshot_last2"
+		android:layout_toStartOf="@+id/ib_snapshot_last2"/>
+
+	<ImageView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:src="@android:drawable/picture_frame"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_marginLeft="14dp"
+		android:layout_marginStart="14dp"
+		android:layout_marginTop="14dp"
+		android:id="@+id/iv_snapshot"
+		android:layout_centerInParent="true"
+		android:scaleType="fitCenter"
+		android:adjustViewBounds="true"/>
+
+	<TextView
+		android:id="@+id/tv_image_name"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_centerHorizontal="true"
+		android:text="@string/MQTT_IP"
+		android:background="@color/colorAccent"
+		android:textColor="@android:color/black"
+		android:visibility="invisible"
+		android:layout_alignBottom="@+id/iv_snapshot"/>
+
+</RelativeLayout>

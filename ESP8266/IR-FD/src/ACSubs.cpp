@@ -1,6 +1,4 @@
 #include <Setup.h>
-/* codes.h contains the IR sequences for the aircon */
-#include "codes.h"
 
 /** Power consumption for decision to send a broadcast */
 double consPowerOld = 0;
@@ -11,43 +9,43 @@ double avgSolarPower[10] = {0,0,0,0,0,0,0,0,0,0};
 /** Pointer to element in avgConsPower[] */
 byte avgConsIndex = 0;
 
-/**
-	sendCode
-	Send IR command
-*/
-void sendCode(int repeat, unsigned int *rawCodes, int rawCount) {
-	// Assume 38 KHz
-	My_Sender.IRsend::sendRaw(rawCodes, rawCount, 38);
-}
+// /**
+// 	sendCode
+// 	Send IR command
+// */
+// void sendCode(int repeat, unsigned int *rawCodes, int rawCount) {
+// 	// Assume 38 KHz
+// 	My_Sender.IRsend::sendRaw(rawCodes, rawCount, 38);
+// }
 
-/**
-	getVal
-	Returns correct duration value depending on bit value
-*/
-unsigned int getVal(byte testVal, byte maskVal) {
-	if ((testVal & maskVal) == maskVal) {
-		return 1800;
-	} else {
-		return 700;
-	}
-}
+// /**
+// 	getVal
+// 	Returns correct duration value depending on bit value
+// */
+// unsigned int getVal(byte testVal, byte maskVal) {
+// 	if ((testVal & maskVal) == maskVal) {
+// 		return 1800;
+// 	} else {
+// 		return 700;
+// 	}
+// }
 
-/**
-	buildBuffer
-	Converts bit stream into IR command made of durations
-*/
-void buildBuffer(unsigned int *newBuffer, byte *cmd) {
-	for (int i = 0; i < 4; i++) {
-		newBuffer[(i * 16) + 3]	= getVal(cmd[i], B10000000);
-		newBuffer[(i * 16) + 5]	= getVal(cmd[i], B01000000);
-		newBuffer[(i * 16) + 7]	= getVal(cmd[i], B00100000);
-		newBuffer[(i * 16) + 9]	= getVal(cmd[i], B00010000);
-		newBuffer[(i * 16) + 11] = getVal(cmd[i], B00001000);
-		newBuffer[(i * 16) + 13] = getVal(cmd[i], B00000100);
-		newBuffer[(i * 16) + 15] = getVal(cmd[i], B00000010);
-		newBuffer[(i * 16) + 17] = getVal(cmd[i], B00000001);
-	}
-}
+// /**
+// 	buildBuffer
+// 	Converts bit stream into IR command made of durations
+// */
+// void buildBuffer(unsigned int *newBuffer, byte *cmd) {
+// 	for (int i = 0; i < 4; i++) {
+// 		newBuffer[(i * 16) + 3]	= getVal(cmd[i], B10000000);
+// 		newBuffer[(i * 16) + 5]	= getVal(cmd[i], B01000000);
+// 		newBuffer[(i * 16) + 7]	= getVal(cmd[i], B00100000);
+// 		newBuffer[(i * 16) + 9]	= getVal(cmd[i], B00010000);
+// 		newBuffer[(i * 16) + 11] = getVal(cmd[i], B00001000);
+// 		newBuffer[(i * 16) + 13] = getVal(cmd[i], B00000100);
+// 		newBuffer[(i * 16) + 15] = getVal(cmd[i], B00000010);
+// 		newBuffer[(i * 16) + 17] = getVal(cmd[i], B00000001);
+// 	}
+// }
 
 /**
 	handleCmd
@@ -58,37 +56,43 @@ void handleCmd() {
 	switch (irCmd) {
 		case CMD_REMOTE_0: // Should only be received in slave AC
 			if ((acMode & AC_ON) == AC_ON) { // AC is on
-				irCmd = CMD_MODE_FAN;
-				sendCmd();
+				My_Sender.sendNEC(Fan,32);
+				// irCmd = CMD_MODE_FAN;
+				// sendCmd();
 				delay(1000);
-				irCmd = CMD_ON_OFF;
-				sendCmd();
+				My_Sender.sendNEC(On_Off,32);
+				// irCmd = CMD_ON_OFF;
+				// sendCmd();
 			}
-			irCmd = 9999;
+			// irCmd = 9999;
 			break;
 		case CMD_REMOTE_1: // Should only be received in slave AC
-			if ((acMode & AC_ON) != AC_ON) {
-				irCmd = CMD_ON_OFF;
-				sendCmd();
+			if ((acMode & AC_ON) != AC_ON) { // AC is off
+				My_Sender.sendNEC(On_Off,32);
+				// irCmd = CMD_ON_OFF;
+				// sendCmd();
 				delay(1000);
 			}
-			irCmd = CMD_MODE_FAN;
-			sendCmd();
-			irCmd = 9999;
+			My_Sender.sendNEC(Fan,32);
+			// irCmd = CMD_MODE_FAN;
+			// sendCmd();
+			// irCmd = 9999;
 			break;
 		case CMD_REMOTE_2: // Should only be received in slave AC
 			if ((acMode & AC_ON) != AC_ON) {
-				irCmd = CMD_ON_OFF;
-				sendCmd();
+				My_Sender.sendNEC(On_Off,32); // AC is off
+				// irCmd = CMD_ON_OFF;
+				// sendCmd();
 				delay(1000);
 			}
-			irCmd = CMD_MODE_AUTO;
-			sendCmd();
-			irCmd = 9999;
+			My_Sender.sendNEC(Dry,32); // Auto mode not available on FD
+			// irCmd = CMD_MODE_AUTO;
+			// sendCmd();
+			// irCmd = 9999;
 			break;
 		case CMD_INIT_AC: // Initialize aircon
 			initAC();
-			irCmd = 9999;
+			// irCmd = 9999;
 			break;
 		case CMD_RESET: // Reboot the ESP module
 			if (debugOn) {
@@ -102,18 +106,21 @@ void handleCmd() {
 			// If AC is on, switch it to FAN low speed and then switch it off
 			if ((acMode & AC_ON) == AC_ON) { // AC is on
 				// Set mode to FAN
-				irCmd = CMD_MODE_FAN;
-				sendCmd();
+				My_Sender.sendNEC(Fan,32);
+				// irCmd = CMD_MODE_FAN;
+				// sendCmd();
 				delay(1000);
 				// Set fan speed to LOW
-				irCmd = CMD_FAN_LOW;
-				sendCmd();
+				My_Sender.sendNEC(L_Fan,32);
+				// irCmd = CMD_FAN_LOW;
+				// sendCmd();
 				delay(1000);
 				// Switch AC off
-				irCmd = CMD_ON_OFF;
-				sendCmd();
+				My_Sender.sendNEC(On_Off,32);
+				// irCmd = CMD_ON_OFF;
+				// sendCmd();
 			}
-			irCmd = 9999;
+			// irCmd = 9999;
 			break;
 		default: // All other commands
 			sendCmd();
@@ -141,7 +148,8 @@ void sendCmd() {
 				acMode = acMode | AC_ON;
 				isValidCmd = true;
 			}
-			buildBuffer(&sendBuffer[0], &POWER[0]);
+			My_Sender.sendNEC(On_Off,32);
+			// buildBuffer(&sendBuffer[0], &POWER[0]);
 			break;
 		case CMD_MODE_COOL: // Cool
 			if ((acMode & AC_ON) == AC_ON) {
@@ -149,28 +157,35 @@ void sendCmd() {
 				acMode = acMode | MODE_COOL; // set mode bits to COOL mode
 				isValidCmd = true;
 			}
-			buildBuffer(&sendBuffer[0], &COOL[0]);
+			My_Sender.sendNEC(Cool,32);
+			// buildBuffer(&sendBuffer[0], &COOL[0]);
+			restoreTempSetting();
 			break;
 		case CMD_MODE_DRY: // Dry
 			if ((acMode & AC_ON) == AC_ON) {
 				acMode = acMode & MODE_CLR; // set mode bits to 0
 				acMode = acMode | MODE_DRY; // set mode bits to DRY mode
 				isValidCmd = true;
-				savedAcTemp = acTemp & TEMP_MASK;
-				acTemp = acTemp & TEMP_CLR; // Dry mode resets AC temperature to 25
-				acTemp += 25;
+				if (!savedAcTempByDry) {
+					savedAcTemp = acTemp & TEMP_MASK;
+					acTemp = acTemp & TEMP_CLR; // Dry mode resets AC temperature to 25
+					acTemp += 25;
+					savedAcTempByDry = true;
+				}
 			}
-			buildBuffer(&sendBuffer[0], &DRY[0]);
+			My_Sender.sendNEC(Dry,32);
+			// buildBuffer(&sendBuffer[0], &DRY[0]);
 			break;
 		case CMD_MODE_FAN: // Fan
 			if ((acMode & AC_ON) == AC_ON) {
 				acMode = acMode & MODE_CLR; // set mode bits to 0
 				acMode = acMode | MODE_FAN; // set mode bits to FAN mode
 				isValidCmd = true;
-				acTemp = acTemp & TEMP_CLR;
-				acTemp = acTemp + savedAcTemp;
+				// acTemp = acTemp & TEMP_CLR;
+				// acTemp = acTemp + savedAcTemp;
 			}
-			buildBuffer(&sendBuffer[0], &FAN[0]);
+			My_Sender.sendNEC(Fan,32);
+			// buildBuffer(&sendBuffer[0], &FAN[0]);
 			break;
 		case CMD_FAN_HIGH: // H-Fan
 			if ((acMode & AC_ON) == AC_ON) {
@@ -178,7 +193,8 @@ void sendCmd() {
 				acMode = acMode | FAN_HIGH; // set mode bits to FAN HIGH mode
 				isValidCmd = true;
 			}
-			buildBuffer(&sendBuffer[0], &H_FAN[0]);
+			My_Sender.sendNEC(H_Fan,32);
+			// buildBuffer(&sendBuffer[0], &H_FAN[0]);
 			break;
 		case CMD_FAN_MED: // M-Fan
 			if ((acMode & AC_ON) == AC_ON) {
@@ -186,7 +202,8 @@ void sendCmd() {
 				acMode = acMode | FAN_MED; // set mode bits to FAN MEDIUM mode
 				isValidCmd = true;
 			}
-			buildBuffer(&sendBuffer[0], &M_FAN[0]);
+			My_Sender.sendNEC(M_Fan,32);
+			// buildBuffer(&sendBuffer[0], &M_FAN[0]);
 			break;
 		case CMD_FAN_LOW: // L-Fan
 			if ((acMode & AC_ON) == AC_ON) {
@@ -194,7 +211,8 @@ void sendCmd() {
 				acMode = acMode | FAN_LOW; // set mode bits to FAN LOW mode
 				isValidCmd = true;
 			}
-			buildBuffer(&sendBuffer[0], &L_FAN[0]);
+			My_Sender.sendNEC(L_Fan,32);
+			// buildBuffer(&sendBuffer[0], &L_FAN[0]);
 			break;
 		case CMD_TEMP_PLUS: // Temp +
 			if ((acMode & AC_ON) == AC_ON) {
@@ -204,12 +222,13 @@ void sendCmd() {
 						lastTemp++;
 						acTemp = acTemp & TEMP_CLR;
 						acTemp += lastTemp;
-						savedAcTemp = acTemp;
+						// savedAcTemp = acTemp;
 						isValidCmd = true;
 					}
 				}
 			}
-			buildBuffer(&sendBuffer[0], &PLUS[0]);
+			My_Sender.sendNEC(Plus,32);
+			// buildBuffer(&sendBuffer[0], &PLUS[0]);
 			break;
 		case CMD_TEMP_MINUS: // Temp -
 			if ((acMode & AC_ON) == AC_ON) {
@@ -224,7 +243,8 @@ void sendCmd() {
 					}
 				}
 			}
-			buildBuffer(&sendBuffer[0], &MINUS[0]);
+			My_Sender.sendNEC(Minus,32);
+			// buildBuffer(&sendBuffer[0], &MINUS[0]);
 			break;
 		case CMD_OTHER_TIMER: // Timer
 			if ((acMode & TIM_ON) == TIM_ON) { // TIMER is already on
@@ -234,16 +254,19 @@ void sendCmd() {
 				// Switch off the aircon
 				if ((acMode & AC_ON) == AC_ON) { // // Switch off the aircon if still on
 					// Set mode to FAN
-					irCmd = CMD_MODE_FAN;
-					sendCmd();
+					My_Sender.sendNEC(Fan,32);
+					// irCmd = CMD_MODE_FAN;
+					// sendCmd();
 					delay(1000);
 					// Set fan speed to LOW
-					irCmd = CMD_FAN_LOW;
-					sendCmd();
+					My_Sender.sendNEC(L_Fan,32);
+					// irCmd = CMD_FAN_LOW;
+					// sendCmd();
 					delay(1000);
 					// Switch AC off
-					irCmd = CMD_ON_OFF;
-					sendCmd();
+					My_Sender.sendNEC(On_Off,32);
+					// irCmd = CMD_ON_OFF;
+					// sendCmd();
 					delay(1000);
 					if (debugOn) {
 						String debugMsg = "Timer stopped manually, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
@@ -262,41 +285,50 @@ void sendCmd() {
 				// Switch on the aircon
 				if (!((acMode & AC_ON) == AC_ON)) { // // Switch on the aircon if off
 					// Switch AC on
-					irCmd = CMD_ON_OFF;
-					sendCmd();
+					My_Sender.sendNEC(On_Off,32);
+					// irCmd = CMD_ON_OFF;
+					// sendCmd();
 					delay(1000);
 				}
 				// Set fan speed to LOW
-				irCmd = CMD_FAN_LOW;
-				sendCmd();
+				My_Sender.sendNEC(L_Fan,32);
+				// irCmd = CMD_FAN_LOW;
+				// sendCmd();
 				delay(1000);
 				// Set mode to cooling
-				irCmd = CMD_MODE_COOL;
-				sendCmd();
+				My_Sender.sendNEC(Cool,32);
+				// irCmd = CMD_MODE_COOL;
+				// sendCmd();
 				restoreTempSetting();
 				powerStatus = 0;
-				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60mx60s+1000ms=3600000 milliseconds)
+				// Start timer to switch off the aircon after "onTime" (default = 1 hour = 60m x 60s x 1000ms=3600000 milliseconds)
 				// Because of 32bit limit (== max 71min) the timer is triggered
 				// every hour and a counter is used if timer time is 2 hours or more
+				timerCounter = 0;
 				timerEndTimer.attach_ms(3600000, triggerTimerEnd);
+        int offHour = hour()+onTime;
+        if (offHour >= 24) {
+          offHour-=24;
+        }
+        timerEnd = formatInt(offHour) + ":" + formatInt(minute());
 				if (debugOn) {
-					String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + onTime + "hours";
+					String debugMsg = "Start of timer, switch on AC (" + timerEnd + ") for " + onTime + "hours";
 					sendDebug(debugMsg, OTA_HOST);
 				}
 			}
 			break;
 	}
-	// Send the command
-	if (isValidCmd) {
-		writeStatus();
-		sendCode(0, &sendBuffer[0], 67);
-		if (irCmd == CMD_MODE_COOL) {
-			restoreTempSetting();
-		}
-	}
+	// // Send the command
+	// if (isValidCmd) {
+	// 	writeStatus();
+	// 	sendCode(0, &sendBuffer[0], 67);
+		// if (irCmd == CMD_MODE_COOL) {
+		// 	restoreTempSetting();
+		// }
+	// }
 
-	// Reset irCmd
-	irCmd = 9999;
+	// // Reset irCmd
+	// irCmd = 9999;
 	actLedFlashStop();
 }
 
@@ -314,22 +346,25 @@ void initAC() {
 	/* FIRST: switch on AC */
 	acMode = acMode & AC_CLR; // set power bit to 0
 	acMode = acMode | AC_ON;
-	buildBuffer(&sendBuffer[0], &POWER[0]);
-	sendCode(0, &sendBuffer[0], 67);
+	My_Sender.sendNEC(On_Off,32);
+	// buildBuffer(&sendBuffer[0], &POWER[0]);
+	// sendCode(0, &sendBuffer[0], 67);
 	delay(2000); // Wait 2 seconds to make sure the aircon is on
 
 	/* SECOND: switch to COOL mode */
 	acMode = acMode & MODE_CLR; // set mode bits to 0
 	acMode = acMode | MODE_COOL; // set mode bits to COOL mode
-	buildBuffer(&sendBuffer[0], &COOL[0]);
-	sendCode(0, &sendBuffer[0], 67);
+	My_Sender.sendNEC(Cool,32);
+	// buildBuffer(&sendBuffer[0], &COOL[0]);
+	// sendCode(0, &sendBuffer[0], 67);
 	delay(1000); // Wait 1 second to make sure the aircon mode is switched
 
 	/* THIRD: switch to LOW FAN speed */
 	acMode = acMode & FAN_CLR; // set fan bits to 0
 	acMode = acMode | FAN_LOW; // set mode bits to FAN LOW mode
-	buildBuffer(&sendBuffer[0], &L_FAN[0]);
-	sendCode(0, &sendBuffer[0], 67);
+	My_Sender.sendNEC(L_Fan,32);
+	// buildBuffer(&sendBuffer[0], &L_FAN[0]);
+	// sendCode(0, &sendBuffer[0], 67);
 	delay(1000); // Wait 1 second to make sure the aircon mode is switched
 
 	/* FORTH: set temperature to 25 deg Celsius */
@@ -340,28 +375,32 @@ void initAC() {
 			then we lower 7 times to get back to 25 degrees
 	*/
 	for (int i = 0; i < 16; i++) {
-		buildBuffer(&sendBuffer[0], &PLUS[0]);
-		sendCode(0, &sendBuffer[0], 67);
+		My_Sender.sendNEC(Plus,32);
+		// buildBuffer(&sendBuffer[0], &PLUS[0]);
+		// sendCode(0, &sendBuffer[0], 67);
 		delay(1000); // Wait 1 second to make sure the aircon mode is switched
 	}
 	for (int i = 0; i < 7; i++) {
-		buildBuffer(&sendBuffer[0], &MINUS[0]);
-		sendCode(0, &sendBuffer[0], 67);
+		My_Sender.sendNEC(Minus,32);
+		// buildBuffer(&sendBuffer[0], &MINUS[0]);
+		// sendCode(0, &sendBuffer[0], 67);
 		delay(1000); // Wait 1 second to make sure the aircon mode is switched
 	}
 
 	/* FIFTH: switch to FAN mode */
 	acMode = acMode & MODE_CLR; // set mode bits to 0
 	acMode = acMode | MODE_FAN; // set mode bits to FAN mode
-	buildBuffer(&sendBuffer[0], &FAN[0]);
-	sendCode(0, &sendBuffer[0], 67);
+	My_Sender.sendNEC(Fan,32);
+	// buildBuffer(&sendBuffer[0], &FAN[0]);
+	// sendCode(0, &sendBuffer[0], 67);
 	delay(1000); // Wait 1 second to make sure the aircon mode is switched
 
 	/* SIXTH: switch AC off */
 	acMode = acMode & AC_CLR; // set status bits to 0
 	acMode = acMode | AC_OFF; // set status to aircon off
-	buildBuffer(&sendBuffer[0], &POWER[0]);
-	sendCode(0, &sendBuffer[0], 67);
+	My_Sender.sendNEC(On_Off,32);
+	// buildBuffer(&sendBuffer[0], &POWER[0]);
+	// sendCode(0, &sendBuffer[0], 67);
 	writeStatus();
 	doubleLedFlashStop();
 }
@@ -458,7 +497,7 @@ void checkPower() {
 		solarPower += avgSolarPower[i];
 	}
 	if (debugOn) {
-		String debugMsg = "checkPower calculated solarPower was " + String(solarPower);
+		String debugMsg = "checkPower calculated solarPower was " + String(solarPower/10);
 		sendDebug(debugMsg, OTA_HOST);
 	}
 
@@ -469,11 +508,13 @@ void checkPower() {
 	if (solarPower == 0) { // No solar panel production
 		if (powerStatus != 0) {
 			if ((acMode & AC_ON) == AC_ON) {
-				irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-				sendCmd();
+				My_Sender.sendNEC(Fan,32);
+				// irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
+				// sendCmd();
 				delay(1000);
-				irCmd = CMD_ON_OFF; // Switch off aircon
-				sendCmd();
+				My_Sender.sendNEC(On_Off,32);
+				// irCmd = CMD_ON_OFF; // Switch off aircon
+				// sendCmd();
 				powerStatus = 0;
 				mustBroadcast = true;
 				mustWriteStatus = true;
@@ -514,19 +555,23 @@ void checkPower() {
 				}
 				if (powerStatus != 0) {
 					if ((acMode & AC_ON) != AC_ON) { // Aircon might be already on (manually)
-						irCmd = CMD_ON_OFF; // Switch on aircon in FAN mode
-						sendCmd();
+						My_Sender.sendNEC(On_Off,32);
+						// irCmd = CMD_ON_OFF; // Switch on aircon in FAN mode
+						// sendCmd();
 						delay(1000);
 					}
 					if (powerStatus == 3) {
-						irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
-					} else {
-						irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
-					}
-					sendCmd();
-					if (irCmd == CMD_MODE_COOL) {
+						My_Sender.sendNEC(Cool,32);
+						// irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
 						restoreTempSetting();
+					} else {
+						My_Sender.sendNEC(Fan,32);
+						// irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
 					}
+					// sendCmd();
+					// if (irCmd == CMD_MODE_COOL) {
+					// 	restoreTempSetting();
+					// }
 
 					mustBroadcast = true;
 					mustWriteStatus = true;
@@ -537,14 +582,14 @@ void checkPower() {
 				// at +200 switch off aircon
 				// at -300 switch to cool mode
 				if (consPower > 200) { // consuming more than 200W
-					irCmd = CMD_ON_OFF; // Switch off aircon
+					// irCmd = CMD_ON_OFF; // Switch off aircon
 					powerStatus = 0;
 					if (debugOn) {
 						String debugMsg = "Status was 1, consumption > 200W, switch aircon off, status to 0";
 						sendDebug(debugMsg, OTA_HOST);
 					}
 				} else if (consPower < -300) { // production exceeds 300W
-					irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
+					// irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
 					powerStatus = 3;
 					if (debugOn) {
 						String debugMsg = "Status was 1, consumption < -300W, switch aircon to cool mode, status to 3";
@@ -552,10 +597,16 @@ void checkPower() {
 					}
 				}
 				if (powerStatus != 1) {
-					sendCmd();
-					if (irCmd == CMD_MODE_COOL) {
+					if (powerStatus == 0) {
+						My_Sender.sendNEC(On_Off,32);
+					} else {
+						My_Sender.sendNEC(Cool,32);
 						restoreTempSetting();
 					}
+					// sendCmd();
+					// if (irCmd == CMD_MODE_COOL) {
+					// 	restoreTempSetting();
+					// }
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
@@ -565,14 +616,14 @@ void checkPower() {
 				// at +300 switch to fan mode
 				// at -75 switch to cool mode
 				if (consPower > 300) { // consuming more than 300W
-					irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
+					// irCmd = CMD_MODE_FAN; // Switch aircon to FAN mode
 					powerStatus = 1;
 					if (debugOn) {
 						String debugMsg = "Status was 2, consumption > 300W, switch aircon to fan mode, status to 1";
 						sendDebug(debugMsg, OTA_HOST);
 					}
 				} else if (consPower < -75) { // over production more than 75W
-					irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
+					// irCmd = CMD_MODE_COOL; // Switch aircon to COOL mode
 					powerStatus = 3;
 					if (debugOn) {
 						String debugMsg = "Status was 2, consumption < -75W, switch aircon to cool mode, status to 3";
@@ -580,10 +631,16 @@ void checkPower() {
 					}
 				}
 				if (powerStatus != 2) { // If changed send command to air con
-					sendCmd();
-					if (irCmd == CMD_MODE_COOL) {
+					if (powerStatus == 1) {
+						My_Sender.sendNEC(Fan,32);
+					} else {
+						My_Sender.sendNEC(Cool,32);
 						restoreTempSetting();
 					}
+					// sendCmd();
+					// if (irCmd == CMD_MODE_COOL) {
+					// 	restoreTempSetting();
+					// }
 					mustBroadcast = true;
 					mustWriteStatus = true;
 					avgConsIndex = 0; // reset average calculation
@@ -592,11 +649,12 @@ void checkPower() {
 			case 3: // aircon is in cool mode
 				// at +400 switch to dry mode
 				if (consPower > 400) { // consuming more than 400W
-					irCmd = CMD_MODE_DRY; // Switch aircon to DRY mode
-					sendCmd();
-					savedAcTemp = acTemp & TEMP_MASK;
-					acTemp = acTemp & TEMP_CLR; // Dry mode resets AC temperature to 25
-					acTemp += 25;
+					My_Sender.sendNEC(Dry,32);
+					// irCmd = CMD_MODE_DRY; // Switch aircon to DRY mode
+					// sendCmd();
+					// savedAcTemp = acTemp & TEMP_MASK;
+					// acTemp = acTemp & TEMP_CLR; // Dry mode resets AC temperature to 25
+					// acTemp += 25;
 					powerStatus = 2;
 					mustBroadcast = true;
 					mustWriteStatus = true;
@@ -733,29 +791,34 @@ void restoreTempSetting() {
 		debugMsg = "Saved temperature setting = " + String(savedAcTemp);
 		sendDebug(debugMsg, OTA_HOST);
 	}
-	if ((acTemp & TEMP_MASK) != savedAcTemp) { // Coming from DRY mode?
+	// if ((acTemp & TEMP_MASK) != savedAcTemp) { // Coming from DRY mode?
+	if (savedAcTempByDry) { // Temperature changed because of switch to DRY mode?
 		byte tempChange;
 		if ((acTemp & TEMP_MASK) > savedAcTemp) {
 			tempChange =  (acTemp & TEMP_MASK) - savedAcTemp;
-			tempCmd = CMD_TEMP_MINUS;
+			tempCmd = Minus;
+			// tempCmd = CMD_TEMP_MINUS;
 			if (debugOn) {
 				String debugMsg = "Temp restore with CMD_TEMP_MINUS - Difference = " + String(tempChange);
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		} else {
 			tempChange =  savedAcTemp - (acTemp & TEMP_MASK);
-			tempCmd = CMD_TEMP_PLUS;
+			tempCmd = Plus;
+			// tempCmd = CMD_TEMP_PLUS;
 			if (debugOn) {
 				String debugMsg = "Temp restore with CMD_TEMP_PLUS - Difference = " + String(tempChange);
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		}
 		for (int i=0; i<tempChange; i++) { // Reset old temperature
-			irCmd = tempCmd;
-			sendCmd();
-			delay(500);
+			My_Sender.sendNEC(tempCmd,32);
+			// irCmd = tempCmd;
+			// sendCmd();
+			delay(1000);
 		}
 		acTemp = acTemp & TEMP_CLR;
 		acTemp = acTemp + savedAcTemp;
+		savedAcTempByDry = false;
 	}
 }

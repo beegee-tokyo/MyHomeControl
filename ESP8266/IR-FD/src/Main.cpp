@@ -55,16 +55,19 @@ void loop() {
 		// If AC is on, switch it to FAN low speed and then switch it off
 		if ((acMode & AC_ON) == AC_ON) { // AC is on
 			// Set mode to FAN
-			irCmd = CMD_MODE_FAN;
-			sendCmd();
+			My_Sender.sendNEC(Fan,32);
+			// irCmd = CMD_MODE_FAN;
+			// sendCmd();
 			delay(1000);
 			// Set fan speed to LOW
-			irCmd = CMD_FAN_LOW;
-			sendCmd();
+			My_Sender.sendNEC(L_Fan,32);
+			// irCmd = CMD_FAN_LOW;
+			// sendCmd();
 			delay(1000);
 			// Switch AC off
-			irCmd = CMD_ON_OFF;
-			sendCmd();
+			My_Sender.sendNEC(On_Off,32);
+			// irCmd = CMD_ON_OFF;
+			// sendCmd();
 			if (debugOn) {
 				String debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
 				sendDebug(debugMsg, OTA_HOST);
@@ -97,16 +100,19 @@ void loop() {
 					// If AC is on, switch it to FAN low speed and then switch it off
 					if ((acMode & AC_ON) == AC_ON) { // AC is on
 						// Set mode to FAN
-						irCmd = CMD_MODE_FAN;
-						sendCmd();
+						My_Sender.sendNEC(Fan,32);
+						// irCmd = CMD_MODE_FAN;
+						// sendCmd();
 						delay(1000);
 						// Set fan speed to LOW
-						irCmd = CMD_FAN_LOW;
-						sendCmd();
+						My_Sender.sendNEC(L_Fan,32);
+						// irCmd = CMD_FAN_LOW;
+						// sendCmd();
 						delay(1000);
 						// Switch AC off
-						irCmd = CMD_ON_OFF;
-						sendCmd();
+						My_Sender.sendNEC(On_Off,32);
+						// irCmd = CMD_ON_OFF;
+						// sendCmd();
 						delay(1000);
 					}
 					dayTime = false;
@@ -128,7 +134,8 @@ void loop() {
 					sendDebug(debugMsg, OTA_HOST);
 				}
 				irCmd = CMD_AUTO_ON;
-				sendCmd();
+				parseSocketCmd();
+				// sendCmd();
 				sendBroadCast();
 			}
 		}
