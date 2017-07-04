@@ -20,9 +20,8 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme"
 		tools:ignore="GoogleAppIndexingWarning">
-
 		<activity
-			android:name="tk.giesecke.myhomecontrol.MyHomeControl"
+			android:name=".Cl_MyHomeControl"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
@@ -32,42 +31,37 @@
 				<category android:name="android.intent.category.LAUNCHER"/>
 			</intent-filter>
 		</activity>
-
 		<activity
-			android:name="tk.giesecke.myhomecontrol.Utilities"
+			android:name=".Cl_Utilities"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
-
 		<activity
-			android:name="tk.giesecke.myhomecontrol.ChartHelper"
+			android:name=".solar.Cl_ChartHelper"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
-
-		<activity android:name="tk.giesecke.myhomecontrol.SPwidgetConfigureActivity">
+		<activity android:name=".solar.WiCo_SolarPanel">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
 			</intent-filter>
 		</activity>
 
 		<receiver
-			android:name="tk.giesecke.myhomecontrol.AutoStart"
+			android:name=".BR_AutoStart"
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED"/>
 			</intent-filter>
 		</receiver>
-
 		<receiver
-			android:name="tk.giesecke.myhomecontrol.EventReceiver"
+			android:name=".BR_Events"
 			android:enabled="true">
 		</receiver>
-
-		<receiver android:name="tk.giesecke.myhomecontrol.SecurityWidget">
+		<receiver android:name=".security.Wi_SecAlarm">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 				<action android:name="android.appwidget.action.APPWIDGET_DELETED"/>
@@ -77,104 +71,126 @@
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/security_widget_info"/>
+				android:resource="@xml/wi_sec_alarm"/>
 		</receiver>
-
-		<receiver android:name=".SPwidget">
+		<receiver android:name=".solar.Wi_SolarPanel">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/spwidget_info"/>
+				android:resource="@xml/wi_solar_panel"/>
 		</receiver>
-
-		<receiver android:name=".LightWidget">
+		<receiver android:name=".security.Wi_SecLight">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/light_widget_info"/>
+				android:resource="@xml/wi_sec_light"/>
 		</receiver>
-
-		<receiver android:name=".AirconWidget">
+		<receiver android:name=".aircon.Wi_Aircon">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/aircon_widget_info"/>
+				android:resource="@xml/wi_aircon"/>
 		</receiver>
-
-		<receiver android:name=".PanicButton">
+		<receiver android:name=".security.Wi_PanicButton">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/panic_button_info"/>
+				android:resource="@xml/wi_sec_panic"/>
 		</receiver>
-
-		<receiver android:name=".LightCtrlWidget">
+		<receiver android:name=".lights.Wi_LightCtrl">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
 
 			<meta-data
 				android:name="android.appwidget.provider"
-				android:resource="@xml/light_ctrl_widget_info"/>
+				android:resource="@xml/wi_light_ctrl"/>
 		</receiver>
 
 		<service
-			android:name=".SecurityWidgetClick"
+			android:name=".security.WiCl_SecAlarm"
 			android:exported="false">
 		</service>
-
 		<service
-			android:name=".StartBackgroundServices"
+			android:name=".Sv_StartBackgroundServices"
 			android:enabled="true">
 		</service>
-
 		<service
-			android:name=".SolarSyncDBService"
+			android:name=".solar.Sv_SolarSyncDB"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".LightWidgetClick"
+			android:name=".security.WiCl_SecLight"
 			android:exported="false">
 		</service>
-
 		<service
-			android:name=".AirconWidgetClick"
+			android:name=".aircon.WiCl_Aircon"
 			android:exported="false">
 		</service>
-
 		<service
-			android:name=".MessageListener"
-			android:exported="false"
+			android:name=".Sv_MessageListener"
+			android:enabled="true"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".security.WiCl_PanicButton"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".devices.Sv_CheckAvailDevices"
 			android:enabled="true">
 		</service>
-
 		<service
-			android:name=".PanicButtonClick"
+			android:name=".lights.WiCl_LightCtrl"
 			android:exported="false">
 		</service>
 
-		<service
-			android:name=".CheckAvailDevices"
-			android:enabled="true">
-		</service>
+		<receiver android:name=".security.Wi_SecCam">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/wi_sec_video"/>
+		</receiver>
+
+		<activity
+			android:name=".security.Cl_SecCamViewer"
+			android:label="@string/title_activity_sec_cam_viewer"
+			android:parentActivityName=".Cl_MyHomeControl"
+			android:theme="@style/AppTheme.NoActionBar">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value="tk.giesecke.myhomecontrol.Cl_MyHomeControl"/>
+		</activity>
+
+		<receiver android:name=".lights.Wi_ByLightCtrl">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/wi_by_light_ctrl_info"/>
+		</receiver>
 
 		<service
-			android:name=".LightCtrlWidgetClick"
+			android:name=".lights.WiCl_ByLight"
 			android:exported="false">
 		</service>
-
 	</application>
 
 </manifest>

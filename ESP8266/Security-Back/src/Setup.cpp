@@ -10,12 +10,12 @@ Ticker heartBeatTimer;
  * Initialization of GPIO pins, WiFi connection, timers and sensors
  */
 void setup() {
+
 	initLeds();
 	pinMode(pirPort, INPUT); // PIR signal
 	pinMode(relayPort, OUTPUT); // Relay trigger signal
 	pinMode(speakerPin, OUTPUT); // Loudspeaker/piezo signal
 	digitalWrite(relayPort, LOW); // Turn off Relay
-//	digitalWrite(speakerPin, LOW); // Speaker off
 	digitalWrite(speakerPin, HIGH); // Switch Piezo buzzer off
 
 	Serial.begin(115200);
@@ -24,6 +24,7 @@ void setup() {
 	Serial.println("====================");
 	Serial.println("ESP8266 Security Back");
 
+	// resetWiFiCredentials();
 	// Try to connect to WiFi with captive portal
 	ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Back");
 
@@ -33,7 +34,7 @@ void setup() {
 	} else {
 		Serial.println("");
 		Serial.print("Connected to ");
-		Serial.println(ssid);
+		Serial.println(ssidMHC);
 		Serial.print("IP address: ");
 		Serial.println(WiFi.localIP());
 	}
@@ -51,17 +52,21 @@ void setup() {
 	getWeatherTimer.attach(10, triggerGetWeather);
 
 	// Set initial time
-	setTime(getNtpTime());
-	if (!gotTime) { // Failed to get time from NTP server, retry once
-		setTime(getNtpTime());
+	if (!tryGetTime(debugOn)) {
+		tryGetTime(debugOn); // Failed to get time from NTP server, retry
+	}
+	if (gotTime) {
+		lastKnownYear = year();
+	} else {
+		lastKnownYear = 0;
 	}
 
-	// Initialize NTP client
-	setSyncProvider(getNtpTime);
-	setSyncInterval(3600); // Sync every hour
+	// // Initialize NTP client
+	// setSyncProvider(getNtpTime);
+	// setSyncInterval(21600); // Sync every 6 hours
 
-	// Start heart beat sending every 5 minutes
-	heartBeatTimer.attach(300, triggerHeartBeat);
+	// Start heart beat sending every 1 minute
+	heartBeatTimer.attach(60, triggerHeartBeat);
 
 	// Initialize interrupt for PIR signal
 	attachInterrupt(pirPort, pirTrigger, CHANGE);
@@ -96,7 +101,7 @@ void setup() {
 	// Reset boot status flag
 	inSetup = false;
 
-	// Start the tcp socket server to listen on port 6000
+	// Start the tcp socket server to listen on port tcpComPort
 	tcpServer.begin();
 
 	if (alarmOn) {

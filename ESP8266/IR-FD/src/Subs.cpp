@@ -35,17 +35,6 @@ void triggerTimerEnd() {
 }
 
 /**
- * Format int number as string with leading 0
- */
- String formatInt(int number) {
-	if (number < 10) {
-		return "0" + String(number);
-	} else {
-		return String(number);
-	}
- }
-
-/**
 	writeStatus
 	writes current status into status.txt
 */
@@ -67,8 +56,10 @@ bool writeStatus() {
 
 	root["acMode"] = acMode;
 	root["acTemp"] = acTemp;
+	root["savedAcTemp"] = savedAcTemp;
 	root["powerStatus"] = powerStatus;
 	root["onTime"] = onTime;
+	root["debugOn"] = debugOn;
 
 	String jsonTxt;
 	root.printTo(jsonTxt);
@@ -139,6 +130,14 @@ bool readStatus() {
 		}
 		return false;
 	}
+	if (root.containsKey("savedAcTemp")) {
+		acTemp = root["savedAcTemp"];
+	} else {
+		if (debugOn) {
+			sendDebug("Could not find savedAcTemp", OTA_HOST);
+		}
+		return false;
+	}
 	if (root.containsKey("powerStatus")) {
 		powerStatus = root["powerStatus"];
 	} else {
@@ -157,6 +156,15 @@ bool readStatus() {
 		onTime = 1;
 		return false;
 	}
+	if (root.containsKey("debugOn")) {
+		debugOn = root["debugOn"];
+	} else {
+		if (debugOn) {
+			sendDebug("Could not find debugOn", OTA_HOST);
+		}
+		onTime = 1;
+		return false;
+	}
 	if (debugOn) {
 		String debugMsg = "readStatus : acMode = " + String(acMode) + " acTemp = " + String(acTemp) + " powerStatus = " + String(powerStatus) + " onTime = " + String(onTime);
 		sendDebug(debugMsg, OTA_HOST);
@@ -166,113 +174,6 @@ bool readStatus() {
 		sendDebug(debugMsg, OTA_HOST);
 	}
 	return true;
-}
-
-/**
-	parseSocketCmd
-	Parse the received command
-*/
-void parseSocketCmd() {
-	String statResponse;
-	// The following commands are followed independant of AC on or off
-	switch (irCmd) {
-		case CMD_REMOTE_0: // Second aircon off
-			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
-				irCmd = 9999;
-			} else {
-				powerStatus = 0;
-				writeStatus();
-			}
-			break;
-		case CMD_REMOTE_1: // Second aircon fan mode
-			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
-				irCmd = 9999;
-			} else {
-				powerStatus = 1;
-				writeStatus();
-			}
-			break;
-		case CMD_REMOTE_2: // Second aircon cool mode
-			if ((acMode & AUTO_ON) != AUTO_ON) { // Are we in auto mode?
-				irCmd = 9999;
-			} else {
-				powerStatus = 2;
-				writeStatus();
-			}
-			break;
-		case CMD_AUTO_ON: // Command to (re)start auto control
-			acMode = acMode & AUTO_CLR;
-			acMode = acMode | AUTO_ON;
-			writeStatus();
-			break;
-		case CMD_AUTO_OFF: // Command to stop auto control
-			acMode = acMode & AUTO_CLR;
-			acMode = acMode | AUTO_OFF;
-			writeStatus();
-			powerStatus = 0; // Independendant from current status it will be set to 0!
-			irCmd = 9999; // No further actions necessary
-			sendBroadCast(); // Send broadcast about the change
-			break;
-		case CMD_OTHER_TIMER: // Timer on/off
-			break;
-		case CMD_RESET: // Command to reset device
-			writeStatus();
-			break;
-		default: // Handle other commands
-			if ((acMode & AC_ON) == AC_ON) { // AC is on
-				switch (irCmd) {
-					case CMD_ON_OFF: // Switch aircon On/Off
-						break;
-					case CMD_MODE_AUTO: // Switch to Auto
-						break;
-					case CMD_MODE_COOL: // Switch to Cool
-						break;
-					case CMD_MODE_DRY: // Switch to Dry
-						break;
-					case CMD_MODE_FAN: // Switch to Fan
-						break;
-					case CMD_FAN_HIGH: // Switch to High Fan
-						break;
-					case CMD_FAN_MED: // Switch to Medium Fan
-						break;
-					case CMD_FAN_LOW: // Switch to Low Fan
-						break;
-					case CMD_FAN_SPEED: // Switch to next fan speed
-						break;
-					case CMD_TEMP_PLUS: // Temp +
-						break;
-					case CMD_TEMP_MINUS: // Temp -
-						break;
-					case CMD_OTHER_SWEEP: // Switch on/off sweep
-						break;
-					case CMD_OTHER_TURBO: // Switch on/off turbo
-						if (((acMode & MODE_COOL) == MODE_COOL) || ((acMode & MODE_AUTO) == MODE_AUTO)) {
-						} else {
-							irCmd = 9999;
-						}
-						break;
-					case CMD_OTHER_ION: // Switch on/off ion
-						break;
-					default:
-						String wrongCmd = "fail - unknown command: " + String(irCmd);
-						irCmd = 9999;
-						break;
-				}
-			} else { // AC is off
-				switch (irCmd) {
-					case CMD_ON_OFF: // Switch aircon on
-						// On manual ON request switch off auto mode
-						acMode = acMode & AUTO_CLR;
-						acMode = acMode | AUTO_OFF;
-						writeStatus();
-						break;
-					default:
-						irCmd = 9999;
-						break;
-				}
-			}
-			break;
-	}
 }
 
 /**

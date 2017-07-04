@@ -25,7 +25,7 @@ void setup() {
 	Serial.print("IP address: ");
 	Serial.println(WiFi.localIP());
 
-	// Start the tcp socket server to listen on port 6000
+	// Start the tcp socket server to listen on port tcpComPort
 	tcpServer.begin();
 
 	// Initialize IR led
@@ -50,13 +50,12 @@ void setup() {
 		acMode = acMode | AUTO_ON | TIM_OFF | AC_OFF | MODE_FAN | FAN_LOW | TUR_OFF | SWP_OFF | ION_OFF;
 		acTemp = acTemp & TEMP_CLR; // set temperature bits to 0
 		acTemp = acTemp + 25; // set temperature bits to 25
+		savedAcTemp = 25; // Set saved AC temperature setting
 	}
 
-	/* Send boot info debug message */
-	sendStatusToDebug();
-
-	/** Set saved AC temperature setting */
-	savedAcTemp = acTemp & TEMP_MASK;
+	if (acTemp == 0 & TEMP_MASK) acTemp += 16;
+	if (savedAcTemp == 0) savedAcTemp += 16;
+	writeStatus();
 
 	// If device was not in auto power mode before reset set powerStatus to 0
 	if ((acMode & AUTO_MASK) == AUTO_OFF) {
@@ -88,9 +87,9 @@ void setup() {
 	// Set initial time
 	setTime(getNtpTime());
 
-	// Initialize NTP client
-	setSyncProvider(getNtpTime);
-	setSyncInterval(43200); // Sync every 12 hours
+	// // Initialize NTP client
+	// setSyncProvider(getNtpTime);
+	// setSyncInterval(43200); // Sync every 12 hours
 
 	// If time is after 5pm (17) and before 8am we stop automatic function and switch off the aircon
 	if (gotTime) {
@@ -102,12 +101,8 @@ void setup() {
 	}
 	writeStatus();
 
-	// Start sending status update every 5 minutes (5x60=300 seconds)
-	sendUpdateTimer.attach(300, triggerSendUpdate);
-
-	// Send aircon restart message
-	sendBroadCast();
-	inSetup = false;
+	// Start sending status update every 1 minute
+	sendUpdateTimer.attach(60, triggerSendUpdate);
 
 	// Start FTP server
 	ftpSrv.begin(DEVICE_ID,DEVICE_ID);    //username, password for ftp.  set ports in ESP8266FtpServer.h  (default 21, 50009 for PASV)
@@ -131,4 +126,11 @@ void setup() {
 	// Start OTA server.
 	ArduinoOTA.setHostname(DEVICE_ID);
 	ArduinoOTA.begin();
+
+  /* Send boot info debug message */
+  sendStatusToDebug();
+
+  // Send aircon restart message
+	sendBroadCast();
+	inSetup = false;
 }

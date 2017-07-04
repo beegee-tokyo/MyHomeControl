@@ -7,6 +7,7 @@
 $dir = 'sqlite:/mnt/sda1/s.db';
 // Instantiate PDO connection object and failure msg
 $dbh = new PDO($dir) or die("cannot open database");
+date_default_timezone_set("Asia/Manila");
 
 // Get year limiter
 // limiter is send by URL/query.php?date=yy&get=all

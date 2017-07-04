@@ -20,6 +20,7 @@
 //
 $dateSelect = $_GET['date'];
 $syncRest = $_GET['get'];
+date_default_timezone_set("Asia/Manila");
 
 // Specify your sqlite database name and path
 $dir = 'sqlite:/mnt/sda1/'.substr($dateSelect,0,5).'.db';

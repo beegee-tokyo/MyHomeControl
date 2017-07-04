@@ -15,6 +15,8 @@ String secFrontStatus = "";
 String secBackStatus = "";
 /** Status of the security camera */
 String secCamStatus = "";
+/** Status of the bedroom light */
+String secLightStatus = "";
 
 // Timekeepers for last received status message
 /** Time in seconds since last status from AC1 */
@@ -50,6 +52,8 @@ void sendToMQTT() {
 		debugMsg = "/SEB length:" + String(secBackStatus.length()) + " - " + secBackStatus;
 		sendDebug(debugMsg, OTA_HOST);
 		debugMsg = "/CM1 length:" + String(secCamStatus.length()) + " - " + secCamStatus;
+		sendDebug(debugMsg, OTA_HOST);
+		debugMsg = "/LB1 length:" + String(secLightStatus.length()) + " - " + secLightStatus;
 		sendDebug(debugMsg, OTA_HOST);
 	}
 
@@ -122,6 +126,12 @@ void sendToMQTT() {
     mqttMsg.length = secCamStatus.length();
     mqttClient.publish(&mqttMsg);
 	}
+	if (secLightStatus.length() != 0) {
+    mqttMsg.topic = (char *)"/LB1";
+    mqttMsg.payload = (char *)&secLightStatus[0];
+    mqttMsg.length = secLightStatus.length();
+    mqttClient.publish(&mqttMsg);
+	}
 
 	spmStatus = "";
 	inWeatherStatus = "";
@@ -133,8 +143,9 @@ void sendToMQTT() {
 /**
  * Answer request on tcp socket server
  * Commands:
- * 		d to enable debugging over TCP
- *			r to reset saved WiFi configuration
+ *		d to enable debugging over TCP
+ *		r to reset saved WiFi configuration
+ *		x to reset the device
  *
  * @param httpClient
  *              Connected WiFi client
@@ -176,7 +187,7 @@ void socketServer(WiFiClient tcpClient) {
 		}
 
 		return;
-	// Delete saved WiFi configuration
+		// Delete saved WiFi configuration
 	} else if (req.substring(0, 1) == "r") {
 		sendDebug("Delete WiFi credentials and reset device", OTA_HOST);
 		wifiManager.resetSettings();
@@ -185,6 +196,15 @@ void socketServer(WiFiClient tcpClient) {
 		ESP.reset();
 		delay(5000);
 		return;
+		// Reset device
+	} else if (req.substring(0, 1) == "x") {
+		sendDebug("Reset device", OTA_HOST);
+		tcpClient.flush();
+		tcpClient.stop();
+		// Reset the ESP
+		delay(3000);
+		ESP.reset();
+		delay(5000);
 	}
 }
 /**
@@ -254,6 +274,8 @@ void messageReceived(String topic, String payload, char * bytes, unsigned int le
 		deviceIP = ipAC2;
 	} else if (deviceID == "cm1") { // front camera
 		deviceIP = ipCam1;
+	} else if (deviceID == "lb1") { // bedroom lights
+		deviceIP = ipBedLight;
 	} else {
 		actLedFlashStop();
 		return;
@@ -345,9 +367,7 @@ void sendCmd(IPAddress serverIP, String deviceCmd) {
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpClient;
 
-	const int httpPort = 6000;
-
-	if (!tcpClient.connect(serverIP, httpPort)) {
+	if (!tcpClient.connect(serverIP, tcpComPort)) {
 		if (debugOn) {
 			String debugMsg = "connection to " + String(serverIP[0]) + "." + String(serverIP[1]) + "." + String(serverIP[2]) + "." + String(serverIP[3]) + " failed";
 			sendDebug(debugMsg, OTA_HOST);
@@ -428,6 +448,9 @@ void getUDPbroadcast(int udpMsgLength) {
 	}
 	if (device == "cm1") { // Broadcast from security camera
 		parseCAMPacket(jsonIn);
+	}
+	if (device == "lb1") { // Broadcast from bedroom lights
+		parseLightPacket(jsonIn);
 	}
 	doubleLedFlashStop();
 }
@@ -531,12 +554,21 @@ void parseSPMPacket (JsonObject& jsonIn) {
 }
 
 /**
-	parseSecFrontPacket
-	Parse front security status packet
+	parseCAMPacket
+	Parse security camera status packet
 */
 void parseCAMPacket (JsonObject& jsonIn) {
 	secCamStatus = "";
 	jsonIn.printTo(secCamStatus);
+}
+
+/**
+	parseLightPacket
+	Parse bedroom light status packet
+*/
+void parseLightPacket (JsonObject& jsonIn) {
+	secLightStatus = "";
+	jsonIn.printTo(secLightStatus);
 }
 
 /**
@@ -550,7 +582,7 @@ void sendWEIBroadCast(String broadCast) {
 		sendDebug(debugMsg, OTA_HOST);
 	}
 	// Broadcast per UTP to LAN
-	udpClientServer.beginPacketMulticast(multiIP, 5000, ipAddr);
+	udpClientServer.beginPacketMulticast(multiIP, udpBcPort, ipAddr);
 	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();

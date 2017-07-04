@@ -1,15 +1,15 @@
 #include <Setup.h>
 
 void handleTCP(String command) {
-	int cmd = 0;
+	int cmdInteger = 0;
 	// Brightness value received
 	if (command.substring(0, 2) == "b=") {
 		if (isDigit(command.charAt(2))) {
 			if (isDigit(command.charAt(3))) {
 				if (isDigit(command.charAt(4))) {
-					cmd = command.substring(2, 5).toInt();
-					if ((cmd >= 140) & (cmd <= 255)) {
-						brightness = cmd;
+					cmdInteger = command.substring(2, 5).toInt();
+					if ((cmdInteger >= 140) & (cmdInteger <= 255)) {
+						brightness = cmdInteger;
 						// set the brightness of led pin:
 						analogWrite(led, brightness);
 						if (brightness >= 222) {
@@ -26,8 +26,8 @@ void handleTCP(String command) {
 	} else if (command.substring(0, 2) == "c=") {
 		if (isDigit(command.charAt(2))) {
 			if (isDigit(command.charAt(3))) {
-				cmd = command.substring(2, 4).toInt();
-				handleIR(0x80BF0000+cmdArray[cmd], false);
+				cmdInteger = command.substring(2, 4).toInt();
+				handleIR(0x80BF0000+cmdArray[cmdInteger], false);
 			}
 		}
 		// Preferred dimmed brightness value received
@@ -35,9 +35,9 @@ void handleTCP(String command) {
 		if (isDigit(command.charAt(2))) {
 			if (isDigit(command.charAt(3))) {
 				if (isDigit(command.charAt(4))) {
-					cmd = command.substring(2, 5).toInt();
-					if ((cmd >= 140) & (cmd <= 255)) {
-						dimValue = cmd;
+					cmdInteger = command.substring(2, 5).toInt();
+					if ((cmdInteger >= 140) & (cmdInteger <= 255)) {
+						dimValue = cmdInteger;
 						writeStatus();
 					}
 					sendBroadCast();
@@ -49,6 +49,20 @@ void handleTCP(String command) {
 		sendBroadCast();
 		// delay(10000);
 		// sendTCPResponse();
+		// Reset device
+	} else if (command.substring(0, 1) == "x") {
+		sendBroadCast();
+		// Reset the ESP & Arduino
+		cmd.SysRestart();
+		// In case that didn't work reset the ESP & Arduino separate
+		cmd.EspRestart();
+		// Reset the Arduino
+		// start watchdog with the provided prescaller
+	  wdt_enable(WDTO_15MS);
+	  // wait 15ms
+	  // without sending the reset signal by using
+	  // the wdt_reset() method
+	  while(1) {}
 	}
 }
 

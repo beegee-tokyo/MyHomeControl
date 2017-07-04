@@ -7,8 +7,8 @@
 /** Build time */
 const char compileDate[] = __DATE__ " " __TIME__;
 
-/** WiFiServer class to create TCP socket server on port 6000 */
-WiFiServer tcpServer(6000);
+/** WiFiServer class to create TCP socket server on port tcpComPort */
+WiFiServer tcpServer(tcpComPort);
 
 /** FTPServer class to create simple ftp server */
 FtpServer ftpSrv;
@@ -32,27 +32,6 @@ boolean heartBeatTriggered = false;
 /** Flag if panic button was pressed */
 boolean panicOn = false;
 
-/** Melody as delay time */
-//long melody[] = {1700, 1700, 1136, 1136, 1432, 1915, 1915, 1700 ,1700 ,1136 ,1136 ,1700 ,1700 ,1915 ,1915 ,1432 ,1432 ,1700 ,1700 ,1136 ,1136 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1432 ,1915 ,1915 ,1700 ,1700 ,1136 ,1136 ,1136 ,1136 ,1275 ,1275 ,1275 ,1275};
-/** Number of melody[] notes */
-//int melodyLenght = 40;
-// Bido Bido sound
-//long melody[] = {1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275, 1915, 1915, 1915, 1915, 1275, 1275, 1275, 1275};
-/** Number of melody[] notes */
-//int melodyLenght = 40;
-/** Alarm melody Martinshorn */
-long melody[] PROGMEM = {NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3 ,NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_C4, NOTE_A3, NOTE_A3, NOTE_A3, NOTE_A3};
-/** Number of melody[] notes */
-int melodyLenght PROGMEM = 56;
-// long melody[] = {2272, 2272, 2272, 2272, 3400, 3400, 3400, 3400, 2272, 2272, 2272, 2272, 1700, 1700, 1700, 1700};
-// /** Number of melody[] notes */
-// int melodyLenght = 16;
-
-/** Melody position pointer */
-int melodyPoint = 0;
-/** Time to play a single tune in milliseconds */
-int melodyTuneTime PROGMEM = 125;
-
 /** Flag if lights should be switched on after movement detection */
 boolean switchLights = false;
 /** Flag for PIR status change */
@@ -63,8 +42,11 @@ boolean lightLDRTriggered = false;
 boolean hasDetection = false;
 /** Flag for light switched off */
 boolean lightOffTriggered = false;
+
 /** Relay on delay time in seconds */
-int onTime = 120;
+int onTime = 300;
+/** Bug capture trial year of last good NTP time received */
+int lastKnownYear = 0;
 
 /** Flag for boot status */
 boolean inSetup = true;

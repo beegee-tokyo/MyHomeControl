@@ -7,6 +7,7 @@
 <body>
 <h1>Backup Databases to DropBox</h1>
 <?php
+	date_default_timezone_set("Asia/Manila");
     # Include the Dropbox SDK libraries
     require_once "dropbox/autoload.php";
     use \Dropbox as dbx;

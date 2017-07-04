@@ -15,6 +15,7 @@ void parseSecFrontPacket (JsonObject& jsonIn);
 void parseSecBackPacket (JsonObject& jsonIn);
 void parseSPMPacket (JsonObject& jsonIn);
 void parseCAMPacket (JsonObject& jsonIn);
+void parseLightPacket (JsonObject& jsonIn);
 void sendWEIBroadCast(String broadCast);
 
 void getHomeInfo(boolean all);

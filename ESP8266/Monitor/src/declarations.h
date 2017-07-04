@@ -11,8 +11,8 @@ MQTTClient mqttClient;
 FtpServer ftpSrv;
 /** WiFiUDP class for listening to UDP broadcasts */
 WiFiUDP udpListener;
-/** WiFiServer class to create TCP socket server on port 6000 */
-WiFiServer tcpServer(6000);
+/** WiFiServer class to create TCP socket server on port tcpComPort */
+WiFiServer tcpServer(tcpComPort);
 
 //#define BREADBOARD
 

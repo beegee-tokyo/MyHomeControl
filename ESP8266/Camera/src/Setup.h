@@ -1,6 +1,7 @@
 #ifndef Setup_h
 #define Setup_h
 
+#include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <Ticker.h>
 #include <ESP8266WiFi.h>
@@ -13,7 +14,9 @@
 #include <ESP8266FtpServer.h>
 #include <TimeLib.h>
 
+#include <DNSServer.h>
 #include <WiFiManager.h>
+#include <ESP8266WebServer.h>
 
 #include <Adafruit_VC0706.h>
 #include <SoftwareSerial.h>

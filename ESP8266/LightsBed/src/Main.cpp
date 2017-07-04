@@ -12,8 +12,8 @@ void loop() {
 	// process any callbacks coming from esp_link
 	esp.Process();
 
-	// Send status every 30 seconds
-	if ((millis() - lastTime) > 30000) {
+	// Send status every 60 seconds
+	if ((millis() - lastTime) > 60000) {
 		sendBroadCast();
 		lastTime = millis();
 	}

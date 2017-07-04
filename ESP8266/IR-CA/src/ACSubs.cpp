@@ -371,12 +371,12 @@ void sendCmd() {
 					sendCmd();
 					delay(1000);
 					if (debugOn) {
-						String debugMsg = "Timer stopped manually, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+						String debugMsg = "Timer stopped manually, switch off AC (" + String(hour()) + ":" + getDigits(minute()) + ")";
 						sendDebug(debugMsg, OTA_HOST);
 					}
 				} else {
 					if (debugOn) {
-						String debugMsg = "Timer stopped manually, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+						String debugMsg = "Timer stopped manually, AC was already off (" + String(hour()) + ":" + getDigits(minute()) + ")";
 						sendDebug(debugMsg, OTA_HOST);
 					}
 				}
@@ -404,7 +404,7 @@ void sendCmd() {
 				// every hour and a counter is used if timer time is 2 hours or more
 				timerEndTimer.attach_ms(3600000, triggerTimerEnd);
 				if (debugOn) {
-					String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + formatInt(minute()) + ") for " + onTime + "hours";
+					String debugMsg = "Start of timer, switch on AC (" + String(hour()) + ":" + getDigits(minute()) + ") for " + onTime + "hours";
 					sendDebug(debugMsg, OTA_HOST);
 				}
 				isValidCmd = true;

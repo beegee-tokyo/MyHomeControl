@@ -11,6 +11,9 @@ static const char* host = "secb";
  */
 void sendAlarm(boolean makeShort) {
 	comLedFlashStart(0.2);
+	if (debugOn) {
+		sendDebug("sendAlarm", OTA_HOST);
+	}
 	/** Buffer for Json object */
 	DynamicJsonBuffer jsonBuffer;
 
@@ -29,18 +32,16 @@ void sendAlarm(boolean makeShort) {
 	WiFiUDP udpClientServer;
 
 	// Start UDP client for sending broadcasts
-	udpClientServer.begin(5000);
+	udpClientServer.begin(udpBcPort);
 
-	int connectionOK = udpClientServer.beginPacketMulticast(multiIP, 5000, ipAddr);
+	int connectionOK = udpClientServer.beginPacketMulticast(multiIP, udpBcPort, ipAddr);
 	if (connectionOK == 0) { // Problem occured!
 		comLedFlashStop();
 		udpClientServer.stop();
 		if (debugOn) {
 			sendDebug("UDP write multicast failed", OTA_HOST);
 		}
-		// reConnectWiFi();
-		// connectWiFi();
-		wmIsConnected = false;
+		// wmIsConnected = false;
 		return;
 	}
 	String broadCast;
@@ -69,9 +70,11 @@ void sendAlarm(boolean makeShort) {
  *		s	to get short status message
  *		p	to switch on alarm sound (panic button function)
  *		i	to get detailed status information
- *		b	to switch on the lights for 2 minutes
+ *		b	to switch on the lights for 5 minutes
  *		r	to reset saved WiFi configuration
  *		d	to enable TCP debug
+ *		x to reset the device
+ *		y=YYYY,MM,DD,HH,mm,ss to set time and date
  *
  * @param httpClient
  *		Connected WiFi client
@@ -80,7 +83,7 @@ void socketServer(WiFiClient tcpClient) {
 
 	// Get data from client until he stops the connection or timeout occurs
 	long timeoutStart = now();
-	String req = "123456789012345";
+	String req = "123456789012345678901";
 	char inByte;
 	byte index = 0;
 	while (tcpClient.connected()) {
@@ -88,6 +91,7 @@ void socketServer(WiFiClient tcpClient) {
 			inByte = tcpClient.read();
 			req[index] = inByte;
 			index++;
+			if (index >= 21) break; // prevent buffer overflow
 		}
 		if (now() > timeoutStart + 3000) { // Wait a maximum of 3 seconds
 			break; // End the while loop because of timeout
@@ -159,15 +163,10 @@ void socketServer(WiFiClient tcpClient) {
 		// PANIC!!!! set the alarm off
 	} else if (req.substring(0, 1) == "p") {
 		if (panicOn) {
-			// alarmTimer.detach();
-			// analogWrite(speakerPin, 0);
-			// digitalWrite(speakerPin, LOW); // Switch off speaker
 			digitalWrite(speakerPin, HIGH); // Switch off piezo
 			digitalWrite(relayPort, LOW); // Switch off lights
 			panicOn = false;
 		} else {
-			// melodyPoint = 0; // Reset melody pointer to 0
-			// alarmTimer.attach_ms(melodyTuneTime, playAlarmSound); // Start alarm sound
 			digitalWrite(speakerPin, LOW); // Switch on piezo
 			digitalWrite(relayPort, HIGH); // Switch on lights
 			panicOn = true;
@@ -181,9 +180,9 @@ void socketServer(WiFiClient tcpClient) {
 		// Send back long status over UDP
 		sendAlarm(false);
 		return;
-	// Switch lights on for 2 minutes
+	// Switch lights on for 5 minutes
 	} else if (req.substring(0, 1) == "b") {
-		// Switch on lights for 2 minutes
+		// Switch on lights for 5 minutes
 		relayOffTimer.detach();
 		relayOffTimer.once(onTime, relayOff);
 		digitalWrite(relayPort, HIGH);
@@ -199,6 +198,7 @@ void socketServer(WiFiClient tcpClient) {
 		} else {
 			sendDebug("Debug over TCP is off", OTA_HOST);
 		}
+		writeStatus();
 		return;
 	// Delete saved WiFi configuration
 	} else if (req.substring(0, 1) == "r") {
@@ -209,6 +209,60 @@ void socketServer(WiFiClient tcpClient) {
 		ESP.reset();
 		delay(5000);
 		return;
+		// Date/time received
+	} else if (req.substring(0, 2) == "y=") {
+		int nowYear = 0;
+		int nowMonth = 0;
+		int nowDay = 0;
+		int nowHour = 0;
+		int nowMinute = 0;
+		int nowSecond = 0;
+
+		if (isDigit(req.charAt(2))
+		&& isDigit(req.charAt(3))
+		&& isDigit(req.charAt(4))
+		&& isDigit(req.charAt(5))
+		&& isDigit(req.charAt(7))
+		&& isDigit(req.charAt(8))
+		&& isDigit(req.charAt(10))
+		&& isDigit(req.charAt(11))
+		&& isDigit(req.charAt(13))
+		&& isDigit(req.charAt(14))
+		&& isDigit(req.charAt(16))
+		&& isDigit(req.charAt(17))
+		&& isDigit(req.charAt(19))
+		&& isDigit(req.charAt(20))) {
+			String cmd = req.substring(2, 6);
+			int nowYear = cmd.toInt();
+			cmd = req.substring(7, 9);
+			int nowMonth = cmd.toInt();
+			cmd = req.substring(10, 12);
+			int nowDay = cmd.toInt();
+			cmd = req.substring(13, 15);
+			int nowHour = cmd.toInt();
+			cmd = req.substring(16, 18);
+			int nowMinute = cmd.toInt();
+			cmd = req.substring(19, 21);
+			int nowSecond = cmd.toInt();
+
+			if (debugOn) {
+				String debugMsg = "Changed time to " + String(nowYear) + "-" + String(nowMonth) + "-" + String(nowDay) + " " + String(nowHour) + ":" + String(nowMinute) + ":" + String(nowSecond);
+				sendDebug(debugMsg, OTA_HOST);
+			}
+			setTime(nowHour,nowMinute,nowSecond,nowDay,nowMonth,nowYear);
+			gotTime = true;
+		} else {
+			String debugMsg = "Received wrong time format: " + req;
+			sendDebug(debugMsg, OTA_HOST);
+		}
+		// Reset device
+	} else if (req.substring(0, 1) == "x") {
+		sendDebug("Reset device", OTA_HOST);
+		writeStatus();
+		// Reset the ESP
+		delay(3000);
+		ESP.reset();
+		delay(5000);
 	}
 }
 
@@ -217,16 +271,68 @@ void triggerPic() {
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpClient;
 
-	const int httpPort = 6000;
-	if (!tcpClient.connect(ipSpare2, httpPort)) {
-		Serial.println("connection to backyard camera " + String(ipSpare2[0]) + "." + String(ipSpare2[1]) + "." + String(ipSpare2[2]) + "." + String(ipSpare2[3]) + " failed");
+	if (debugOn) {
+		sendDebug("triggerPic", OTA_HOST);
+	}
+
+	if (!tcpClient.connect(ipSpare, tcpComPort)) {
+		Serial.println("connection to backyard camera " + String(ipSpare[0]) + "." + String(ipSpare[1]) + "." + String(ipSpare[2]) + "." + String(ipSpare[3]) + " failed");
 		tcpClient.stop();
 		comLedFlashStop();
-		wmIsConnected = false;
+		// wmIsConnected = false;
 		return;
 	}
 
-	tcpClient.print("t");
+	tcpClient.print("b");
+
+	tcpClient.flush();
+	tcpClient.stop();
+	comLedFlashStop();
+}
+
+void triggerVid(int cameraNum) {
+	comLedFlashStart(0.1);
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpClient;
+
+	if (debugOn) {
+		sendDebug("triggerVid", OTA_HOST);
+	}
+
+	if (!tcpClient.connect(ipCam2, tcpComPort)) {
+		if (debugOn) {
+			String debugMsg = "connection to frontyard camera " + String(ipCam2[0]) + "." + String(ipCam2[1]) + "." + String(ipCam2[2]) + "." + String(ipCam2[3]) + " failed";
+			sendDebug(debugMsg, OTA_HOST);
+		}
+		tcpClient.stop();
+		comLedFlashStop();
+		return;
+	}
+
+	tcpClient.print(String(cameraNum));
+
+	tcpClient.flush();
+	tcpClient.stop();
+	comLedFlashStop();
+}
+
+void triggerLights() {
+	comLedFlashStart(0.1);
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpClient;
+
+	if (debugOn) {
+		sendDebug("triggerLights", OTA_HOST);
+	}
+
+	if (!tcpClient.connect(ipByardLight, tcpComPort)) {
+		Serial.println("connection to backyard lights " + String(ipByardLight[0]) + "." + String(ipByardLight[1]) + "." + String(ipByardLight[2]) + "." + String(ipByardLight[3]) + " failed");
+		tcpClient.stop();
+		comLedFlashStop();
+		return;
+	}
+
+	tcpClient.print("b");
 
 	tcpClient.flush();
 	tcpClient.stop();

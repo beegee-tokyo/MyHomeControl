@@ -19,6 +19,7 @@
 	<body bgcolor="#000000">
 	<font color="white">
 		<?php
+			date_default_timezone_set("Asia/Manila");
 			$daySelected = $_GET['day'];
 			$plotType = $_GET['type'];
 

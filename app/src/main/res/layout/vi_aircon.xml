@@ -1,0 +1,113 @@
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	app:layout_behavior="@string/appbar_scrolling_view_behavior"
+	tools:context="tk.giesecke.myhomecontrol.Cl_MyHomeControl"
+	tools:showIn="@layout/activity_my_home_control"
+	android:id="@+id/view_aircon"
+	android:visibility="invisible"
+	tools:ignore="ButtonStyle">
+
+	<include layout="@layout/vi_fuji_denzo"
+			 android:layout_width="fill_parent"
+			 android:layout_height="wrap_content"
+			 android:id="@+id/fuji_denzo"/>
+
+	<include layout="@layout/vi_carrier"
+			 android:layout_width="fill_parent"
+			 android:layout_height="wrap_content"
+			 android:id="@+id/carrier"/>
+
+	<include layout="@layout/vi_american"
+	         android:layout_width="fill_parent"
+	         android:layout_height="wrap_content"
+	         android:id="@+id/american"/>
+
+	<TextView
+		android:id="@+id/aircon_status"
+		android:layout_width="fill_parent"
+		android:layout_height="match_parent"
+		android:layout_below="@+id/ll_weather_status"/>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_centerHorizontal="true"
+		android:layout_below="@+id/carrier"
+		android:orientation="horizontal"
+		android:id="@+id/ll_weather_status">
+
+		<!--<ImageView-->
+		<!--android:layout_width="wrap_content"-->
+		<!--android:layout_height="wrap_content"-->
+		<!--android:scaleType="fitXY"-->
+		<!--android:src="@drawable/ic_house_frame"-->
+		<!--android:contentDescription="@string/action_refresh"-->
+		<!--android:layout_alignStart="@+id/tv_weather_in"-->
+		<!--android:layout_alignEnd="@+id/tv_weather_in"-->
+		<!--android:layout_alignLeft="@+id/tv_weather_in"-->
+		<!--android:layout_alignRight="@+id/tv_weather_in"-->
+		<!--android:layout_marginLeft="-10dp"-->
+		<!--android:layout_marginRight="-10dp"-->
+		<!--android:layout_alignParentTop="true"/>-->
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_weather_in"
+			android:visibility="visible"
+			android:text="@string/weather_initial"
+			android:gravity="center"
+			android:layout_marginTop="10dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginStart="2dp"
+			android:layout_weight="1"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:textSize="14sp"/>
+
+		<!--<ImageView-->
+		<!--android:layout_width="wrap_content"-->
+		<!--android:layout_height="wrap_content"-->
+		<!--android:scaleType="fitXY"-->
+		<!--android:src="@drawable/ic_outside_frame"-->
+		<!--android:contentDescription="@string/action_refresh"-->
+		<!--android:layout_alignStart="@+id/tv_weather_out"-->
+		<!--android:layout_alignEnd="@+id/tv_weather_out"-->
+		<!--android:layout_alignLeft="@+id/tv_weather_out"-->
+		<!--android:layout_alignRight="@+id/tv_weather_out"-->
+		<!--android:layout_marginLeft="-10dp"-->
+		<!--android:layout_marginRight="-10dp"-->
+		<!--android:layout_alignParentTop="true"/>-->
+
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_weather_out"
+			android:visibility="visible"
+			android:text="@string/weather_initial"
+			android:gravity="center"
+			android:layout_marginTop="10dp"
+			android:layout_marginRight="2dp"
+			android:layout_marginEnd="2dp"
+			android:layout_weight="1"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:textSize="14sp"/>
+
+	</LinearLayout>
+
+	<!--<ProgressBar-->
+		<!--style="?android:attr/progressBarStyleSmall"-->
+		<!--android:layout_width="300dp"-->
+		<!--android:layout_height="300dp"-->
+		<!--android:layout_centerInParent="true"-->
+		<!--android:background="@android:color/transparent"-->
+		<!--android:visibility="invisible"/>-->
+
+</RelativeLayout>

@@ -74,7 +74,7 @@ void loop() {
 				udpListener.stop();
 				// Try to reset WiFi connection
 				reConnectWiFi();
-				udpListener.begin(5000);
+				udpListener.begin(udpBcPort);
 			}
 			// Handle OTA updates
 			ArduinoOTA.handle();

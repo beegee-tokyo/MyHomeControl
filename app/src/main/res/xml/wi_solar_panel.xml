@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+					xmlns:tools="http://schemas.android.com/tools"
+					android:configure="tk.giesecke.myhomecontrol.solar.WiCo_SolarPanel"
+					android:initialKeyguardLayout="@layout/wi_solar_panel_s"
+					android:initialLayout="@layout/wi_solar_panel_s"
+					android:minHeight="40dp"
+					android:minWidth="40dp"
+					android:previewImage="@drawable/wi_solar_widget"
+					android:resizeMode="horizontal|vertical"
+					android:updatePeriodMillis="0"
+					android:widgetCategory="home_screen"
+					tools:ignore="UnusedAttribute">
+</appwidget-provider>

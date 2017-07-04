@@ -1,6 +1,6 @@
 import select, socket, subprocess, json
 
-port = 5000  # where do you expect to get a msg?
+port = 9997  # where do you expect to get a msg?
 bufferSize = 1024 # whatever you need
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -1,4 +1,5 @@
 #include "ntp.h"
+#include "wifi.h"
 
 /** Size of NTP time server packet */
 const int NTP_PACKET_SIZE = 48; // NTP time is in the first 48 bytes of message
@@ -12,13 +13,27 @@ bool gotTime = false;
  * @return <code>bool</code>
  *		true if time was updated
  */
-bool tryGetTime() {
+bool tryGetTime(boolean debugOn) {
 	time_t dayTime = 0;
 	for (uint8_t trials = 0; trials < 10; trials++) {
 		dayTime = getNtpTime();
-		if (dayTime != 0) {
+		if ((dayTime != 0) && gotTime) {
 			setTime(dayTime);
+			if (debugOn) {
+				String debugMsg = "Got time after " + String(trials) + " trials";
+				sendDebug(debugMsg, "NTP");
+			}
 			return true;
+		}
+		if (dayTime == 0) {
+			if (debugOn) {
+				sendDebug("dayTime == 0", "NTP");
+			}
+		}
+		if (!gotTime) {
+			if (debugOn) {
+				sendDebug("gotTime == false", "NTP");
+			}
 		}
 	}
 	return false;

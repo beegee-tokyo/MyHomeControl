@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:initialLayout="@layout/wi_sec_cam"
+                    android:minHeight="40dp"
+                    android:minWidth="40dp"
+                    android:previewImage="@drawable/wi_sec_video"
+                    android:resizeMode="horizontal|vertical"
+                    android:updatePeriodMillis="0">
+</appwidget-provider>

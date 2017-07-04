@@ -64,7 +64,7 @@ bool ftpConnect() {
   if (!ftpReceive()) {
 		if (debugOn) {
 			String debugMsg = "FTP: Wrong username: " + String(ftpBuf);
-			sendDebug(debugMsg, OTA_HOST);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
     ftpClient.stop();
     return false;
@@ -75,7 +75,7 @@ bool ftpConnect() {
   if (!ftpReceive()) {
 		if (debugOn) {
 			String debugMsg = "FTP: Wrong password: " + String(ftpBuf);
-			sendDebug(debugMsg, OTA_HOST);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
     ftpClient.stop();
     return false;
@@ -86,7 +86,7 @@ bool ftpConnect() {
   if (!ftpReceive()) {
 		if (debugOn) {
 			String debugMsg = "FTP: Binary file mode not available: " + String(ftpBuf);
-			sendDebug(debugMsg, OTA_HOST);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
     ftpClient.stop();
     return false;
@@ -97,7 +97,7 @@ bool ftpConnect() {
   if (!ftpReceive()) {
 		if (debugOn) {
 			String debugMsg = "FTP: Streaming mode not available: " + String(ftpBuf);
-			sendDebug(debugMsg, OTA_HOST);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
     ftpClient.stop();
     return false;
@@ -108,7 +108,7 @@ bool ftpConnect() {
   if (!ftpReceive()) {
 		if (debugOn) {
 			String debugMsg = "FTP: Passive mode not available: " + String(ftpBuf);
-			sendDebug(debugMsg, OTA_HOST);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
     ftpClient.stop();
     return false;
@@ -128,7 +128,7 @@ bool ftpConnect() {
 
   if (!ftpDataClient.connect(ftpDataServer, hiPort)) {
 		if (debugOn) {
-			sendDebug("FTP: Data connection failed", OTA_HOST);
+			sendRpiDebug("FTP: Data connection failed", OTA_HOST);
 		}
     ftpClient.stop();
     return false;

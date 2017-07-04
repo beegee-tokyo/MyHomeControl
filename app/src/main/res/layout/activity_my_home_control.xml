@@ -6,7 +6,7 @@
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:fitsSystemWindows="true"
-	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
+	tools:context="tk.giesecke.myhomecontrol.Cl_MyHomeControl"
 	tools:ignore="DuplicateIds">
 
 	<android.support.design.widget.AppBarLayout
@@ -25,16 +25,16 @@
 
 	</android.support.design.widget.AppBarLayout>
 
-	<include layout="@layout/view_security"/>
+	<include layout="@layout/vi_security"/>
 
-	<include layout="@layout/view_solar"/>
+	<include layout="@layout/vi_solar_panel"/>
 
-	<include layout="@layout/view_aircon"/>
+	<include layout="@layout/vi_aircon"/>
 
-	<include layout="@layout/view_devdebug"/>
+	<include layout="@layout/vi_debug"/>
 
-	<include layout="@layout/view_seccam"/>
+	<include layout="@layout/vi_seccam"/>
 
-	<include layout="@layout/view_lights"/>
+	<include layout="@layout/vi_lights"/>
 
 </android.support.design.widget.CoordinatorLayout>

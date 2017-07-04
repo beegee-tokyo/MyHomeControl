@@ -28,26 +28,6 @@ void relayOff() {
 }
 
 /**
- * Plays the tune defined with melody[] endless until ticker is detached
- */
-void playAlarmSound() {
-	/** Current tone to be played */
-	int toneLength = melody[melodyPoint];
-	analogWriteFreq(toneLength / 2);
-	analogWrite(speakerPin, toneLength / 4);
-
-	melodyPoint ++;
-	if (melodyPoint == melodyLenght) {
-		melodyPoint = 0;
-		if (!hasDetection && !panicOn) {
-			alarmTimer.detach();
-			analogWrite(speakerPin, 0);
-			digitalWrite(speakerPin, LOW); // Switch off speaker
-		}
-	}
-}
-
-/**
  * Interrupt routine called if status of PIR detection status changes
  */
 void pirTrigger() {
@@ -55,16 +35,9 @@ void pirTrigger() {
 		pirTriggered = true;
 		hasDetection = true;
 		if (alarmOn) {
-			// melodyPoint = 0; // Reset melody pointer to 0
-			// alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
 			digitalWrite(speakerPin,LOW); // Switch Piezo buzzer on
 		}
 		actLedFlashStart(0.2);
-		// if (switchLights) {
-		// 	relayOffTimer.detach();
-		// 	relayOffTimer.once(onTime, relayOff);
-		// 	digitalWrite(relayPort, HIGH);
-		// }
 	} else { // No detection
 		pirTriggered = true;
 		hasDetection = false;
@@ -129,6 +102,12 @@ void createStatus(JsonObject& root, boolean makeShort) {
 		root["re"] = lastRebootReason; //root["reboot"] = lastRebootReason;
 
 		root["dt"] = digitalClockDisplay();
+
+		if (debugOn) {
+			root["db"] = 1;
+		} else {
+			root["db"] = 0;
+		}
 	}
 }
 
@@ -294,6 +273,15 @@ bool readStatus() {
 		autoActivOff = root["af"]; //autoActivOff = root["auto_off"];
 	} else {
 		autoActivOff = 8;
+	}
+	if (root.containsKey("db")) {
+		if (root["db"] == 0) {
+			debugOn = false;
+		} else {
+			debugOn = true;
+		}
+	} else {
+		debugOn = false;
 	}
 	return true;
 }

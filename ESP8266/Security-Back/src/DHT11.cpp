@@ -15,6 +15,11 @@ void getTemperature() {
 		}
 		return;
 	}
+	/******************************************************* */
+	/* Trying to calibrate the humidity values               */
+	/******************************************************* */
+	// newHumidValue = 10*sqrt(newHumidValue);
+	newHumidValue = 20+newHumidValue;
 	humidValue = newHumidValue;
 	tempValue = newTempValue;
 }

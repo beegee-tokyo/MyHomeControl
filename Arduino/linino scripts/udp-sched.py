@@ -10,7 +10,7 @@ values = bridgeclient()
 s = sched.scheduler(time.time, time.sleep)
 def sendBroadCast(sc): 
 	UDP_IP = "192.168.0.255"   #Local network broadcast mask
-	UDP_PORT = 5000
+	UDP_PORT = 9997
 	#MESSAGE = str(sys.argv[1])
 	CONSUMPTION = values.get('C')
 	print CONSUMPTION

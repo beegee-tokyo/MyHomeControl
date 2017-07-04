@@ -12,3 +12,6 @@ boolean takeShot();
 // FTP client functions
 byte ftpReceive();
 bool ftpConnect();
+
+// Ticker functions
+void triggerHeartBeat();

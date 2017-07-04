@@ -1,13 +1,13 @@
 #include "Setup.h"
 
 /** IP address for tcp server */
-char * const tcpServer PROGMEM = (char *) "192.168.0.151";
+char * const tcpServer PROGMEM = (char *) "192.168.0.58"; // was 192.168.0.151
 /** Port for TCP socket server */
-uint16_t const tcpPort PROGMEM = 6000;
+uint16_t const tcpPort PROGMEM = 9998; // TODO use global declaration wifiAPinfo.h -> tcpComPort instead
 /** IP address for UDP client */
 char * const udpServer PROGMEM = (char *) "192.168.0.255"; // Broadcast to given network ip mask
 /** Port for UDP client */
-uint16_t const udpPort PROGMEM = 5000;
+uint16_t const udpPort PROGMEM = 9997; // TODO use global declaration wifiAPinfo.h -> udpBcPort instead
 
 /** Serial port to ESP8266 */
 SC16IS750 i2cuart = SC16IS750(SC16IS750_PROTOCOL_I2C,SC16IS750_ADDRESS_AA);

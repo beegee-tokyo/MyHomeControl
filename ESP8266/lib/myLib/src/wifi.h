@@ -18,5 +18,5 @@ void resetWiFiCredentials();
 void reConnectWiFi();
 int32_t getRSSI();
 void sendDebug(String debugMsg, String senderID);
-
+void sendRpiDebug(String debugMsg, String senderID);
 #endif

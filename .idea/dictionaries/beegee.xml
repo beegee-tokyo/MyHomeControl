@@ -5,11 +5,13 @@
       <w>addr</w>
       <w>attacher</w>
       <w>autooff</w>
+      <w>camwidget</w>
       <w>debugview</w>
       <w>devdebug</w>
       <w>edittext</w>
       <w>inet</w>
       <w>jsonrpc</w>
+      <w>mjpg</w>
       <w>moni</w>
       <w>mqstat</w>
       <w>mqttconn</w>

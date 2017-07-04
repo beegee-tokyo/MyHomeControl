@@ -23,7 +23,7 @@ When doing breadboard test, enable this define
 
 /** Build time */
 extern const char compileDate [];
-/** WiFiServer class to create TCP socket server on port 6000 */
+/** WiFiServer class to create TCP socket server on port tcpComPort */
 extern WiFiServer tcpServer;
 /** FTPServer class to create simple ftp server */
 extern FtpServer ftpSrv;
@@ -47,15 +47,8 @@ extern bool debugOn;
 extern int onTime;
 /** Flag for WiFi connection */
 extern bool wmIsConnected;
-
-/** Alarm melody */
-extern long melody [];
-/** Number of melody[] notes */
-extern int melodyLenght;
-/** Melody position pointer */
-extern int melodyPoint;
-/** Time to play a single tune in milliseconds */
-extern int melodyTuneTime;
+/** Bug capture trial year of last good NTP time received */
+extern int lastKnownYear;
 
 /** Flag if lights should be switched on after movement detection */
 extern boolean switchLights;

@@ -6,9 +6,6 @@
 
 //Function definitions
 
-// UI functions
-void playAlarmSound();
-
 // Timer trigger functions
 void triggerGetLDR();
 void triggerHeartBeat();
@@ -31,4 +28,5 @@ void sendAlarm(boolean makeShort);
 void socketServer(WiFiClient tcpClient);
 void sendLightStatus(boolean switchOn);
 void triggerPic();
+void triggerVid(int cameraNum);
 #endif

@@ -13,7 +13,7 @@ extern const char compileDate[];
 
 /** WiFiClient class to create TCP communication */
 extern WiFiClient tcpClientOut;
-/** WiFiServer class to create TCP socket server on port 6000 */
+/** WiFiServer class to create TCP socket server on port tcpComPort */
 extern WiFiServer tcpServer;
 /** FTPServer class to create simple ftp server */
 extern FtpServer ftpSrv;
@@ -203,3 +203,8 @@ extern double consPower;
 extern double avgConsPower[];
 /** Last temperature set by user before switching to DRY mode */
 extern byte savedAcTemp;
+/** Last temperature saved by switching to DRY mode */
+extern bool savedAcTempByDry;
+
+/** Port for red LED */
+extern uint8_t actLED;

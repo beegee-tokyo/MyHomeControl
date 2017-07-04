@@ -15,12 +15,22 @@ void loop() {
 		return;
 	}
 
+ 	// Trial to catch time changing Bug
+ 	if ((lastKnownYear != 0) && (year() != lastKnownYear) && gotTime) {
+ 		if (!tryGetTime(debugOn)) {
+ 			tryGetTime(debugOn);
+ 		}
+ 		if (gotTime) {
+ 			lastKnownYear = year();
+ 		}
+ 	}
+
 	wdt_reset();
 	/* Handle new PIR status if available
 	*	if there is a detection
 	*	- the detection led starts to flash
 	*	- the relay is switched on (if flag switchLights is true)
-	*	- alarm sound is played (if flag switchLights is true)
+	*	- piezo alarm buzzer is activated (if flag switchLights is true)
 	*	- msgText is set to detection message
 	*	if detection is finished
 	*	- the detection led stops flashing
@@ -30,8 +40,6 @@ void loop() {
 		pirTriggered = false;
 		if (hasDetection) { // Detection of movement
 			if (alarmOn) {
-			// 	melodyPoint = 0; // Reset melody pointer to 0
-			// 	alarmTimer.attach_ms(melodyTuneTime, playAlarmSound);
 				sendAlarm(true);
 			}
 			// actLedFlashStart(0.2);
@@ -42,6 +50,7 @@ void loop() {
 				}
 				relayOffTimer.once(onTime, relayOff);
 				digitalWrite(relayPort, HIGH);
+				triggerLights(); // Switch on other backyard light
 			}
 			// if (alarmOn || switchLights) {
 			// 	triggerPic(); // Trigger picture from security camera
@@ -50,9 +59,7 @@ void loop() {
 				sendDebug("Detection interrupt from PIR pin", OTA_HOST);
 			}
 		} else { // No detection
-			// actLedFlashStop();
-			if (alarmOn) { // If alarm is active, continue to flash slowly
-				// actLedFlashStart(1);
+			if (alarmOn) { // If alarm is active, send status message
 				sendAlarm(true);
 			}
 			if (debugOn) {
@@ -63,7 +70,6 @@ void loop() {
 
 	if (lightOffTriggered) {
 		lightOffTriggered = false;
-		// relayOffTimer.detach();
 		sendAlarm(true);
 		if (debugOn) {
 			sendDebug("lightOffTriggered", OTA_HOST);
@@ -81,6 +87,9 @@ void loop() {
 	// Handle new request on tcp socket server if available
 	WiFiClient tcpClient = tcpServer.available();
 	if (tcpClient) {
+		if (debugOn) {
+			sendDebug("tcpClient connected", OTA_HOST);
+		}
 		comLedFlashStart(0.2);
 		socketServer(tcpClient);
 		comLedFlashStop();
@@ -109,19 +118,26 @@ void loop() {
 
 	wdt_reset();
 	if (heartBeatTriggered) {
+		if (!WiFi.isConnected()) {
+			if (debugOn) {
+				sendDebug("Lost WiFi connection", OTA_HOST);
+			}
+		}
 		if (!wmIsConnected) { // Connection to WiFi failed, retry to connect
 			// Try to connect to WiFi with captive portal
 			ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Back");
 		}
-		if (!gotTime) { // Got no time from the NTP server, retry to get it
-			setTime(getNtpTime());
-		}
+ 		if (!gotTime) { // Got no time from the NTP server, retry to get it
+ 			if (!tryGetTime(debugOn)) {
+ 				tryGetTime(debugOn); // Failed to get time from NTP server, retry
+ 			}
+ 		}
 		heartBeatTriggered = false;
 		// Stop the tcp socket server
 		tcpServer.stop();
-		// Restart the tcp socket server to listen on port 6000
-		tcpServer.begin();
 		// Give a "I am alive" signal
 		sendAlarm(true);
+		// Restart the tcp socket server to listen on port tcpComPort
+		tcpServer.begin();
 	}
 }

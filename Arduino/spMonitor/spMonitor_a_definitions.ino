@@ -5,8 +5,8 @@
  * Optional additional measurement of luminosity.
  * Optional additional measurement of in/output to electricity grid
  *
- * @author Bernd Giesecke
- * @version 0.2 beta August 19, 2015.
+ *@author Bernd Giesecke
+ *@version 1.0 April 16, 2017.
  */
 
 #include <Wire.h>
@@ -28,7 +28,7 @@ unsigned long lastMeasure;
 /** Timer for saving */
 unsigned long lastSave;
 /** Timer for reset */
-//unsigned long lastReset;
+unsigned long lastReset;
 /** Current month used for database */
 unsigned int thisMonth = 0;
 
@@ -70,7 +70,7 @@ double collPower[2];
 int collCount[3];
 
 /** Listen to the default port 5555, the Yún webserver
-   will forward there all the HTTP requests you send */
+	 will forward there all the HTTP requests you send */
 YunServer server;
 /** Instance of client for incoming and outgoing HTTP requests */
 YunClient client;

@@ -6,8 +6,6 @@ WiFiUDP udpClientServer;
 /**
 	 sendBroadCast
 	 send updated status over LAN
-	 - to my gcm server for broadcast to
-	 		registered Android devices
 	 - by UTP broadcast over local lan
 */
 void sendBroadCast() {
@@ -87,11 +85,11 @@ void sendBroadCast() {
 	// Broadcast per UTP to LAN
 	String broadCast;
 	root.printTo(broadCast);
-	udpClientServer.beginPacketMulticast(multiIP, 5000, ipAddr);
+	udpClientServer.beginPacketMulticast(multiIP, udpBcPort, ipAddr);
 	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
-	udpClientServer.beginPacket(ipMonitor,5000);
+	udpClientServer.beginPacket(ipMonitor,udpBcPort);
 	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();
@@ -102,14 +100,46 @@ void sendBroadCast() {
 /**
 	socketServer
 	answer request on tcp socket server
-	returns status to client
-*/
+	* Commands:
+  * 	c=00 AC on/off
+  *		c=10 Mode Auto (ca1 only)
+  *		c=11 Mode Cool
+  * 	c=12 Mode Dry
+  * 	c=13 Mode Fan
+  * 	c=20 Fan High (fd1 only)
+	* 	c=21 Fan Medium (fd1 only)
+	* 	c=22 Fan Low (fd1 only)
+	* 	c=23 Fan Speed (ca1 only)
+	* 	c=30 Temp plus
+	* 	c=31 Temp minus
+	* 	c=40 Timer (fd1 only)
+	* 	c=41 Sweep (ca1 only)
+	* 	c=42 Turbo (ca1 only)
+	* 	c=43 Ion (ca1 only)
+	* 	c=70 Reset
+	* 	c=71 AC init
+	* 	c=80 Remote 00
+	* 	c=81 Remote 01
+	* 	c=82 Remote 02
+	* 	c=98 Auto on
+	* 	c=99 Auto off
+	*		t=h Timer on time (1...9)(fd1 only)
+	*		s	to get short status message
+	*		d	to enable TCP debug
+	*		i	AC init request
+	*		r	to reset saved WiFi configuration
+	*		x to reset the device
+	*		y=YYYY,MM,DD,HH,mm,ss to set time and date
+	*
+	* @param httpClient
+	*		Connected WiFi client
+	*/
 void socketServer(WiFiClient tcpClient) {
 	comLedFlashStart(0.4);
 
 	// Get data from client until he stops the connection or timeout occurs
 	long timeoutStart = now();
-	String req = "1234567890";
+	String req = "1234567890123456789012";
 	String cmd;
 	char inByte;
 	byte index = 0;
@@ -118,6 +148,7 @@ void socketServer(WiFiClient tcpClient) {
 			inByte = tcpClient.read();
 			req[index] = inByte;
 			index++;
+			if (index >= 21) break; // prevent buffer overflow
 		}
 		if (now() > timeoutStart + 3000) { // Wait a maximum of 3 seconds
 			break; // End the while loop because of timeout
@@ -156,7 +187,53 @@ void socketServer(WiFiClient tcpClient) {
 			}
 			writeStatus();
 		}
-		// // toggle debugging
+		// Date/time received
+	} else if (req.substring(0, 2) == "y=") {
+		int nowYear = 0;
+		int nowMonth = 0;
+		int nowDay = 0;
+		int nowHour = 0;
+		int nowMinute = 0;
+		int nowSecond = 0;
+
+		if (isDigit(req.charAt(2))
+		&& isDigit(req.charAt(3))
+		&& isDigit(req.charAt(4))
+		&& isDigit(req.charAt(5))
+		&& isDigit(req.charAt(7))
+		&& isDigit(req.charAt(8))
+		&& isDigit(req.charAt(10))
+		&& isDigit(req.charAt(11))
+		&& isDigit(req.charAt(13))
+		&& isDigit(req.charAt(14))
+		&& isDigit(req.charAt(16))
+		&& isDigit(req.charAt(17))
+		&& isDigit(req.charAt(19))
+		&& isDigit(req.charAt(20))) {
+			cmd = req.substring(2, 6);
+			int nowYear = cmd.toInt();
+			cmd = req.substring(7, 9);
+			int nowMonth = cmd.toInt();
+			cmd = req.substring(10, 12);
+			int nowDay = cmd.toInt();
+			cmd = req.substring(13, 15);
+			int nowHour = cmd.toInt();
+			cmd = req.substring(16, 18);
+			int nowMinute = cmd.toInt();
+			cmd = req.substring(19, 21);
+			int nowSecond = cmd.toInt();
+
+			if (debugOn) {
+				String debugMsg = "Changed time to " + String(nowYear) + "-" + String(nowMonth) + "-" + String(nowDay) + " " + String(nowHour) + ":" + String(nowMinute) + ":" + String(nowSecond);
+				sendDebug(debugMsg, OTA_HOST);
+			}
+			setTime(nowHour,nowMinute,nowSecond,nowDay,nowMonth,nowYear);
+			gotTime = true;
+		} else {
+			String debugMsg = "Received wrong time format: " + req;
+			sendDebug(debugMsg, OTA_HOST);
+		}
+		// toggle debugging
 	} else if (req.substring(0, 1) == "d"){
 		debugOn = !debugOn;
 		if (debugOn) {
@@ -164,6 +241,9 @@ void socketServer(WiFiClient tcpClient) {
 		} else {
 			sendDebug("Debug over TCP is off", OTA_HOST);
 		}
+		// send status
+	} else if (req.substring(0, 1) == "s"){
+		// Status sent after every TCP request!
 		// initialization request received
 	} else if (req.substring(0, 1) == "i") {
 		irCmd = CMD_INIT_AC;
@@ -171,6 +251,15 @@ void socketServer(WiFiClient tcpClient) {
 	} else if (req.substring(0, 1) == "r") {
 		sendDebug("Delete WiFi credentials and reset device", OTA_HOST);
 		wifiManager.resetSettings();
+		// Reset the ESP
+		delay(3000);
+		ESP.reset();
+		delay(5000);
+		// Reset device
+	} else if (req.substring(0, 1) == "x") {
+		sendDebug("Reset device", OTA_HOST);
+		// Save last status before reset
+		writeStatus();
 		// Reset the ESP
 		delay(3000);
 		ESP.reset();

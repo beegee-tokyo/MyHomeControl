@@ -6,8 +6,8 @@
  * Optional additional measurement of luminosity.
  * Optional additional measurement of in/output to electricity grid
  *
- * @author Bernd Giesecke
- * @version 0.2 beta August 19, 2015.
+ *@author Bernd Giesecke
+ *@version 1.0 April 16, 2017.
  */
 
 /* spMonitor_a_definitions => includes and global variables */

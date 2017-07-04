@@ -142,25 +142,40 @@ int32_t getRSSI() {
 void sendDebug(String debugMsg, String senderID) {
 	doubleLedFlashStart(0.5);
 	/** WiFiClient class to create TCP communication */
-	WiFiClient tcpClient;
+	WiFiClient tcpDebugClient;
 
-	// ipDebug[0] = 192;
-	// ipDebug[1] = 168;
-	// ipDebug[2] = 0;
-	// ipDebug[3] = 150;
-
-	const int httpPort = 9999;
-	if (!tcpClient.connect(ipDebug, httpPort)) {
-		Serial.println("connection to Debug PC " + String(ipDebug[0]) + "." + String(ipDebug[1]) + "." + String(ipDebug[2]) + "." + String(ipDebug[3]) + " failed");
-		tcpClient.stop();
+	if (!tcpDebugClient.connect(ipDebug, tcpDebugPort)) {
+		Serial.println("connection to Debug Android " + String(ipDebug[0]) + "." + String(ipDebug[1]) + "." + String(ipDebug[2]) + "." + String(ipDebug[3]) + " failed");
+		tcpDebugClient.stop();
 		doubleLedFlashStop();
 		return;
 	}
 
 	// String sendMsg = OTA_HOST;
 	debugMsg = senderID + " " + debugMsg;
-	tcpClient.print(debugMsg);
+	tcpDebugClient.print(debugMsg);
 
-	tcpClient.stop();
+	tcpDebugClient.stop();
+	doubleLedFlashStop();
+}
+
+// For debug over TCP to Raspberry Pi
+void sendRpiDebug(String debugMsg, String senderID) {
+	doubleLedFlashStart(0.5);
+	/** WiFiClient class to create TCP communication */
+	WiFiClient tcpDebugClient;
+
+	if (!tcpDebugClient.connect(ipRaspi, tcpDebugPort)) {
+		Serial.println("connection to Debug PC " + String(ipRaspi[0]) + "." + String(ipRaspi[1]) + "." + String(ipRaspi[2]) + "." + String(ipRaspi[3]) + " failed");
+		tcpDebugClient.stop();
+		doubleLedFlashStop();
+		return;
+	}
+
+	// String sendMsg = OTA_HOST;
+	debugMsg = senderID + " " + debugMsg;
+	tcpDebugClient.print(debugMsg);
+
+	tcpDebugClient.stop();
 	doubleLedFlashStop();
 }

@@ -36,7 +36,7 @@ extern MQTTClient mqttClient;
 extern FtpServer ftpSrv;
 /** WiFiUDP class for listening to UDP broadcasts */
 extern WiFiUDP udpListener;
-/** WiFiServer class to create TCP socket server on port 6000 */
+/** WiFiServer class to create TCP socket server on port tcpComPort */
 extern WiFiServer tcpServer;
 
 /** IP address of this module */

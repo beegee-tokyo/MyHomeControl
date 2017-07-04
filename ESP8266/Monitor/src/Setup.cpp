@@ -41,8 +41,28 @@ void setup() {
 	Serial.begin(115200);
 	Serial.println();
 
+// wifiManager.resetSettings();
 	// Try to connect to WiFi with captive portal
 	ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Monitor");
+
+// static const char* ssid2 = "MyLTE";
+// static const char* pw2 = "teresa1963";
+// doubleLedFlashStart(1);
+//
+// // Set a timeout of 180 seconds before returning
+// wifiManager.setConfigPortalTimeout(180);
+// // Try to connect to known network
+// if (!wifiManager.autoConnect(ssid2,pw2)) {
+// 	// TODO new feature: instead of resetting here, return IPAddress of NULL and set flag for failed connection
+// 	// Set flag for failed connection
+// 	wmIsConnected = false;
+// 	Serial.println("Connection failed");
+// 	// // If timeout occured try to reset the ESP
+// 	// delay(3000);
+// 	// ESP.reset();
+// 	// delay(5000);
+// }
+// doubleLedFlashStop();
 
 	if (WiFi.status() == WL_CONNECTED) {
 		ucg_print_ln("Connected to ", false);
@@ -74,17 +94,18 @@ void setup() {
 	}
 
 	// Start UDP listener
-	udpListener.begin(5000);
+	udpListener.begin(udpBcPort);
 
 	ucg_print_ln("Setting time", false);
 	// Set initial time
 	setTime(getNtpTime());
-	// Set initial time
-	setTime(getNtpTime());
+	if (!gotTime) { // Failed to get time from NTP server, retry once
+		setTime(getNtpTime());
+	}
 
 	// Initialize NTP client
 	setSyncProvider(getNtpTime);
-	setSyncInterval(3600); // Sync every hour
+	setSyncInterval(43200); // Sync every 12 hours
 
 	// Connect to MQTT broker
 	mqttClient.begin(mqttBroker, mqttReceiver);
@@ -111,9 +132,22 @@ void setup() {
 		ucg_print_ln("Connected to MQTT", false);
 	}
 
+	// Set MQTT last will
+	mqttClient.setWill("/DEV/MONITOR", "Dead");
+
+	// Subscribe to /CMD topic
 	mqttClient.subscribe("/CMD");
 
-	// Start the tcp socket server to listen on port 6000
+	// Push device identification
+	MQTTMessage mqttMsg;
+  mqttMsg.retained = true;
+	mqttMsg.topic = (char *)"/DEV/MONITOR";
+	mqttMsg.payload = (char *)mqttUser;
+	mqttMsg.length = 4; // TODO how to get length of mqttMsg
+	mqttClient.publish(&mqttMsg);
+
+
+	// Start the tcp socket server to listen on port tcpComPort
 	tcpServer.begin();
 
 	// Start FTP server

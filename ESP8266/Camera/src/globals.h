@@ -11,10 +11,8 @@ extern const char compileDate[];
 	#define OTA_HOST "cm1" // Host name for OTA updates
 #endif
 
-/** WiFiServer class to create TCP socket server on port 6000 */
+/** WiFiServer class to create TCP socket server on port tcpComPort */
 extern WiFiServer tcpServer;
-// /** FTPServer class to create simple ftp server */
-extern FtpServer ftpSrv;
 /** FTP client */
 extern WiFiClient ftpClient;
 /** External FTP server for data transfer*/
@@ -41,6 +39,8 @@ extern boolean otaRunning;
 extern bool debugOn;
 /** Last time NTP sync was performed */
 extern time_t lastSyncTime;
+/** Flag if heart beat was triggered */
+extern boolean heartBeatTriggered;
 
 /** Flag for broadcast status & consumption */
 extern boolean sendUpdateTriggered;
@@ -53,6 +53,8 @@ extern SoftwareSerial cameraconnection;
 extern Adafruit_VC0706 cam;
 // Flag if camera was found
 extern boolean hasCamera;
+/** Name of the last saved picture */
+extern char filename[];
 
 /** Flashlight LED output */
 extern int flashLED;

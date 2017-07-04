@@ -1,0 +1,14 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/rlSecCamwidget"
+                android:background="@android:color/transparent"
+                android:padding="@dimen/widget_margin">
+
+	<ImageView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:src="@drawable/wi_sec_video"
+		android:scaleType="fitXY"
+		android:contentDescription="@string/bt_status_txt"/>
+</RelativeLayout>

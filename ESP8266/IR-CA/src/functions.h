@@ -7,9 +7,6 @@ void triggerGetPower();
 void triggerSendUpdate();
 void triggerTimerEnd();
 
-// Other utilities
-String formatInt(int number);
-
 // Status functions
 bool writeStatus();
 bool readStatus();

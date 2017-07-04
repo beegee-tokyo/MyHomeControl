@@ -31,22 +31,11 @@ void triggerSendUpdate() {
 */
 void triggerTimerEnd() {
 	timerCounter++;
-	if (timerCounter == onTime) {
+	if (timerCounter >= onTime) {
 		timerEndTriggered = true;
 		timerCounter = 0;
 	}
 }
-
-/**
- * Format int number as string with leading 0
- */
- String formatInt(int number) {
-	if (number < 10) {
-		return "0" + String(number);
-	} else {
-		return String(number);
-	}
- }
 
 /**
 	writeStatus
@@ -72,6 +61,7 @@ bool writeStatus() {
 	root["acTemp"] = acTemp;
 	root["powerStatus"] = powerStatus;
 	root["onTime"] = onTime;
+	root["debugOn"] = debugOn;
 
 	String jsonTxt;
 	root.printTo(jsonTxt);
@@ -142,6 +132,14 @@ bool readStatus() {
 		}
 		return false;
 	}
+	if (root.containsKey("savedAcTemp")) {
+		acTemp = root["savedAcTemp"];
+	} else {
+		if (debugOn) {
+			sendDebug("Could not find savedAcTemp", OTA_HOST);
+		}
+		return false;
+	}
 	if (root.containsKey("powerStatus")) {
 		powerStatus = root["powerStatus"];
 	} else {
@@ -156,6 +154,15 @@ bool readStatus() {
 	} else {
 		if (debugOn) {
 			sendDebug("Could not find onTime", OTA_HOST);
+		}
+		onTime = 1;
+		return false;
+	}
+	if (root.containsKey("debugOn")) {
+		debugOn = root["debugOn"];
+	} else {
+		if (debugOn) {
+			sendDebug("Could not find debugOn", OTA_HOST);
 		}
 		onTime = 1;
 		return false;

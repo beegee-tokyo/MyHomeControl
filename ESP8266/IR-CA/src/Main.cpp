@@ -11,9 +11,10 @@ void loop() {
 		return;
 	}
 
-	// In case we don't have a time from NTP, retry
+	// In case we don't have a time from NTP or local server, retry
 	if (!gotTime) {
-		setTime(getNtpTime());
+		sendDebug("tryGetTime", OTA_HOST);
+		tryGetTime(false);
 	}
 
 	// Handle new request on tcp socket server if available
@@ -55,7 +56,7 @@ void loop() {
 			byte lastFanSpeed = acMode & FAN_MASK;
 			// Set fan speed to LOW
 			// If in high speed send command once to get into low speed mode
-			if (lastFanSpeed == 2) { 
+			if (lastFanSpeed == 2) {
 				irCmd = CMD_FAN_SPEED;
 				sendCmd();
 				delay(1000);
@@ -70,16 +71,18 @@ void loop() {
 			irCmd = CMD_ON_OFF;
 			sendCmd();
 			if (debugOn) {
-				String debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+				String debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + getDigits(minute()) + ")";
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		} else {
 			if (debugOn) {
-				String debugMsg = "End of timer, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+				String debugMsg = "End of timer, AC was already off (" + String(hour()) + ":" + getDigits(minute()) + ")";
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		}
 		acMode = acMode & TIM_CLR; // set timer bit to 0 (off)
+		acMode = acMode & AC_CLR; // set power bit to 0
+		acMode = acMode | AC_OFF; // set power bit to OFF
 		powerStatus = 0;
 		writeStatus();
 		sendBroadCast();
@@ -130,6 +133,8 @@ void loop() {
 						irCmd = CMD_ON_OFF;
 						sendCmd();
 						delay(1000);
+						acMode = acMode & AC_CLR; // set power bit to 0
+						acMode = acMode | AC_OFF; // set power bit to OFF
 					}
 					dayTime = false;
 					powerStatus = 0;

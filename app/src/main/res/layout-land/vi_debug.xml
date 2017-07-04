@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	app:layout_behavior="@string/appbar_scrolling_view_behavior"
+	tools:context="tk.giesecke.myhomecontrol.Cl_MyHomeControl"
+	tools:ignore="ButtonStyle"
+	android:id="@+id/view_devdebug"
+	android:visibility="visible">
+	<!--tools:showIn="@layout/activity_my_home_control"-->
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content">
+
+		<TextView
+			android:text="@string/bt_txt_debug_line"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_debug_line"
+			android:textSize="24sp"
+			android:gravity="center"
+			android:layout_alignTop="@+id/bt_debug_moni"
+			android:layout_alignBottom="@+id/bt_debug_moni"/>
+
+		<Button
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_moni"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toRightOf="@+id/tv_debug_line"
+			android:layout_toEndOf="@+id/tv_debug_line"
+			android:layout_width="60dp"
+			android:layout_marginBottom="5dp"
+			android:text="@string/bt_txt_debug_moni"/>
+
+		<Button
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_secf"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_moni"
+			android:layout_toRightOf="@+id/bt_debug_moni"
+			android:text="@string/bt_txt_debug_secf"
+			android:layout_width="60dp"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_secb"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_secf"
+			android:layout_toRightOf="@+id/bt_debug_secf"
+			android:text="@string/bt_txt_debug_secb"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_ac1"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_secb"
+			android:layout_toRightOf="@+id/bt_debug_secb"
+			android:text="@string/bt_txt_debug_ac1"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_ac2"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_ac1"
+			android:layout_toRightOf="@+id/bt_debug_ac1"
+			android:text="@string/bt_txt_debug_ac2"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_ac3"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_ac2"
+			android:layout_toRightOf="@+id/bt_debug_ac2"
+			android:text="@string/bt_txt_debug_ac3"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_debug_cam1"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_light"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_gravity="center"
+			android:layout_toEndOf="@+id/bt_debug_ac3"
+			android:layout_toRightOf="@+id/bt_debug_ac3"
+			android:text="@string/bt_txt_debug_cam1"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/bt_cmd_send"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_blue_bright"
+			android:layout_gravity="center"
+			android:text="@string/txt_cmd_send"
+			android:textSize="12sp"
+			android:layout_toStartOf="@+id/tb_cmd_moni"
+			android:layout_toLeftOf="@+id/tb_cmd_moni"
+			android:layout_alignBottom="@+id/bt_debug_cam1"
+			android:layout_alignTop="@+id/bt_debug_cam1"
+			android:layout_marginEnd="5dp"
+			android:layout_marginLeft="5dp"
+			android:layout_marginRight="5dp"
+			android:layout_marginStart="5dp"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_moni"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_moni"
+			android:layout_toStartOf="@+id/tb_cmd_secf"
+			android:layout_toLeftOf="@+id/tb_cmd_secf"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_moni"
+			android:textOn="@string/bt_txt_cmd_moni"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_secf"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_secf"
+			android:layout_toStartOf="@+id/tb_cmd_secb"
+			android:layout_toLeftOf="@+id/tb_cmd_secb"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_secf"
+			android:textOn="@string/bt_txt_cmd_secf"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_secb"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_secb"
+			android:layout_toStartOf="@+id/tb_cmd_ac1"
+			android:layout_toLeftOf="@+id/tb_cmd_ac1"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_secb"
+			android:textOn="@string/bt_txt_cmd_secb"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_ac1"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_ac1"
+			android:layout_toStartOf="@+id/tb_cmd_ac2"
+			android:layout_toLeftOf="@+id/tb_cmd_ac2"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_ac1"
+			android:textOn="@string/bt_txt_cmd_ac1"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_ac2"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_ac2"
+			android:layout_toStartOf="@+id/tb_cmd_ac3"
+			android:layout_toLeftOf="@+id/tb_cmd_ac3"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_ac2"
+			android:textOn="@string/bt_txt_cmd_ac1"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_ac3"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_ac3"
+			android:layout_toStartOf="@+id/tb_cmd_cam1"
+			android:layout_toLeftOf="@+id/tb_cmd_cam1"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_ac3"
+			android:textOn="@string/bt_txt_cmd_ac3"/>
+
+		<ToggleButton
+			android:text="@string/bt_txt_debug_cam1"
+			android:layout_width="60dp"
+			android:layout_height="wrap_content"
+			android:id="@+id/tb_cmd_cam1"
+			android:onClick="onClick"
+			android:textOff="@string/bt_txt_cmd_cam1"
+			android:textOn="@string/bt_txt_cmd_cam1"
+			android:layout_alignParentEnd="true"
+			android:layout_alignParentRight="true"/>
+
+		<TextView
+			android:text="@string/bt_txt_reset_line"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_reset_line"
+			android:textSize="24sp"
+			android:gravity="center"
+			android:layout_alignTop="@+id/bt_res_moni"
+			android:layout_alignBottom="@+id/bt_res_moni"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_moni"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/tv_debug_line"
+			android:layout_toRightOf="@+id/tv_debug_line"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_secf"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_moni"
+			android:layout_toRightOf="@+id/bt_res_moni"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_secb"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_secf"
+			android:layout_toRightOf="@+id/bt_res_secf"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_ac1"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_secb"
+			android:layout_toRightOf="@+id/bt_res_secb"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_ac2"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_ac1"
+			android:layout_toRightOf="@+id/bt_res_ac1"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_ac3"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_ac2"
+			android:layout_toRightOf="@+id/bt_res_ac2"/>
+
+		<Button
+			android:layout_width="60dp"
+			android:layout_height="25dp"
+			android:id="@+id/bt_res_cam1"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_red_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_marginTop="5dp"
+			android:layout_gravity="center"
+			android:layout_below="@+id/tb_cmd_moni"
+			android:layout_toEndOf="@+id/bt_res_ac3"
+			android:layout_toRightOf="@+id/bt_res_ac3"/>
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/tv_debug_cmd"
+			android:textSize="24sp"
+			android:layout_alignTop="@+id/bt_res_cam1"
+			android:layout_alignBottom="@+id/bt_res_cam1"
+			android:gravity="center_vertical"
+			android:text="@string/tv_debug_cmd_lo"
+			android:layout_alignLeft="@+id/bt_cmd_send"
+			android:layout_alignStart="@+id/bt_cmd_send"
+			android:layout_marginLeft="5dp"
+			android:layout_marginStart="5dp"/>
+
+		<EditText
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/et_debug_cmd"
+			android:inputType="textNoSuggestions"
+			android:editable="true"
+			android:imeOptions="actionSearch"
+			android:layout_toEndOf="@+id/tv_debug_cmd"
+			android:layout_toRightOf="@+id/tv_debug_cmd"
+			android:layout_alignTop="@+id/tv_debug_cmd"
+			/>
+
+	</RelativeLayout>
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="10dp"
+		android:layout_marginTop="5dp">
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/bt_txt_find"
+			android:id="@+id/bt_highlight"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_weight="1"/>
+
+		<EditText
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/et_highlight"
+			android:inputType="textNoSuggestions"
+			android:editable="true"
+			android:imeOptions="actionSearch"
+			android:layout_weight="2"
+			/>
+
+		<Button
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/bt_txt_clear"
+			android:id="@+id/bt_clear"
+			android:clickable="true"
+			android:onClick="onClick"
+			android:background="@android:color/holo_orange_dark"
+			android:layout_marginRight="2dp"
+			android:layout_marginLeft="2dp"
+			android:layout_weight="1"/>
+
+	</LinearLayout>
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="10dp"
+		android:baselineAligned="false">
+
+		<ScrollView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:id="@+id/sv_debugview"
+			android:fadeScrollbars="false"
+			android:layout_weight="1">
+
+			<TextView
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textAppearance="?android:attr/textAppearanceMedium"
+				android:id="@+id/tv_sv_debug"/>
+
+		</ScrollView>
+
+		<RelativeLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:id="@+id/rl_mqtt_status">
+
+			<TextView
+				android:text="@string/tv_mqtt_status_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_status"
+				android:textAppearance="@android:style/TextAppearance.Large"
+				android:textStyle="bold"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_bytes_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/tv_mqtt_status"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_bytes_avg"
+				android:layout_below="@+id/tv_mqtt_status"
+				android:layout_alignParentEnd="true"
+				android:layout_alignParentRight="true"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_msgs_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/tv_mqtt_bytes_avg"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_msg_avg"
+				android:layout_below="@+id/tv_mqtt_bytes_avg"
+				android:layout_alignParentEnd="true"
+				android:layout_alignParentRight="true"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_client_conn_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_below="@+id/tv_mqtt_msg_avg"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_client_conn"
+				android:layout_below="@+id/tv_mqtt_msg_avg"
+				android:layout_alignParentEnd="true"
+				android:layout_alignParentRight="true"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_client_list_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_client_list_hdr"
+				android:layout_below="@+id/tv_mqtt_client_conn"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_client_list1"
+				android:layout_below="@+id/tv_mqtt_client_conn"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"
+				android:layout_toRightOf="@+id/tv_mqtt_client_list_hdr"
+				android:layout_toEndOf="@+id/tv_mqtt_client_list_hdr"
+				android:layout_marginStart="5dp"
+				android:layout_marginLeft="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_mqtt_client_list2"
+				android:layout_below="@+id/tv_mqtt_client_conn"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_alignParentRight="true"
+				android:layout_alignParentEnd="true"
+				android:layout_marginTop="5dp"
+				android:textAlignment="viewEnd"
+				android:gravity="end"/>
+
+			<TextView
+				android:text="@string/tv_device_status_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_device_status"
+				android:textAppearance="@android:style/TextAppearance.Large"
+				android:textStyle="bold"
+				android:layout_below="@+id/tv_mqtt_client_list1"
+				android:layout_marginTop="5dp"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_device_name_list"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_marginTop="5dp"
+				android:layout_below="@+id/tv_device_status"/>
+
+			<TextView
+				android:text="@string/tv_mqtt_unknown_txt"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/tv_device_ip_list"
+				android:textAppearance="@android:style/TextAppearance.Medium"
+				android:layout_below="@+id/tv_device_status"
+				android:layout_alignParentRight="true"
+				android:layout_alignParentEnd="true"
+				android:layout_marginTop="5dp"/>
+
+		</RelativeLayout>
+
+	</LinearLayout>
+
+</LinearLayout>

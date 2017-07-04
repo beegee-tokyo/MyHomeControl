@@ -6,7 +6,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUDP.h>
 
-bool tryGetTime();
+bool tryGetTime(boolean debugOn);
 time_t getNtpTime();
 void sendNTPpacket(WiFiUDP udpNTP);
 String digitalClockDisplay();

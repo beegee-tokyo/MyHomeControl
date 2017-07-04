@@ -3,6 +3,7 @@
  * Connect to SQLite database returning results as JSON
  * START SQLite Section
  */
+date_default_timezone_set("Asia/Manila");
 $dateSelect = $_GET['date'];
 
 // Specify your sqlite database name and path

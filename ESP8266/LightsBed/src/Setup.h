@@ -6,6 +6,7 @@
 #include <SPI.h>
 #include <Wire.h>
 #include <EEPROM.h>
+#include <avr/wdt.h>
 
 #include <IRLibDecodeBase.h> // First include the decode base
 #include <IRLib_P01_NEC.h>   // Now include only the protocols you wish

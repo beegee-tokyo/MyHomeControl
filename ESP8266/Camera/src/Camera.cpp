@@ -12,24 +12,46 @@ char outCount;
 			false if error occured
 */
 boolean takeShot() {
+	String debugMsg;
+	wdt_reset();
+	if (debugOn) {
+		sendRpiDebug("takeShot started", OTA_HOST);
+	}
 	comLedFlashStart(0.1);
 	digitalWrite(flashLED, HIGH);
 	uint32_t startTime = millis();
+	wdt_reset();
 	if (! cam.takePicture()) {
 		if (debugOn) {
-			sendDebug("Failed to snap!", OTA_HOST);
+			sendRpiDebug("Failed to snap!", OTA_HOST);
 		}
+		wdt_reset();
 		cam.resumeVideo();
 		comLedFlashStop();
 		digitalWrite(flashLED, LOW);
-		sendBroadCast(false);
 		return false;
 	}
 	// Get the size of the image (frame) taken
 	uint16_t jpglen = cam.frameLength();
+	if (debugOn) {
+		debugMsg = "Got image with size " + String(jpglen);
+		sendRpiDebug(debugMsg, OTA_HOST);
+	}
+
+	wdt_reset();
+	if (jpglen == 0) {
+		if (debugOn) {
+			debugMsg = "Image size wrong: " + String(jpglen);
+			sendRpiDebug(debugMsg, OTA_HOST);
+		}
+		cam.resumeVideo();
+		comLedFlashStop();
+		digitalWrite(flashLED, LOW);
+		return false;
+	}
 
 	// Create an image with the name MM-DD-hh-mm-ss.JPG
-	char filename[19];
+	// char filename[19];
 	String dateTime = getDigits(month());
 	dateTime += "-" + getDigits(day());
 	dateTime += "-" + getDigits(hour());
@@ -45,10 +67,11 @@ boolean takeShot() {
 	filename[18] = 0;
 
 	if (debugOn) {
-		String debugMsg = "Saving " + String(filename) + " Image size: " + String(jpglen);
-		sendDebug(debugMsg, OTA_HOST);
+		debugMsg = "Saving " + String(filename) + " Image size: " + String(jpglen);
+		sendRpiDebug(debugMsg, OTA_HOST);
 	}
 
+	wdt_reset();
 	// Prepare file to save image
 	bool fileOpen = true;
 	File imgFile = SPIFFS.open("/last.jpg", "w");
@@ -58,39 +81,39 @@ boolean takeShot() {
 
 	// Prepare FTP connection
 	bool ftpConnected = true;
-if (debugOn) {
-	sendDebug("Connecting to FTP", OTA_HOST);
-}
+	if (debugOn) {
+		sendRpiDebug("Connecting to FTP", OTA_HOST);
+	}
+	wdt_reset();
 	if (!ftpConnect()) {
 		ftpConnected = false;
+		if (debugOn) {
+			sendRpiDebug("Connecting to FTP failed", OTA_HOST);
+		}
 	}
 
 	if (ftpConnected) {
 		// Prepare data upload
-if (debugOn) {
-	sendDebug("CD on FTP", OTA_HOST);
-}
 		ftpClient.println(F("CWD /var/www/html/1s"));
 		// Check result
+		wdt_reset();
 		if (!ftpReceive()) {
 			if (debugOn) {
-				String debugMsg = "FTP: CD failed: " + String(ftpBuf);
-				sendDebug(debugMsg, OTA_HOST);
+				debugMsg = "FTP: CD failed: " + String(ftpBuf);
+				sendRpiDebug(debugMsg, OTA_HOST);
 			}
 			ftpDataClient.stop();
 			ftpClient.stop();
 			ftpConnected = false;
 		} else {
-if (debugOn) {
-	sendDebug("STOR on FTP", OTA_HOST);
-}
 			ftpClient.print(F("STOR "));
 			ftpClient.println(filename);
 			// Check result
+			wdt_reset();
 			if (!ftpReceive()) {
 				if (debugOn) {
-					String debugMsg = "FTP: Passive mode not available: " + String(ftpBuf);
-					sendDebug(debugMsg, OTA_HOST);
+					debugMsg = "FTP: Passive mode not available: " + String(ftpBuf);
+					sendRpiDebug(debugMsg, OTA_HOST);
 				}
 				ftpDataClient.stop();
 				ftpClient.stop();
@@ -121,11 +144,12 @@ if (debugOn) {
 			} else {
 				bytesToRead = 32;
 			}
+			wdt_reset();
 			buffer = cam.readPicture(bytesToRead);
 
 			if (buffer == 0) {
 				if (debugOn) {
-					sendDebug("Read from camera failed", OTA_HOST);
+					sendRpiDebug("Read from camera failed", OTA_HOST);
 				}
 				readFailures++;
 				if (readFailures > 100) { // Too many read errors, better to stop
@@ -133,58 +157,58 @@ if (debugOn) {
 					break;
 				}
 			} else {
+				wdt_reset();
 				memcpy(&clientBuf[blocks*32],buffer,bytesToRead);
 				wCount += bytesToRead;
 				jpglen -= bytesToRead;
 			}
 		}
 		if (ftpConnected) {
+			wdt_reset();
 			bytesWrittenFTP += ftpDataClient.write((const uint8_t *) clientBuf, wCount);
 		}
 		if (fileOpen) {
+			wdt_reset();
 			bytesWrittenFS += imgFile.write((const uint8_t *) clientBuf, wCount);
 		}
 		if (millis()-timeOut > 60000) { // if transfer takes more than a minute, stop it
 			if (debugOn) {
-				sendDebug("Timeout saving picture", OTA_HOST);
+				sendRpiDebug("Timeout saving picture", OTA_HOST);
 			}
 			bytesWrittenFTP = bytesWrittenFS = jpglen = 0;
+			digitalWrite(flashLED, LOW);
+			wmIsConnected = false;
 			break;
 		}
 	}
 	if (ftpConnected) {
-if (debugOn) {
-	sendDebug("STOP on FTP data client", OTA_HOST);
-}
+		wdt_reset();
 		ftpDataClient.stop();
 	}
 	if (fileOpen) {
-if (debugOn) {
-	sendDebug("Close file", OTA_HOST);
-}
+		wdt_reset();
 		imgFile.close();
 	}
 
-if (debugOn) {
-	sendDebug("QUIT FTP", OTA_HOST);
-}
 	if (ftpConnected) {
 		ftpClient.println("QUIT");
 		// Check result
+		wdt_reset();
 		if (!ftpReceive()) {
 			if (debugOn) {
-				String debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
-				sendDebug(debugMsg, OTA_HOST);
+				debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
+				sendRpiDebug(debugMsg, OTA_HOST);
 			}
 			ftpClient.stop();
 			cam.resumeVideo();
 			comLedFlashStop();
 			digitalWrite(flashLED, LOW);
+			wmIsConnected = false;
 			return false;
 		}
 	}
 	if (debugOn) {
-		sendDebug("STOP FTP", OTA_HOST);
+		sendRpiDebug("STOP FTP", OTA_HOST);
 	}
 	if (ftpConnected) {
 		ftpClient.stop();
@@ -192,17 +216,13 @@ if (debugOn) {
 	uint32_t endTime = millis();
 	digitalWrite(flashLED, LOW);
 	if (debugOn) {
-		String debugMsg = "Read from camera & save to FTP finished: " + String(bytesWrittenFTP) + "/" + String(bytesWrittenFS) + " bytes in " + String(endTime-startTime) + "ms";
-		sendDebug(debugMsg, OTA_HOST);
+		debugMsg = "Read from camera & save to FTP finished: " + String(bytesWrittenFTP) + "/" + String(bytesWrittenFS) + " bytes in " + String(endTime-startTime) + "ms";
+		sendRpiDebug(debugMsg, OTA_HOST);
 	}
 
 	// Restart camera
+	wdt_reset();
 	cam.resumeVideo();
 	comLedFlashStop();
-	// if ((ftpConnected && bytesWrittenFTP == 0) || (fileOpen && bytesWrittenFS == 0)) {
-	if (ftpConnected && (bytesWrittenFTP == 0)) {
-		return false;
-	} else {
-		return true;
-	}
+	return true;
 }

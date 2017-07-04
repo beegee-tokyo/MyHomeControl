@@ -14,8 +14,8 @@ When doing breadboard test, enable this define
 
 /** WiFiClient class to create TCP communication */
 WiFiClient tcpClientOut;
-/** WiFiServer class to create TCP socket server on port 6000 */
-WiFiServer tcpServer(6000);
+/** WiFiServer class to create TCP socket server on port tcpComPort */
+WiFiServer tcpServer(tcpComPort);
 /** FTPServer class to create simple ftp server */
 FtpServer ftpSrv;
 

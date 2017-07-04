@@ -257,7 +257,7 @@ void updateAC(boolean all) {
 		ucg.setColor(0, 0, 0);
 		ucg.drawBox (0, 107, 71, 21);
 
-		// Print AC status
+		// Print AC 1 status
 		ucg.setFont(ucg_font_helvB10_tr);
 		if (ac1On == 2) {
 			ucg.setColor(128, 128, 128);
@@ -302,6 +302,7 @@ void updateAC(boolean all) {
 			}
 		}
 
+		// Print AC 2 status
 		ucg.setFont(ucg_font_helvB10_tr);
 		if (ac2On == 2) {
 			ucg.setColor(128, 128, 128);
@@ -492,7 +493,7 @@ void updateAC(boolean all) {
 				ucg.setColor(0, 0, 255);
 				ucg.print("Tim");
 			} else {
-				if (ac1Auto == 1) {
+				if (ac2Auto == 1) {
 					ucg.setColor(0, 255, 0);
 					ucg.setFont(ucg_font_helvB14_tr);
 					ucg.print("Auto");

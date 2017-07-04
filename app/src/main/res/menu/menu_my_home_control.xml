@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
 	  xmlns:app="http://schemas.android.com/apk/res-auto"
 	  xmlns:tools="http://schemas.android.com/tools"
-	  tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
+	  tools:context="tk.giesecke.myhomecontrol.Cl_MyHomeControl"
 	  tools:ignore="AlwaysShowAction">
 
 	<!-- Menu ID 0 => lights -->
@@ -93,6 +93,14 @@
 		android:orderInCategory="100"
 		android:title="@string/action_devDebug"
 		app:showAsAction="never"/>
+
+	<!-- Menu ID 11 => sync solar database manually -->
+	<item
+		android:id="@+id/action_syncSolar"
+	    android:icon="@drawable/dr_thumb"
+	    android:orderInCategory="100"
+	    android:title="@string/action_syncSolar"
+	    app:showAsAction="never"/>
 
 </menu>
 

@@ -7,19 +7,19 @@ When doing breadboard test, enable this define
 //#define BREADBOARD
 
 #ifdef BREADBOARD
-	IPAddress ipAddr = ipSpare4;
+	IPAddress ipAddr = ipSpare;
 #else
 	IPAddress ipAddr = ipAC1;
 #endif
 
 /** WiFiClient class to create TCP communication */
 WiFiClient tcpClientOut;
-/** WiFiServer class to create TCP socket server on port 6000 */
-WiFiServer tcpServer(6000);
+/** WiFiServer class to create TCP socket server on port tcpComPort */
+WiFiServer tcpServer(tcpComPort);
 /** FTPServer class to create simple ftp server */
 FtpServer ftpSrv;
 
-// /** Received command (from lan or serial connection) */
+/** Received command (from lan or serial connection) */
 int irCmd = 9999;
 /** Last processed command (from lan or serial connection) */
 int lastCmd = 99;

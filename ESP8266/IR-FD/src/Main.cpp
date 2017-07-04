@@ -11,9 +11,10 @@ void loop() {
 		return;
 	}
 
-	// In case we don't have a time from NTP, retry
+	// In case we don't have a time from NTP or local server, retry
 	if (!gotTime) {
-		setTime(getNtpTime());
+		sendDebug("tryGetTime", OTA_HOST);
+		tryGetTime(false);
 	}
 
 	// Handle new request on tcp socket server if available
@@ -55,30 +56,30 @@ void loop() {
 		// If AC is on, switch it to FAN low speed and then switch it off
 		if ((acMode & AC_ON) == AC_ON) { // AC is on
 			// Set mode to FAN
+			acMode = acMode & MODE_CLR; // set mode bits to 0
+			acMode = acMode | MODE_FAN; // set mode bits to FAN mode
 			My_Sender.sendNEC(Fan,32);
-			// irCmd = CMD_MODE_FAN;
-			// sendCmd();
 			delay(1000);
 			// Set fan speed to LOW
+			acMode = acMode & FAN_CLR; // set fan bits to 0
+			acMode = acMode | FAN_LOW; // set mode bits to FAN LOW mode
 			My_Sender.sendNEC(L_Fan,32);
-			// irCmd = CMD_FAN_LOW;
-			// sendCmd();
 			delay(1000);
 			// Switch AC off
 			My_Sender.sendNEC(On_Off,32);
-			// irCmd = CMD_ON_OFF;
-			// sendCmd();
 			if (debugOn) {
-				String debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + formatInt(minute()) + ")";
+				String debugMsg = "End of timer, switch off AC (" + String(hour()) + ":" + getDigits(minute()) + ")";
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		} else {
 			if (debugOn) {
-				String debugMsg = "End of timer, AC was already off (" + String(hour()) + ":" + formatInt(minute()) + ")";
+				String debugMsg = "End of timer, AC was already off (" + String(hour()) + ":" + getDigits(minute()) + ")";
 				sendDebug(debugMsg, OTA_HOST);
 			}
 		}
 		acMode = acMode & TIM_CLR; // set timer bit to 0 (off)
+		acMode = acMode & AC_CLR; // set power bit to 0
+		acMode = acMode | AC_OFF; // set power bit to OFF
 		powerStatus = 0;
 		writeStatus();
 		sendBroadCast();
@@ -100,19 +101,19 @@ void loop() {
 					// If AC is on, switch it to FAN low speed and then switch it off
 					if ((acMode & AC_ON) == AC_ON) { // AC is on
 						// Set mode to FAN
+						acMode = acMode & MODE_CLR; // set mode bits to 0
+						acMode = acMode | MODE_FAN; // set mode bits to FAN mode
 						My_Sender.sendNEC(Fan,32);
-						// irCmd = CMD_MODE_FAN;
-						// sendCmd();
 						delay(1000);
 						// Set fan speed to LOW
+						acMode = acMode & FAN_CLR; // set fan bits to 0
+						acMode = acMode | FAN_LOW; // set mode bits to FAN LOW mode
 						My_Sender.sendNEC(L_Fan,32);
-						// irCmd = CMD_FAN_LOW;
-						// sendCmd();
 						delay(1000);
 						// Switch AC off
+						acMode = acMode & AC_CLR; // set power bit to 0
+						acMode = acMode | AC_OFF; // set power bit to OFF
 						My_Sender.sendNEC(On_Off,32);
-						// irCmd = CMD_ON_OFF;
-						// sendCmd();
 						delay(1000);
 					}
 					dayTime = false;
@@ -134,8 +135,7 @@ void loop() {
 					sendDebug(debugMsg, OTA_HOST);
 				}
 				irCmd = CMD_AUTO_ON;
-				parseSocketCmd();
-				// sendCmd();
+				handleCmd();
 				sendBroadCast();
 			}
 		}
