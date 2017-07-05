@@ -48,7 +48,7 @@ void setup() {
 
 	// Get initial temperature
 	getTemperature();
-	// Start update of light value every 10 seconds
+	// Start update of weather value every 10 seconds
 	getWeatherTimer.attach(10, triggerGetWeather);
 
 	// Set initial time

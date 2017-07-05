@@ -59,7 +59,6 @@ import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -88,7 +87,6 @@ import tk.giesecke.myhomecontrol.devices.Sv_CheckAvailDevices;
 import tk.giesecke.myhomecontrol.security.Cl_SecCamViewer;
 import tk.giesecke.myhomecontrol.solar.Cl_ChartHelper;
 import tk.giesecke.myhomecontrol.solar.Db_Helper;
-import tk.giesecke.myhomecontrol.solar.St_SolarCommResult;
 import tk.giesecke.myhomecontrol.solar.Sv_SolarSyncDB;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -321,13 +319,6 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 
 	/** Today's year-month database name */
 	private static String[] dbNamesList = new String[2];
-	/** Flag for last month update request */
-	private static boolean needLastMonth = false;
-
-	/** AsyncTask for updating current month database */
-	private static AsyncTask atNow;
-	/** AsyncTask for updating last month database */
-	private static AsyncTask atLast;
 
 	// Aircon view related
 	/** Aircon control view */
@@ -768,12 +759,6 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 	protected void onPause() {
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Sequence - onPause started");
 		super.onPause();
-
-		// Check if async tasks with database access are still running
-		if(atNow != null && atNow.getStatus() == AsyncTask.Status.RUNNING)
-			atNow.cancel(false);
-		if(atLast != null && atLast.getStatus() == AsyncTask.Status.RUNNING)
-			atLast.cancel(false);
 
 		// Close databases
 		dbHelperNow.close();
@@ -1336,6 +1321,9 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received broadcast from " + sender);
 
+			if (sender.equalsIgnoreCase("SPSYNC")) {
+				updateSynced("Sync finished!", intent.getStringExtra("message"));
+			}
 			if (sender.equalsIgnoreCase("NSD")) {
 				boolean nsdScanResult = intent.getBooleanExtra("resolved",false);
 				if (nsdScanResult) { // Scan finished successful
@@ -1783,7 +1771,8 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 
 			if (!tk.giesecke.myhomecontrol.Cl_Utilities.isHomeWiFi(getApplicationContext())) {
 				// For solar panel monitor get data from web site if we are not home
-				result.httpURL = "www.spmonitor.giesecke.tk";
+				result.httpURL = "www.spMonitor.giesecke.tk";
+//				result.httpURL = "www.spmonitor.giesecke.tk";
 				result.comCmd = "/l.php";
 			}
 			/** URL to be called */
@@ -2503,197 +2492,6 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 	}
 
 	/**
-	 * Async task class to contact Linino part of the spMonitor device
-	 * and sync spMonitor database with local Android database
-	 */
-	private class syncSolarDB extends AsyncTask<String, String, St_SolarCommResult> {
-
-		@Override
-		protected St_SolarCommResult doInBackground(String... params) {
-
-			/** Return values for onPostExecute */
-			St_SolarCommResult result = new St_SolarCommResult();
-
-			/** A HTTP client to access the ESP device */
-			// Set timeout to 5 minutes in case we have a lot of data to load
-			OkHttpClient client = new OkHttpClient.Builder()
-					.connectTimeout(300, TimeUnit.SECONDS)
-					.writeTimeout(10, TimeUnit.SECONDS)
-					.readTimeout(300, TimeUnit.SECONDS)
-					.build();
-
-			/** Which month to sync */
-			result.syncMonth = params[0];
-
-			/** Response from the spMonitor device or error message */
-			result.taskResult = result.syncMonth + " " + getResources().getString(R.string.filesSyncFail);
-
-			/** URL to be called */
-//			String urlString = "http://" + deviceIPs[spMonitorIndex] + "/sd/spMonitor/query2.php"; // URL to call
-			String urlString = "http://" + deviceIPs[spMonitorIndex] + "/sd/spmonitor/query2.php"; // URL to call
-
-			// Check for last entry in the local database
-			/** Instance of data base */
-			SQLiteDatabase dataBase;
-			if (result.syncMonth.equalsIgnoreCase(dbNamesList[0])) {
-				dataBase = dbHelperNow.getReadableDatabase();
-			} else {
-				dataBase = dbHelperLast.getReadableDatabase();
-			}
-			// Is database in use?
-			while (dataBase.inTransaction()) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "syncSolarDB Database is in use");
-			}
-
-			dataBase.beginTransaction();
-			/** Cursor with data from database */
-			Cursor dbCursor = Db_Helper.getLastRow(dataBase);
-			/** Flag for database access type */
-			boolean splitAccess = false;
-			if (dbCursor != null) {
-				if (dbCursor.getCount() != 0) { // local database not empty, need to sync only missing
-					dbCursor.moveToFirst();
-
-					int lastMinute =  dbCursor.getInt(4);
-					int lastHour = dbCursor.getInt(3);
-					int lastDay = dbCursor.getInt(2);
-
-					urlString += "?date=" + dbCursor.getString(0); // add year
-					urlString += "-" + ("00" +
-							dbCursor.getString(1)).substring(dbCursor.getString(1).length()); // add month
-					urlString += "-" + ("00" +
-							String.valueOf(lastDay))
-							.substring(String.valueOf(lastDay).length()); // add day
-					urlString += "-" + ("00" +
-							String.valueOf(lastHour))
-							.substring(String.valueOf(lastHour).length()); // add hour
-					urlString += ":" + ("00" +
-							String.valueOf(lastMinute))
-							.substring(String.valueOf(lastMinute).length()); // add minute
-					urlString += "&get=all";
-				} else { // local database is empty, need to sync all data
-					splitAccess = true;
-					urlString += "?date=" + result.syncMonth;
-				}
-			} else { // something went wrong with the database access
-				result.taskResult = result.syncMonth + " " + getResources().getString(R.string.filesSyncFail);
-				try {
-					dataBase.endTransaction();
-					dataBase.close();
-				} catch (IllegalStateException ignore) {
-				}
-				try {
-					dataBase.close();
-				} catch (IllegalStateException ignore) {
-				}
-				return result;
-			}
-			dbCursor.close();
-			dataBase.endTransaction();
-			dataBase.close();
-
-			/** Repeat counter used when full database needs to be synced */
-			int loopCnt = 0;
-			/** URL used for access */
-			String thisURL = urlString;
-			if (splitAccess) {
-				loopCnt = 3;
-			}
-
-			for (int loop = 0; loop <= loopCnt; loop++) {
-				if (splitAccess) {
-					urlString = thisURL + "-" + String.valueOf(loop);
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"URL = " + urlString);
-				}
-				/** Request to spMonitor device */
-				Request request = new Request.Builder()
-						.url(urlString)
-						.build();
-
-				if (request != null) {
-					try {
-						/** Response from spMonitor device */
-						Response response = client.newCall(request).execute();
-						if (response != null) {
-							result.taskResult = response.body().string();
-						}
-					} catch (IOException e) {
-						result.taskResult = e.getMessage();
-						try {
-							if (result.taskResult.contains("EHOSTUNREACH")) {
-								result.taskResult = getApplicationContext().getString(R.string.err_arduino);
-							}
-							if (result.taskResult.equalsIgnoreCase("")) {
-								result.taskResult = getApplicationContext().getString(R.string.err_arduino);
-							}
-							return result;
-						} catch (NullPointerException en) {
-							result.taskResult = getResources().getString(R.string.err_no_device);
-							return result;
-						}
-					}
-
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"JSON size = " + result.taskResult.length());
-
-					try {
-						/** JSON array with the data received from spMonitor device */
-						JSONArray jsonFromDevice = new JSONArray(result.taskResult);
-						if (result.syncMonth.equalsIgnoreCase(dbNamesList[0])) {
-							dataBase = dbHelperNow.getWritableDatabase();
-						} else {
-							dataBase = dbHelperLast.getWritableDatabase();
-						}
-						// Get received data into local database
-						/** Data string for insert into database */
-						String record = "";
-						try {
-							dataBase.beginTransaction();
-							for (int i=0; i<jsonFromDevice.length(); i++) {
-								// skip first data record from device if we are just updating the database
-								if (i == 0 && !splitAccess) i++;
-								/** JSONObject with a single record */
-								JSONObject jsonRecord = jsonFromDevice.getJSONObject(i);
-								record = jsonRecord.getString("d");
-								record = record.replace("-",",");
-								record += ","+jsonRecord.getString("l");
-								record += ","+jsonRecord.getString("s");
-								record += ","+jsonRecord.getString("c");
-								if (BuildConfig.DEBUG && i <= 1) Log.d(DEBUG_LOG_TAG,"DB insert: " + record);
-								Db_Helper.addDay(dataBase, record);
-							}
-							dataBase.setTransactionSuccessful();
-							dataBase.endTransaction();
-							dataBase.close();
-							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"DB insert: " + record);
-							result.taskResult = result.syncMonth + " " + getResources().getString(R.string.filesSynced);
-						} catch (SQLiteDatabaseLockedException e) {
-							result.taskResult = result.syncMonth + " " + getResources().getString(R.string.filesSyncFail1);
-							dataBase.endTransaction();
-							dataBase.close();
-						}
-					} catch (JSONException e) {
-						result.taskResult = result.syncMonth + " " + getResources().getString(R.string.filesSyncFail);
-						try {
-							dataBase.endTransaction();
-						} catch (IllegalStateException ignore) {}
-						dataBase.close();
-					}
-				}
-			}
-			dataBaseIsEmpty = false;
-			return result;
-		}
-
-		protected void onPostExecute(St_SolarCommResult result) {
-			updateSynced(result.taskResult, result.syncMonth);
-			if (needLastMonth) {
-				atLast = new syncSolarDB().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, dbNamesList[1]);
-				needLastMonth = false;
-			}
-		}
-	}
-
-	/**
 	 * Update UI with values received from spMonitor device (Arduino part)
 	 *
 	 * @param value
@@ -3133,6 +2931,7 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 		btDryLightCA = findViewById(R.id.bt_dry_hl_ca);
 		btFanLightCA = findViewById(R.id.bt_fan_hl_ca);
 		btSweepLightCA = findViewById(R.id.bt_sweep_hl_ca);
+		btTurboLightCA = findViewById(R.id.bt_turbo_hl_ca);
 		btIonLightCA = findViewById(R.id.bt_ion_hl_ca);
 		btAutomLightCA = findViewById(R.id.bt_autom_hl_ca);
 
@@ -3373,28 +3172,18 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 			/** Instance of data base */
 			SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
 			dataBase.beginTransaction();
+			/** Cursor with data from database */
+			Cursor chCursor = Db_Helper.getLastRow(dataBase);
+			if (chCursor != null) {
+				dataBaseIsEmpty = chCursor.getCount() == 0;
+				chCursor.close();
+			}
 			dataBase.endTransaction();
 			dataBase.close();
 			/** Instance of data base */
 			dataBase = dbHelperLast.getReadableDatabase();
 			dataBase.beginTransaction();
 			dataBase.endTransaction();
-			dataBase.close();
-
-			// Check if database is empty. If yes, sync only the database for this month
-			dataBase = dbHelperNow.getReadableDatabase();
-			/** Cursor with data from database */
-			Cursor chCursor = Db_Helper.getLastRow(dataBase);
-			if (chCursor != null) {
-				if (chCursor.getCount() != 0) { // local database is not empty, no need to sync all data
-					dataBaseIsEmpty = false;
-				} else { // local database is empty, need to sync all data including last month
-					needLastMonth = true;
-				}
-			}
-			if (chCursor != null) {
-				chCursor.close();
-			}
 			dataBase.close();
 
 			// Start background sync of the database
@@ -3408,9 +3197,8 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 				Cursor dbCursor = Db_Helper.getLastRow(dataBase);
 				if (dbCursor != null) {
 					try {
-						if (dbCursor.getCount() == 0) { // local database is empty, need to sync all data
-							needLastMonth = true;
-						} else { // fill last log file array
+						// create logged data array only if database is not empty
+						if (dbCursor.getCount() != 0) {
 							lastLogDates.clear();
 							/** List with years in the database */
 							ArrayList<Integer> yearsAvail = Db_Helper.getEntries(dataBase, "year", 0, 0);
@@ -3584,7 +3372,7 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 						new ESPbyTCP(url, message, deviceID);
 						break;
 					case 9: // Start background sync of database
-						atNow = new syncSolarDB().execute(message);
+						startService(new Intent(getApplicationContext(), Sv_SolarSyncDB.class));
 						break;
 					case 10:
 						TableLayout backYardDots = (TableLayout) findViewById(R.id.tl_alarm_back);
@@ -4125,7 +3913,8 @@ public class Cl_MyHomeControl extends AppCompatActivity implements View.OnClickL
 					if (showingLog) {
 						showingLog = false;
 						if (tk.giesecke.myhomecontrol.Cl_Utilities.isHomeWiFi(this)) {
-							atNow = new syncSolarDB().execute(dbNamesList[0]);
+//							atNow = new syncSolarDB().execute(dbNamesList[0]);
+							startService(new Intent(this, Sv_SolarSyncDB.class));
 						}
 
 						/** Pointer to text views showing the consumed / produced energy */
