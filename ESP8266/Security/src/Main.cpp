@@ -39,22 +39,19 @@ void loop() {
 	if (pirTriggered) {
 		pirTriggered = false;
 		if (hasDetection) { // Detection of movement
-			if (alarmOn) {
-				sendAlarm(true);
-			}
-			// actLedFlashStart(0.2);
 			if (switchLights) {
 				relayOffTimer.detach();
+				relayOffTimer.once(onTime, relayOff);
+				digitalWrite(relayPort, HIGH);
 				if (debugOn) {
 					sendDebug("Retriggered lights", OTA_HOST);
 				}
-				relayOffTimer.once(onTime, relayOff);
-				digitalWrite(relayPort, HIGH);
 			}
 			if (alarmOn || switchLights) {
 				triggerPic(); // Trigger picture from security camera
-				triggerVid(1);
-				triggerVid(2);
+			}
+			if (alarmOn) {
+				sendAlarm(true);
 			}
 			if (debugOn) {
 				sendDebug("Detection interrupt from PIR pin", OTA_HOST);

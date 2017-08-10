@@ -13,7 +13,7 @@
 		android:id="@+id/bt_ac_wid_timer"
 		android:clickable="true"
 		android:textColor="#FFFFFF"
-		android:background="@drawable/dr_orange_round_button"
+		android:background="@drawable/orange_round_button"
 		android:shadowColor="#A8A8A8"
 		android:shadowDx="0"
 		android:shadowDy="0"

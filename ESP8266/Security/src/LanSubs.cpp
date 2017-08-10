@@ -50,7 +50,7 @@ void sendAlarm(boolean makeShort) {
 	udpClientServer.endPacket();
 	udpClientServer.stop();
 
-	udpClientServer.beginPacket(ipMonitor,5000);
+	udpClientServer.beginPacket(ipMonitor,udpBcPort);
 	udpClientServer.print(broadCast);
 	udpClientServer.endPacket();
 	udpClientServer.stop();

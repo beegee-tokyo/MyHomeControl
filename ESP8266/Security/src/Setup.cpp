@@ -12,7 +12,7 @@ Ticker heartBeatTimer;
 void setup() {
 
 	initLeds();
-	pinMode(pirPort, INPUT_PULLUP); // PIR signal
+	pinMode(pirPort, INPUT); // PIR signal
 	pinMode(relayPort, OUTPUT); // Relay trigger signal
 	pinMode(speakerPin, OUTPUT); // Loudspeaker/piezo signal
 	digitalWrite(relayPort, LOW); // Turn off Relay
@@ -24,7 +24,7 @@ void setup() {
 	Serial.println("====================");
 	Serial.println("ESP8266 Security Front");
 
-// wifiManager.resetSettings();
+	// resetWiFiCredentials();
 	// Try to connect to WiFi with captive portal
 	ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Front");
 

@@ -36,7 +36,7 @@ boolean inSetup = true;
 /** Flag for OTA update running */
 boolean otaRunning = false;
 /** Flag for TCP debugging */
-bool debugOn = true;
+bool debugOn = false;
 /** Last time NTP sync was performed */
 time_t lastSyncTime;
 /** Flag if heart beat was triggered */

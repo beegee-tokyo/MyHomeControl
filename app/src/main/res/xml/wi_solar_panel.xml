@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
 					xmlns:tools="http://schemas.android.com/tools"
-					android:configure="tk.giesecke.myhomecontrol.solar.WiCo_SolarPanel"
+					android:configure="tk.giesecke.myhomecontrol.solar.SolarPanelWidgetHelper"
 					android:initialKeyguardLayout="@layout/wi_solar_panel_s"
 					android:initialLayout="@layout/wi_solar_panel_s"
 					android:minHeight="40dp"

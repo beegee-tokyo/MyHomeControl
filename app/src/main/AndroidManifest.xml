@@ -21,7 +21,7 @@
 		android:theme="@style/AppTheme"
 		tools:ignore="GoogleAppIndexingWarning">
 		<activity
-			android:name=".Cl_MyHomeControl"
+			android:name=".MyHomeControl"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
@@ -32,25 +32,25 @@
 			</intent-filter>
 		</activity>
 		<activity
-			android:name=".Cl_Utilities"
+			android:name=".Utilities"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
 		<activity
-			android:name=".solar.Cl_ChartHelper"
+			android:name=".solar.ChartHelper"
 			android:label="@string/app_name"
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
-		<activity android:name=".solar.WiCo_SolarPanel">
+		<activity android:name=".solar.SolarPanelWidgetHelper">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
 			</intent-filter>
 		</activity>
 
 		<receiver
-			android:name=".BR_AutoStart"
+			android:name=".AutoStart"
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>
@@ -58,10 +58,10 @@
 			</intent-filter>
 		</receiver>
 		<receiver
-			android:name=".BR_Events"
+			android:name=".Events"
 			android:enabled="true">
 		</receiver>
-		<receiver android:name=".security.Wi_SecAlarm">
+		<receiver android:name=".security.SecAlarmWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 				<action android:name="android.appwidget.action.APPWIDGET_DELETED"/>
@@ -73,7 +73,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_alarm"/>
 		</receiver>
-		<receiver android:name=".solar.Wi_SolarPanel">
+		<receiver android:name=".solar.SolarPanelWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -82,7 +82,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_solar_panel"/>
 		</receiver>
-		<receiver android:name=".security.Wi_SecLight">
+		<receiver android:name=".security.SecLightWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -91,7 +91,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_light"/>
 		</receiver>
-		<receiver android:name=".aircon.Wi_Aircon">
+		<receiver android:name=".aircon.AirconWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -100,7 +100,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_aircon"/>
 		</receiver>
-		<receiver android:name=".security.Wi_PanicButton">
+		<receiver android:name=".security.PanicButtonWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -109,7 +109,7 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_panic"/>
 		</receiver>
-		<receiver android:name=".lights.Wi_LightCtrl">
+		<receiver android:name=".lights.BedRoomLightWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -120,44 +120,52 @@
 		</receiver>
 
 		<service
-			android:name=".security.WiCl_SecAlarm"
+			android:name=".security.SecAlarmWidgetHelper"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".Sv_StartBackgroundServices"
+			android:name=".StartBackgroundServices"
 			android:enabled="true">
 		</service>
 		<service
-			android:name=".solar.Sv_SolarSyncDB"
+			android:name=".solar.SolarSyncDataBase"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".security.WiCl_SecLight"
+			android:name=".security.SecLightWidgetHelper"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".aircon.WiCl_Aircon"
+			android:name=".aircon.AirconWidgetHelper"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".Sv_MessageListener"
+			android:name=".MessageListener"
 			android:enabled="true"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".security.WiCl_PanicButton"
+			android:name=".security.PanicButtonWidgetHelper"
 			android:exported="false">
 		</service>
 		<service
-			android:name=".devices.Sv_CheckAvailDevices"
+			android:name=".devices.CheckAvailDevices"
 			android:enabled="true">
 		</service>
 		<service
-			android:name=".lights.WiCl_LightCtrl"
+			android:name=".lights.BedRoomLightWidgetOn"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".lights.BedRoomLightWidgetOff"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".lights.BedRoomLightWidgetDim"
 			android:exported="false">
 		</service>
 
-		<receiver android:name=".security.Wi_SecCam">
+		<receiver android:name=".security.SecCamWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -168,16 +176,16 @@
 		</receiver>
 
 		<activity
-			android:name=".security.Cl_SecCamViewer"
+			android:name=".security.SecCamViewer"
 			android:label="@string/title_activity_sec_cam_viewer"
-			android:parentActivityName=".Cl_MyHomeControl"
+			android:parentActivityName=".MyHomeControl"
 			android:theme="@style/AppTheme.NoActionBar">
 			<meta-data
 				android:name="android.support.PARENT_ACTIVITY"
-				android:value="tk.giesecke.myhomecontrol.Cl_MyHomeControl"/>
+				android:value="tk.giesecke.myhomecontrol.MyHomeControl"/>
 		</activity>
 
-		<receiver android:name=".lights.Wi_ByLightCtrl">
+		<receiver android:name=".lights.BackYardLightWidget">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -188,7 +196,7 @@
 		</receiver>
 
 		<service
-			android:name=".lights.WiCl_ByLight"
+			android:name=".lights.BackYardLightWidgetHelper"
 			android:exported="false">
 		</service>
 	</application>
