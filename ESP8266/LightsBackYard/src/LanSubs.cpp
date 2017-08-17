@@ -109,8 +109,13 @@ void socketServer(WiFiClient tcpClient) {
 		sendDebug(debugMsg, OTA_HOST);
 	}
 
+	// Request short status
+	if (req.substring(0, 1) == "s") {
+		// Send back short status over UDP
+		sendAlarm(true);
+		return;
 	// Request long status
-	if (req.substring(0, 1) == "i") {
+	} else if (req.substring(0, 1) == "i") {
 		// Send back long status over UDP
 		sendAlarm(false);
 		return;

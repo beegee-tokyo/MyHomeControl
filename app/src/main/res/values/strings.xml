@@ -94,22 +94,6 @@
 	<string name="timer_on">TIMER ON</string>
 
 	<string name="bt_txt_clear">Clear</string>
-	<string name="bt_txt_debug_line">Debug</string>
-	<string name="bt_txt_reset_line">Reset</string>
-	<string name="bt_txt_debug_moni">Moni</string>
-	<string name="bt_txt_debug_secf">Sfront</string>
-	<string name="bt_txt_debug_secb">Sback</string>
-	<string name="bt_txt_debug_ac1">AC1</string>
-	<string name="bt_txt_debug_ac2">AC2</string>
-	<string name="bt_txt_debug_ac3">AC3</string>
-	<string name="bt_txt_debug_cam1">CAM1</string>
-	<string name="bt_txt_cmd_moni">Mo</string>
-	<string name="bt_txt_cmd_secf">Sf</string>
-	<string name="bt_txt_cmd_secb">Sb</string>
-	<string name="bt_txt_cmd_ac1">A1</string>
-	<string name="bt_txt_cmd_ac2">A2</string>
-	<string name="bt_txt_cmd_ac3">A3</string>
-	<string name="bt_txt_cmd_cam1">C1</string>
 	<string name="bt_txt_find">SEARCH</string>
 
 	<string name="weather_initial">--"C\n--%</string>
@@ -131,9 +115,7 @@
 	<string name="tv_mqtt_client_list_txt">Clients:</string>
 
 	<string name="tv_device_status_txt">Devices</string>
-	<string name="tv_debug_cmd_sh">Com.:</string>
-	<string name="tv_debug_cmd_lo">Command:</string>
-	<string name="txt_cmd_send">Send</string>
+	<string name="txt_cmd_send">Send Command</string>
 	<string name="title_activity_sec_cam_viewer">SecCamViewer</string>
 
 </resources>

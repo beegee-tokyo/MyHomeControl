@@ -108,10 +108,13 @@ public class SolarSyncDataBase extends IntentService {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"Sync last month");
 					if (!syncDB(DataBaseHelper.DATABASE_NAME_LAST, dbNamesList[1], intentContext, true)) {
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"Sync last month failed");
-					} else {
-						sendMyBroadcast(dbNamesList[1]);
+						return;
+//					} else {
+//						sendMyBroadcast(dbNamesList[1]);
 					}
 				}
+				// Update applications database list
+				sendMyBroadcast(dbNamesList[1]);
 			} else {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"Sync stopped, wrong WiFi network");
 			}

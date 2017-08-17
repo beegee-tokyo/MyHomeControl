@@ -77,6 +77,7 @@ void setup() {
 	Serial.println("====================");
 
 	// Send Lights restart message
+	sendDebug("Restarting", OTA_HOST);
 	sendAlarm(true);
 
 	// Reset boot status flag

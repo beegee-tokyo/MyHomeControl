@@ -16,6 +16,7 @@ import java.net.Socket;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.MyHomeControl;
+import tk.giesecke.myhomecontrol.R;
 import tk.giesecke.myhomecontrol.Utilities;
 import tk.giesecke.myhomecontrol.aircon.AirconWidgetHelper;
 
@@ -65,16 +66,15 @@ public class SecAlarmWidgetHelper extends IntentService {
 				if (!Utilities.isHomeWiFi(getApplicationContext())) {
 					String mqttTopic = "{\"ip\":\"sf1\","; // Device IP address
 					mqttTopic += "\"cm\":\"" + cmd + "\"}"; // The command
-
 					AirconWidgetHelper.doPublish(mqttTopic, getApplicationContext());
+
 					mqttTopic = "{\"ip\":\"sb1\","; // Device IP address
 					mqttTopic += "\"cm\":\"" + cmd + "\"}"; // The command
-
 					AirconWidgetHelper.doPublish(mqttTopic, getApplicationContext());
 				} else {
 					SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
-					String urlFront = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secFrontIndex],"NA");
-					String urlBack = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secBackIndex],"NA");
+					String urlFront = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secFrontIndex],getString(R.string.SECURITY_URL_FRONT_1));
+					String urlBack = mPrefs.getString( MyHomeControl.deviceNames[MyHomeControl.secBackIndex],getString(R.string.SECURITY_URL_FRONT_1));
 					try {
 						InetAddress tcpServer = InetAddress.getByName(urlFront);
 						Socket tcpSocket = new Socket(tcpServer, TCP_CLIENT_PORT);

@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseLockedException;
+import android.database.sqlite.SQLiteReadOnlyDatabaseException;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -82,21 +83,15 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import tk.giesecke.myhomecontrol.devices.NSDHelper;
+
+import uk.co.senab.photoview.PhotoViewAttacher;
+
 import tk.giesecke.myhomecontrol.devices.CheckAvailDevices;
+import tk.giesecke.myhomecontrol.devices.NSDHelper;
 import tk.giesecke.myhomecontrol.solar.ChartHelper;
 import tk.giesecke.myhomecontrol.solar.DataBaseHelper;
 import tk.giesecke.myhomecontrol.solar.SolarSyncDataBase;
-import uk.co.senab.photoview.PhotoViewAttacher;
 
-import static tk.giesecke.myhomecontrol.MessageListener.bytesLoadRcvd;
-import static tk.giesecke.myhomecontrol.MessageListener.bytesLoadSend;
-import static tk.giesecke.myhomecontrol.MessageListener.bytesMsgsRcvd;
-import static tk.giesecke.myhomecontrol.MessageListener.bytesMsgsSend;
-import static tk.giesecke.myhomecontrol.MessageListener.clientsConn;
-import static tk.giesecke.myhomecontrol.MessageListener.mqttClientList;
-import static tk.giesecke.myhomecontrol.MessageListener.unSubscribeBrokerStatus;
-import static tk.giesecke.myhomecontrol.devices.NSDHelper.mServicesHosts;
 
 public class MyHomeControl extends AppCompatActivity implements View.OnClickListener
 		, AdapterView.OnItemClickListener , LoadImage.Listener , SeekBar.OnSeekBarChangeListener {
@@ -129,8 +124,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@SuppressWarnings("FieldCanBeLocal")
 	private final int action_debug_id = 9;
 	@SuppressWarnings("FieldCanBeLocal")
-	private final
-	int action_devDebug_id = 10;
+	private final int action_devDebug_id = 10;
 	/** Id's of views */
 	private final int view_security_id = 0;
 	public final static int view_solar_id = 1;
@@ -214,11 +208,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 	// SPmonitor, Security front, Security back, Aircon 1, Aircon 2, Aircon 3, Monitor, Camera front
 	/** List of device names */
-	public static final String[] deviceNames = {"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "vc1"};
+	public static final String[] deviceNames = {"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "vc1", "MHControl"};
 	/** List of potential control device availability */
-	private static final boolean[] deviceIsOn = {false, false, false, false, false, false, false, false, false, false, false};
+	private static final boolean[] deviceIsOn = {false, false, false, false, false, false, false, false, false, false, false, false};
 	/** List of IP addresses of found devices */
-	private static final String[] deviceIPs = {"", "", "", "", "", "", "", "", "", "", ""};
+	private static final String[] deviceIPs = {"", "", "", "", "", "", "", "", "", "", "", ""};
 	/** deviceIsOn index for SPmonitor */
 	public static final int spMonitorIndex = 0;
 	/** deviceIsOn index for Security front */
@@ -769,7 +763,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperLast.close();
 
 		// Unsubscribe from MQTT broker status messages
-		unSubscribeBrokerStatus();
+		MessageListener.unSubscribeBrokerStatus();
 
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Sequence - onPause finished");
 	}
@@ -1415,7 +1409,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						mPrefs.edit().remove(deviceNames[i]).apply();
 						deviceIsOn[i] = false;
 					} else {
-						deviceIPs[i] = mServicesHosts[listIndex].toString().substring(1);
+						deviceIPs[i] = NSDHelper.mServicesHosts[listIndex].toString().substring(1);
 						deviceIsOn[i] = true;
 						new Initialize().execute(deviceNames[i]);
 					}
@@ -1427,10 +1421,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						nsdResults += deviceIPs[i] + "\t\t" + deviceNames[i] + "\n";
 					}
 				}
-				// Start second search
-				Intent searchIntent = new Intent(appContext, CheckAvailDevices.class);
-				searchIntent.putExtra("alternative",true);
-				startService(searchIntent);
+//				if (!searchAlternative) {
+//					// Start second search
+//					Intent searchIntent = new Intent(appContext, CheckAvailDevices.class);
+//					searchIntent.putExtra("alternative",true);
+//					startService(searchIntent);
+//				}
 			} else {
 				nsdResults = "Found other devices & IP's:\n\n";
 				for (int j = 0; j< NSDHelper.foundServices; j++) {
@@ -1475,59 +1471,59 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	private void handleDebugBC(Intent bcIntent) {
 		String message = bcIntent.getStringExtra("message");
-		String deviceName = "";
-		if(message.contains(" ")){
-			deviceName= message.substring(0, message.indexOf(" "));
-		}
-		if (!deviceName.isEmpty()) {
-			Button buttonToChange = null;
-			int listIndex = 0;
-			switch (deviceName) {
-				//"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1"
-				//    0           1      2      3      4      5      6      7       8
-				case "moni":
-					buttonToChange = (Button) findViewById(R.id.bt_debug_moni);
-					listIndex = moniIndex;
-					break;
-				case "sf1":
-					buttonToChange = (Button) findViewById(R.id.bt_debug_secf);
-					listIndex = secFrontIndex;
-					break;
-				case "sb1":
-					buttonToChange = (Button) findViewById(R.id.bt_debug_secb);
-					listIndex = secBackIndex;
-					break;
-				case "fd1":
-					buttonToChange = (Button) findViewById(R.id.bt_debug_ac1);
-					listIndex = aircon1Index;
-					break;
-				case "ca1":
-					buttonToChange = (Button) findViewById(R.id.bt_debug_ac2);
-					listIndex = aircon2Index;
-					break;
-				// TODO add button for American Home aircon
-//						case "am1":
-//							buttonToChange = (Button) findViewById(R.id.bt_debug_ac3);
-//							listIndex = aircon3Index;
-//							break;
-				case "cm1":
-					listIndex = cam1Index;
-					buttonToChange = (Button) findViewById(R.id.bt_debug_cam1);
-					break;
-			}
-			if (buttonToChange != null) {
-				if (message.contains("TCP is on")) {
-					buttonToChange.setBackgroundColor(colorGreen);
-					debugDeviceList[listIndex] = true;
-				}
-				if (message.contains("TCP is off")) {
-					buttonToChange.setBackgroundColor(colorOrange);
-					debugDeviceList[listIndex] = false;
-				}
-			}
-		} else {
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received unknown broadcast: " + message);
-		}
+//		String deviceName = "";
+//		if(message.contains(" ")){
+//			deviceName= message.substring(0, message.indexOf(" "));
+//		}
+//		if (!deviceName.isEmpty()) {
+//			Button buttonToChange = null;
+//			int listIndex = 0;
+//			switch (deviceName) {
+//				//"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1"
+//				//    0           1      2      3      4      5      6      7       8
+//				case "moni":
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_moni);
+//					listIndex = moniIndex;
+//					break;
+//				case "sf1":
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_secf);
+//					listIndex = secFrontIndex;
+//					break;
+//				case "sb1":
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_secb);
+//					listIndex = secBackIndex;
+//					break;
+//				case "fd1":
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_ac1);
+//					listIndex = aircon1Index;
+//					break;
+//				case "ca1":
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_ac2);
+//					listIndex = aircon2Index;
+//					break;
+//				// TODO add button for American Home aircon
+////						case "am1":
+////							buttonToChange = (Button) findViewById(R.id.bt_debug_ac3);
+////							listIndex = aircon3Index;
+////							break;
+//				case "cm1":
+//					listIndex = cam1Index;
+//					buttonToChange = (Button) findViewById(R.id.bt_debug_cam1);
+//					break;
+//			}
+//			if (buttonToChange != null) {
+//				if (message.contains("TCP is on")) {
+//					buttonToChange.setBackgroundColor(colorGreen);
+//					debugDeviceList[listIndex] = true;
+//				}
+//				if (message.contains("TCP is off")) {
+//					buttonToChange.setBackgroundColor(colorOrange);
+//					debugDeviceList[listIndex] = false;
+//				}
+//			}
+//		} else {
+//			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received unknown broadcast: " + message);
+//		}
 		debugMsgs += message + "\n";
 
 		TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
@@ -2806,26 +2802,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private void debugViewUpdate() {
 		Locale locale = Locale.getDefault();
 		TextView viewToChange = (TextView) findViewById(R.id.tv_mqtt_bytes_avg);
-		String tvText = NumberFormat.getNumberInstance(locale).format(bytesLoadRcvd)
-				+ " / " + NumberFormat.getNumberInstance(locale).format(bytesLoadSend);
+		String tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadRcvd)
+				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadSend);
 		viewToChange.setText(tvText);
 		viewToChange = (TextView) findViewById(R.id.tv_mqtt_msg_avg);
-		tvText = NumberFormat.getNumberInstance(locale).format(bytesMsgsRcvd)
-				+ " / " + NumberFormat.getNumberInstance(locale).format(bytesMsgsSend);
+		tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsRcvd)
+				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsSend);
 		viewToChange.setText(tvText);
 
 		viewToChange = (TextView) findViewById(R.id.tv_mqtt_client_conn);
-		viewToChange.setText(NumberFormat.getNumberInstance(locale).format(clientsConn));
+		viewToChange.setText(NumberFormat.getNumberInstance(locale).format(MessageListener.clientsConn));
 
 		String statusClients1 = "";
 		String statusClients2 = "";
-		int mqttClientsNum = mqttClientList.size();
+		int mqttClientsNum = MessageListener.mqttClientList.size();
 		if (mqttClientsNum != 0) {
 			for (int i=0; i<mqttClientsNum; i++) {
 				if (i%2 == 0) { // Get two clients into one line
-					statusClients1 += mqttClientList.get(i) + "\n";
+					statusClients1 += MessageListener.mqttClientList.get(i) + "\n";
 				} else {
-					statusClients2 += mqttClientList.get(i) + "\n";
+					statusClients2 += MessageListener.mqttClientList.get(i) + "\n";
 				}
 			}
 		}
@@ -2861,7 +2857,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				MessageListener.subscribeBrokerStatus();
 			} else {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Unsubscribe from MQTT status");
-				unSubscribeBrokerStatus();
+				MessageListener.unSubscribeBrokerStatus();
 			}
 			return null;
 		}
@@ -3266,7 +3262,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				dataBase.beginTransaction();
 				dataBase.endTransaction();
 				dataBase.close();
-			} catch (SQLiteDatabaseLockedException ignore) {
+			} catch (SQLiteDatabaseLockedException | SQLiteReadOnlyDatabaseException ignore) {
 			}
 
 			// Start background sync of the database
@@ -3538,6 +3534,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				visibleView = view_aircon_id;
 				break;
 			case view_devDebug_id: // Device Debug UI
+				if (Utilities.isHomeWiFi(this)) {
+					// Start discovery of mDNS/NSD services available if not running already
+					if (myServiceIsStopped(CheckAvailDevices.class)) {
+						startService(new Intent(this, CheckAvailDevices.class));
+					}
+				}
 				statusBarColor = getResources().getColor(android.R.color.holo_orange_dark);
 				actionBarColor = getResources().getColor(android.R.color.holo_orange_light);
 				if (abMenu != null) {
@@ -3629,11 +3631,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					new mqttDebugAsync().execute("unsubscribe");
 				}
 				visibleView = view_solar_id;
-//				if (ChartHelper.autoRefreshOn) {
-//					ChartHelper.initChart(true, appContext, chartTitle);
-//				} else {
-//					ChartHelper.initChart(false, appContext, chartTitle);
-//				}
 				ChartHelper.initChart(ChartHelper.autoRefreshOn, appContext, chartTitle);
 				break;
 		}
@@ -4006,7 +4003,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					if (showingLog) {
 						showingLog = false;
 						if (Utilities.isHomeWiFi(this)) {
-//							atNow = new syncSolarDB().execute(dbNamesList[0]);
 							startService(new Intent(this, SolarSyncDataBase.class));
 						}
 
@@ -4261,62 +4257,62 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				debugTxtView.setText("");
 				debugMsgs = "";
 				break;
-			case R.id.bt_debug_moni:
-				cmd = "d";
-				url = deviceIPs[moniIndex];
-				break;
-			case R.id.bt_res_moni:
-				cmd = "r";
-				url = deviceIPs[moniIndex];
-				break;
-			case R.id.bt_debug_secf:
-				cmd = "d";
-				url = deviceIPs[secFrontIndex];
-				break;
-			case R.id.bt_res_secf:
-				cmd = "r";
-				url = deviceIPs[secFrontIndex];
-				break;
-			case R.id.bt_debug_secb:
-				cmd = "d";
-				url = deviceIPs[secBackIndex];
-				break;
-			case R.id.bt_res_secb:
-				cmd = "r";
-				url = deviceIPs[secBackIndex];
-				break;
-			case R.id.bt_debug_ac1:
-				cmd = "d";
-				url = deviceIPs[aircon1Index];
-				break;
-			case R.id.bt_res_ac1:
-				cmd = "r";
-				url = deviceIPs[aircon1Index];
-				break;
-			case R.id.bt_debug_ac2:
-				cmd = "d";
-				url = deviceIPs[aircon2Index];
-				break;
-			case R.id.bt_res_ac2:
-				cmd = "r";
-				url = deviceIPs[aircon2Index];
-				break;
-			case R.id.bt_debug_ac3:
-				cmd = "d";
-				url = deviceIPs[aircon3Index];
-				break;
-			case R.id.bt_res_ac3:
-				cmd = "r";
-				url = deviceIPs[aircon3Index];
-				break;
-			case R.id.bt_debug_cam1:
-				cmd = "d";
-				url = deviceIPs[cam1Index];
-				break;
-			case R.id.bt_res_cam1:
-				cmd = "r";
-				url = deviceIPs[cam1Index];
-				break;
+//			case R.id.bt_debug_moni:
+//				cmd = "d";
+//				url = deviceIPs[moniIndex];
+//				break;
+//			case R.id.bt_res_moni:
+//				cmd = "r";
+//				url = deviceIPs[moniIndex];
+//				break;
+//			case R.id.bt_debug_secf:
+//				cmd = "d";
+//				url = deviceIPs[secFrontIndex];
+//				break;
+//			case R.id.bt_res_secf:
+//				cmd = "r";
+//				url = deviceIPs[secFrontIndex];
+//				break;
+//			case R.id.bt_debug_secb:
+//				cmd = "d";
+//				url = deviceIPs[secBackIndex];
+//				break;
+//			case R.id.bt_res_secb:
+//				cmd = "r";
+//				url = deviceIPs[secBackIndex];
+//				break;
+//			case R.id.bt_debug_ac1:
+//				cmd = "d";
+//				url = deviceIPs[aircon1Index];
+//				break;
+//			case R.id.bt_res_ac1:
+//				cmd = "r";
+//				url = deviceIPs[aircon1Index];
+//				break;
+//			case R.id.bt_debug_ac2:
+//				cmd = "d";
+//				url = deviceIPs[aircon2Index];
+//				break;
+//			case R.id.bt_res_ac2:
+//				cmd = "r";
+//				url = deviceIPs[aircon2Index];
+//				break;
+//			case R.id.bt_debug_ac3:
+//				cmd = "d";
+//				url = deviceIPs[aircon3Index];
+//				break;
+//			case R.id.bt_res_ac3:
+//				cmd = "r";
+//				url = deviceIPs[aircon3Index];
+//				break;
+//			case R.id.bt_debug_cam1:
+//				cmd = "d";
+//				url = deviceIPs[cam1Index];
+//				break;
+//			case R.id.bt_res_cam1:
+//				cmd = "r";
+//				url = deviceIPs[cam1Index];
+//				break;
 			case R.id.bt_highlight:
 				filterDbgMsg();
 				break;
@@ -4344,51 +4340,108 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		ToggleButton tbPushed = null;
 		/** Index for list of enabled devices to send command to */
 		int listIndex = -1;
-		/** URL for communication with ESP */
-		String url;
-
-		//"spMonitor", "sf1", "sb1", "fd1", "ca1", "mhc", "moni", "cm1", "lb1"
 		switch (v.getId()) {
-			case R.id.tb_cmd_moni:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_moni);
-				listIndex = moniIndex;
-				break;
-			case R.id.tb_cmd_secf:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_secf);
-				listIndex = secFrontIndex;
-				break;
-			case R.id.tb_cmd_secb:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_secb);
-				listIndex = secBackIndex;
-				break;
-			case R.id.tb_cmd_ac1:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_ac1);
-				listIndex = aircon1Index;
-				break;
-			case R.id.tb_cmd_ac2:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_ac2);
-				listIndex = aircon2Index;
-				break;
-			case R.id.tb_cmd_ac3:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_ac3);
-				listIndex = aircon3Index;
-				break;
-			case R.id.tb_cmd_cam1:
-				tbPushed = (ToggleButton) findViewById(R.id.tb_cmd_cam1);
-				listIndex = cam1Index;
-				break;
 			case R.id.bt_cmd_send:
-				/** Edittext to highlight search word in the incoming debug messages */
-				EditText cmdTxt = (EditText) findViewById(R.id.et_debug_cmd);
-				String cmdAsText = cmdTxt.getText().toString();
-				if (!cmdAsText.equalsIgnoreCase("")) {
-					for (int i=0; i<9; i++) {
-						if (cmdDeviceList[i]) { // if device is selected, send the command
-							url = deviceIPs[i];
-							new ESPbyTCP(url, cmdAsText, "0");
+				String[] availDevices = getResources().getStringArray(R.array.mhc_devices);
+				AlertDialog.Builder devListbuilder = new AlertDialog.Builder(this);
+				devListbuilder.setTitle("Select device");
+				devListbuilder.setItems(availDevices, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected device num = " + which);
+						String[] availCmds = null;
+						final int selDeviceNum = which;
+						String cmdAsText;
+						switch (which) {
+							case 0:
+							case 1:
+								availCmds = getResources().getStringArray(R.array.sec_cmds_txt);
+								break;
+							case 2:
+								availCmds = getResources().getStringArray(R.array.cam_cmds_txt);
+								break;
+							case 3:
+								availCmds = getResources().getStringArray(R.array.byard_light_cmds_txt);
+								break;
+							case 4:
+								availCmds = getResources().getStringArray(R.array.bed_light_cmds_txt);
+								break;
+							case 5:
+							case 6:
+								availCmds = getResources().getStringArray(R.array.ac_cmds_txt);
+								break;
+							case 7:
+								cmdAsText = "d";
+								for (int i=0; i<deviceNames.length; i++) {
+									if (!deviceIPs[i].equalsIgnoreCase("")) {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
+										new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
+									}
+								}
+								break;
+							case 8:
+								cmdAsText = "s";
+								for (int i=0; i<deviceNames.length; i++) {
+									if (!deviceIPs[i].equalsIgnoreCase("")) {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
+										new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
+									}
+								}
+								break;
+						}
+						dialog.dismiss();
+						if (availCmds != null) {
+							AlertDialog.Builder cmdListBuilder = new AlertDialog.Builder(appContext);
+							cmdListBuilder.setTitle("Select command");
+							cmdListBuilder.setItems(availCmds, new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected cmd num = " + which);
+									String selURL = "";
+									String[] cmdList = null;
+									switch (selDeviceNum) {
+										case 0:
+											selURL = deviceIPs[secFrontIndex];
+											cmdList = getResources().getStringArray(R.array.sec_cmds);
+											break;
+										case 1:
+											selURL = deviceIPs[secBackIndex];
+											cmdList = getResources().getStringArray(R.array.sec_cmds);
+											break;
+										case 2:
+											selURL = deviceIPs[cam1Index];
+											cmdList = getResources().getStringArray(R.array.cam_cmds);
+											break;
+										case 3:
+											selURL = deviceIPs[ly1Index];
+											cmdList = getResources().getStringArray(R.array.byard_light_cmds);
+											break;
+										case 4:
+											selURL = deviceIPs[lb1Index];
+											cmdList = getResources().getStringArray(R.array.bed_light_cmds);
+											break;
+										case 5:
+											selURL = deviceIPs[aircon1Index];
+											cmdList = getResources().getStringArray(R.array.ac_cmds);
+											break;
+										case 6:
+											selURL = deviceIPs[aircon2Index];
+											cmdList = getResources().getStringArray(R.array.ac_cmds);
+											break;
+									}
+									dialog.dismiss();
+									if (cmdList != null) {
+										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected cmd = " + cmdList[which]);
+										new ESPbyTCP(selURL, cmdList[which], "0");
+									}
+								}
+							});
+							cmdListBuilder.create();
+							cmdListBuilder.show();
 						}
 					}
-				}
+				});
+				devListbuilder.show();
 				break;
 			default:
 				return false;

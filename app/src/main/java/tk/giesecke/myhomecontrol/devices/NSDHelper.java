@@ -6,8 +6,14 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
 
@@ -20,7 +26,7 @@ public class NSDHelper {
 
 //	private static final String SERVICE_TYPE = "_arduino._tcp."; //"_services._dns-sd._udp"; "_http._tcp";
 	private static final String SERVICE_TYPE = "_arduino._tcp."; //"_services._dns-sd._udp"; "_http._tcp";
-	private static final String SERVICE_TYPE2 = "_workstation._tcp."; //"_services._dns-sd._udp"; "_http._tcp";
+	private static final String SERVICE_TYPE2 = "_http._tcp."; //"_services._dns-sd._udp"; "_http._tcp";
 /** Available services:
 	_workstation
 	_UnoWiFi
@@ -99,7 +105,7 @@ public class NSDHelper {
 			@Override
 			public void onStartDiscoveryFailed(String serviceType, int errorCode) {
 				if (BuildConfig.DEBUG) Log.e(DEBUG_LOG_TAG, "Discovery failed: Error code: " + errorCode);
-				mNsdManager.stopServiceDiscovery(this);
+//				mNsdManager.stopServiceDiscovery(this);
 				sendMyBroadcast(99, false); // Send error
 			}
 
@@ -146,6 +152,7 @@ public class NSDHelper {
 
 				Log.d(DEBUG_LOG_TAG, "Service name: " + serviceInfo.getServiceName()
 						+ " IP: " + serviceInfo.getHost() + ":" + serviceInfo.getPort());
+
 				for (int i=0; i<foundServices; i++) {
 					String newServiceName = serviceInfo.getServiceName();
 					int startOfIP6 = newServiceName.indexOf("[");
@@ -153,7 +160,17 @@ public class NSDHelper {
 						newServiceName = newServiceName.substring(0,startOfIP6-1);
 					}
 					if (mServicesNames[i].equalsIgnoreCase(newServiceName)) {
-						mServicesHosts[i] = serviceInfo.getHost();
+						InetAddress ipV4;
+						try {
+							InetAddress hostInet= InetAddress.getByName(serviceInfo.getHost().getHostAddress());
+							byte [] addressBytes = hostInet.getAddress();
+							ipV4 = Inet4Address.getByAddress(addressBytes);
+						} catch (UnknownHostException e) {
+							Log.d(DEBUG_LOG_TAG, "Error getting IP V4 address: " + e.getMessage());
+							ipV4 = serviceInfo.getHost();
+						}
+//						mServicesHosts[i] = serviceInfo.getHost();
+						mServicesHosts[i] = ipV4;
 						mServicesPort[i] = serviceInfo.getPort();
 						sendMyBroadcast(i, true);
 						break;

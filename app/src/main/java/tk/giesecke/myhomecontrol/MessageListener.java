@@ -947,100 +947,140 @@ public class MessageListener extends Service {
 		}
 	}
 
+	/**
+	 * Start runnable to subscribe to broker status
+	 */
 	public static void subscribeBrokerStatus() {
-		if (mqttClient != null) {
-			// Clear old status
-			clientsConn = 0; // $SYS/broker/clients/connected
-			bytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
-			bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
-			bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
-			bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
-			mqttClientList.clear();
+		new subscribeBrokerStatusRunnable();
+	}
 
-			IMqttToken token;
-			try {
-				token = mqttClient.unsubscribe("/DEV/#");
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("$SYS/broker/load/bytes/received/1min", 0);
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("$SYS/broker/load/bytes/sent/1min", 0);
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("$SYS/broker/load/messages/received/1min", 0);
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("$SYS/broker/load/messages/sent/1min", 0);
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("$SYS/broker/clients/connected", 0);
-				token.waitForCompletion(10000);
-				token = mqttClient.subscribe("/DEV/#", 0);
-				token.waitForCompletion(10000);
-			} catch (MqttException e) {
-				switch (e.getReasonCode()) {
-					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_CONNECTION_LOST:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
-						if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
-							mqttconnLostNum ++;
-						}
-						break;
-					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
-						break;
-					default:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
-						break;
+	/**
+	 * Subscribe to broker status
+	 */
+	private static class subscribeBrokerStatusRunnable implements Runnable {
+
+		subscribeBrokerStatusRunnable() {
+			run();
+		}
+
+		public void run() {
+			if (mqttClient != null) {
+				// Clear old status
+				clientsConn = 0; // $SYS/broker/clients/connected
+				bytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
+				bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
+				bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
+				bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
+				mqttClientList.clear();
+
+				IMqttToken token;
+				try {
+					token = mqttClient.unsubscribe("/DEV/#");
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("$SYS/broker/load/bytes/received/1min", 0);
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("$SYS/broker/load/bytes/sent/1min", 0);
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("$SYS/broker/load/messages/received/1min", 0);
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("$SYS/broker/load/messages/sent/1min", 0);
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("$SYS/broker/clients/connected", 0);
+					token.waitForCompletion(10000);
+					token = mqttClient.subscribe("/DEV/#", 0);
+					token.waitForCompletion(10000);
+				} catch (MqttException e) {
+					switch (e.getReasonCode()) {
+						case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " + e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " + e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CONNECTION_LOST:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " + e.getMessage());
+							if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+								mqttconnLostNum++;
+							}
+							break;
+						case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " + e.getMessage());
+							break;
+						case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION " + e.getMessage());
+							break;
+						default:
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+							break;
+					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Start runnable to unsubscribe from broker status
+	 */
 	public static void unSubscribeBrokerStatus() {
-		if (mqttClient != null) {
-			IMqttToken token;
-			try {
-//				token = mqttClient.unsubscribe("");
-//				token.waitForCompletion(10000);
+		new unSubscribeBrokerStatusRunnable();
+	}
 
-				token = mqttClient.unsubscribe("$SYS/broker/clients/connected");
-				token.waitForCompletion(10000);
-				token = mqttClient.unsubscribe("$SYS/broker/load/bytes/received/1min");
-				token.waitForCompletion(10000);
-				token = mqttClient.unsubscribe("$SYS/broker/load/bytes/sent/1min");
-				token.waitForCompletion(10000);
-				token = mqttClient.unsubscribe("$SYS/broker/load/messages/received/1min");
-				token.waitForCompletion(10000);
-				token = mqttClient.unsubscribe("$SYS/broker/load/messages/sent/1min");
-				token.waitForCompletion(10000);
-			} catch (MqttException e) {
-				switch (e.getReasonCode()) {
-					case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_CLIENT_TIMEOUT:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_CONNECTION_LOST:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
-						if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
-							mqttconnLostNum ++;
-						}
-						break;
-					case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
-						break;
-					case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
-						break;
-					default:
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
-						break;
+	/**
+	 * Unsubscribe from broker status
+	 */
+	private static class unSubscribeBrokerStatusRunnable implements Runnable {
+
+		unSubscribeBrokerStatusRunnable() {
+			run();
+		}
+
+		public void run() {
+			if (mqttClient != null) {
+				IMqttToken token;
+				try {
+//			    	token = mqttClient.unsubscribe("");
+//				    token.waitForCompletion(10000);
+
+					token = mqttClient.unsubscribe("$SYS/broker/clients/connected");
+					token.waitForCompletion(10000);
+					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/received/1min");
+					token.waitForCompletion(10000);
+					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/sent/1min");
+					token.waitForCompletion(10000);
+					token = mqttClient.unsubscribe("$SYS/broker/load/messages/received/1min");
+					token.waitForCompletion(10000);
+					token = mqttClient.unsubscribe("$SYS/broker/load/messages/sent/1min");
+					token.waitForCompletion(10000);
+				} catch (MqttException e) {
+					switch (e.getReasonCode()) {
+						case MqttException.REASON_CODE_BROKER_UNAVAILABLE:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "BROKER_UNAVAILABLE " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CLIENT_TIMEOUT:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CLIENT_TIMEOUT " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_CONNECTION_LOST:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CONNECTION_LOST " +e.getMessage());
+							if (e.getMessage().contains("32109")) { // Connection lost due to EOFException
+								mqttconnLostNum ++;
+							}
+							break;
+						case MqttException.REASON_CODE_SERVER_CONNECT_ERROR:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "SERVER_CONNECT_ERROR " +e.getMessage());
+							break;
+						case MqttException.REASON_CODE_FAILED_AUTHENTICATION:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "FAILED_AUTHENTICATION "+ e.getMessage());
+							break;
+						default:
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT unknown error " + e.getMessage());
+							break;
+					}
 				}
 			}
 		}

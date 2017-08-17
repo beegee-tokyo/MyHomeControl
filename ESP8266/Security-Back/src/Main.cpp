@@ -97,18 +97,56 @@ void loop() {
 	wdt_reset();
 	// Check time in case automatic de/activation of alarm is set */
 	if (hasAutoActivation) {
-		if ((hour()==autoActivOn) && !alarmOn) {
+		byte newAlarmStatusIsOn = 0;
+		// If ON time is earlier than OFF time
+		if (autoActivOn < autoActivOff) {
+			// Alarm is off, check if we are within the alarm time zone
+			if (!alarmOn && (hour() >= autoActivOn) && (hour() < autoActivOff)) {
+				// Set alarm_on to active
+				newAlarmStatusIsOn = 1;
+			}
+			// Alarm is on, check if we are outside the alarm time zone
+			if (alarmOn && ((hour() >= autoActivOff) || (hour() < autoActivOn))) {
+				// Set alarm_on to inactive
+				newAlarmStatusIsOn = 2;
+			}
+		} else {
+			// Alarm is off, check if we are within the alarm time zone
+			if (!alarmOn && ((hour() >= autoActivOn) || (hour() < autoActivOff))) {
+				// Set alarm_on to active
+				newAlarmStatusIsOn = 1;
+			}
+			// Alarm is on, check if we are outside the alarm time zone
+			if (alarmOn && (hour() >= autoActivOff) && (hour() < autoActivOn)) {
+				// Set alarm_on to inactive
+				newAlarmStatusIsOn = 2;
+			}
+		}
+
+		if (newAlarmStatusIsOn == 1) {
 			// Set alarm_on to active
 			alarmOn = true;
 			actLedFlashStart(1);
 			sendAlarm(true);
-		}
-		if ((hour()== autoActivOff) && alarmOn) {
+		} else if (newAlarmStatusIsOn == 2){
 			// Set alarm_on to inactive
 			alarmOn = false;
 			actLedFlashStop();
 			sendAlarm(true);
 		}
+
+		// if ((hour()==autoActivOn) && !alarmOn) {
+		// 	// Set alarm_on to active
+		// 	alarmOn = true;
+		// 	actLedFlashStart(1);
+		// 	sendAlarm(true);
+		// }
+		// if ((hour()== autoActivOff) && alarmOn) {
+		// 	// Set alarm_on to inactive
+		// 	alarmOn = false;
+		// 	actLedFlashStop();
+		// 	sendAlarm(true);
+		// }
 	}
 
 	wdt_reset();

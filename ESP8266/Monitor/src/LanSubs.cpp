@@ -207,6 +207,7 @@ void socketServer(WiFiClient tcpClient) {
 		delay(5000);
 	}
 }
+
 /**
 	messageReceived
 	Called when subscribed message was received from MQTT broker

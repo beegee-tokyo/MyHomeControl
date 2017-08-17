@@ -35,17 +35,13 @@ public class CheckAvailDevices extends Service {
 	private static SharedPreferences mPrefs;
 	/* Name of shared preferences */
 	private static final String sharedPrefName = "MyHomeControl";
-
-
-//	public CheckAvailDevices() {
-//	}
+	/* Flag if we are searching for none Arduino type of services */
+	static boolean searchAlternative = false;
 
 	@Override
 	public IBinder onBind(Intent intent) {
 		throw new UnsupportedOperationException("Not yet implemented");
 	}
-
-	static boolean searchAlternative = false;
 
 	@Override
 	public int onStartCommand( Intent intent, int flags, int startId ) {
@@ -93,11 +89,6 @@ public class CheckAvailDevices extends Service {
 		}, 10000);
 		return super.onStartCommand( intent, flags, startId );
 	}
-
-//	@Override
-//	public void onCreate() {
-//		super.onCreate();
-//	}
 
 	/**
 	 * Broadcast receiver for notifications received from service resolver

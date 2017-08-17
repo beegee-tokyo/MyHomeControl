@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+	<string-array name="mhc_devices">
+		<item>Security Front</item>
+		<item>Security Back</item>
+		<item>Still Camera Front</item>
+		<item>Lights Backyard</item>
+		<item>Lights Bedroom</item>
+		<item>Aircon Fuji Denzo</item>
+		<item>Aircon Carrier</item>
+		<item>Toggle Debug status</item>
+		<item>Request status</item>
+	</string-array>
+
+	<string-array name="ac_cmds">
+		<item>c=00</item>
+		<item>c=10</item>
+		<item>c=11</item>
+		<item>c=12</item>
+		<item>c=13</item>
+		<item>c=20</item>
+		<item>c=21</item>
+		<item>c=22</item>
+		<item>c=23</item>
+		<item>c=30</item>
+		<item>c=31</item>
+		<item>c=40</item>
+		<item>c=41</item>
+		<item>c=42</item>
+		<item>c=43</item>
+		<item>c=70</item>
+		<item>c=71</item>
+		<item>c=80</item>
+		<item>c=81</item>
+		<item>c=82</item>
+		<item>c=98</item>
+		<item>c=99</item>
+		<item>t=</item>
+		<item>d</item>
+		<item>i</item>
+		<item>r</item>
+		<item>s</item>
+		<item>x</item>
+		<item>y=</item>
+	</string-array>
+
+	<string-array name="ac_cmds_txt">
+		<item>AC on/off</item>
+		<item>Mode Auto (ca1 only)</item>
+		<item>Mode Cool</item>
+		<item>Mode Dry</item>
+		<item>Mode Fan</item>
+		<item>Fan High (fd1 only)</item>
+		<item>Fan Medium (fd1 only)</item>
+		<item>Fan Low (fd1 only)</item>
+		<item>Fan Speed</item>
+		<item>Temp plus</item>
+		<item>Temp minus</item>
+		<item>Timer (fd1 only)</item>
+		<item>Sweep (ca1 only)</item>
+		<item>Turbo (ca1 only)</item>
+		<item>Ion (ca1 only)</item>
+		<item>Reset</item>
+		<item>AC init</item>
+		<item>Remote 00</item>
+		<item>Remote 01</item>
+		<item>Remote 02</item>
+		<item>Auto on</item>
+		<item>Auto off</item>
+		<item>Manual timer (fd1 only)</item>
+		<item>Debug on/off</item>
+		<item>AC init request</item>
+		<item>Reset WiFi config</item>
+		<item>Request status</item>
+		<item>Reset device</item>
+		<item>Date/Time update</item>
+	</string-array>
+
+	<string-array name="sec_cmds">
+		<item>a=0</item>
+		<item>a=1</item>
+		<item>a=2,</item>
+		<item>a=3</item>
+		<item>a=4</item>
+		<item>a=5</item>
+		<item>s</item>
+		<item>p</item>
+		<item>i</item>
+		<item>b</item>
+		<item>d</item>
+		<item>r</item>
+		<item>x</item>
+		<item>y=</item>
+	</string-array>
+
+	<string-array name="sec_cmds_txt">
+		<item>Alarm off</item>
+		<item>Alarm on</item>
+		<item>Alarm auto on time</item>
+		<item>Alarm auto off</item>
+		<item>Lights auto on</item>
+		<item>Lights auto off</item>
+		<item>Request status</item>
+		<item>Panic mode on/off</item>
+		<item>Request ext. status</item>
+		<item>Lights on (2min)</item>
+		<item>Debug on/off</item>
+		<item>Reset WiFi config</item>
+		<item>Reset device</item>
+		<item>Date/Time update</item>
+	</string-array>
+
+	<string-array name="cam_cmds">
+		<item>t</item>
+		<item>d</item>
+		<item>r</item>
+		<item>x</item>
+		<item>y=</item>
+	</string-array>
+
+	<string-array name="cam_cmds_txt">
+		<item>Take picture</item>
+		<item>Debug on/off</item>
+		<item>Reset WiFi config</item>
+		<item>Reset device</item>
+		<item>Date/Time update</item>
+	</string-array>
+
+	<string-array name="bed_light_cmds">
+		<item>c=00</item>
+		<item>c=01</item>
+		<item>c=02</item>
+		<item>c=03</item>
+		<item>c=04</item>
+		<item>c=05</item>
+		<item>c=06</item>
+		<item>c=07</item>
+		<item>c=08</item>
+		<item>c=09</item>
+		<item>c=10</item>
+		<item>c=11</item>
+		<item>b=</item>
+		<item>s</item>
+		<item>d=</item>
+	</string-array>
+
+	<string-array name="bed_light_cmds_txt">
+		<item>brightness 0</item>
+		<item>brightness 200</item>
+		<item>brightness -1</item>
+		<item>brightness +1</item>
+		<item>brightness -25</item>
+		<item>brightness +25</item>
+		<item>brightness +10</item>
+		<item>brightness -10</item>
+		<item>brightness 226</item>
+		<item>brightness 225</item>
+		<item>brightness 224</item>
+		<item>brightness 223</item>
+		<item>set brightness</item>
+		<item>Request status</item>
+		<item>Set Dim value</item>
+	</string-array>
+
+	<string-array name="byard_light_cmds">
+		<item>s</item>
+		<item>i</item>
+		<item>l=1</item>
+		<item>l=0</item>
+		<item>p</item>
+		<item>b</item>
+		<item>d</item>
+		<item>r</item>
+		<item>x</item>
+		<item>y=</item>
+	</string-array>
+
+	<string-array name="byard_light_cmds_txt">
+		<item>Request status</item>
+		<item>Request ext. status</item>
+		<item>Switch light on</item>
+		<item>Switch light off</item>
+		<item>Panic mode on/off</item>
+		<item>Lights on 5min</item>
+		<item>Debug on/off</item>
+		<item>Reset WiFi config</item>
+		<item>Reset device</item>
+		<item>Date/Time update</item>
+	</string-array>
+
+</resources>
