@@ -49,7 +49,7 @@ void loop() {
 			sendRpiDebug("heartBeatTriggered", OTA_HOST);
 		}
 		heartBeatTriggered = false;
-		if (!wmIsConnected) { // Connection to WiFi failed, retry to connect
+		if (!wmIsConnected) { // Connection to WiFi lost, retry to connect
 			// Try to connect to WiFi with captive portal
 			wdt_disable();
 			ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 CAM 1");

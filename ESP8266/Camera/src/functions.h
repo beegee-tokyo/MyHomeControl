@@ -15,3 +15,6 @@ bool ftpConnect();
 
 // Ticker functions
 void triggerHeartBeat();
+
+// SPIFFS functions
+bool formatSPIFFS();

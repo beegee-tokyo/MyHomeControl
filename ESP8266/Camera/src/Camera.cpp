@@ -1,9 +1,9 @@
 #include <Setup.h>
 
-/** Buffer for received data */
-char outBuf[128];
-/** Counter for sent/received data */
-char outCount;
+// /** Buffer for received data */
+// char outBuf[128];
+// /** Counter for sent/received data */
+// char outCount;
 
 /**
 	Take camera shot and save to FTP & SPIFFS
@@ -21,7 +21,7 @@ boolean takeShot() {
 	digitalWrite(flashLED, HIGH);
 	uint32_t startTime = millis();
 	wdt_reset();
-	if (! cam.takePicture()) {
+	if (!cam.takePicture()) {
 		if (debugOn) {
 			sendRpiDebug("Failed to snap!", OTA_HOST);
 		}
@@ -77,6 +77,9 @@ boolean takeShot() {
 	File imgFile = SPIFFS.open("/last.jpg", "w");
 	if (imgFile == 0) {
 		fileOpen = false;
+		if (debugOn) {
+			sendRpiDebug("Failed to open file /last.jpg", OTA_HOST);
+		}
 	}
 
 	// Prepare FTP connection
@@ -90,6 +93,8 @@ boolean takeShot() {
 		if (debugOn) {
 			sendRpiDebug("Connecting to FTP failed", OTA_HOST);
 		}
+		// Maybe we lost WiFi connection!
+		wmIsConnected = false;
 	}
 
 	if (ftpConnected) {
@@ -105,6 +110,8 @@ boolean takeShot() {
 			ftpDataClient.stop();
 			ftpClient.stop();
 			ftpConnected = false;
+			// Maybe we lost WiFi connection!
+			wmIsConnected = false;
 		} else {
 			ftpClient.print(F("STOR "));
 			ftpClient.println(filename);
@@ -118,6 +125,8 @@ boolean takeShot() {
 				ftpDataClient.stop();
 				ftpClient.stop();
 				ftpConnected = false;
+				// Maybe we lost WiFi connection!
+				wmIsConnected = false;
 			}
 		}
 	}
@@ -131,7 +140,7 @@ boolean takeShot() {
 	uint32_t bytesWrittenFTP = 0;
 	uint32_t bytesWrittenFS = 0;
 
-	// Read all the data up to # bytes!
+	// Read all the data up to jpglen # bytes!
 	uint32_t timeOut = millis(); // timout counter
 	while (jpglen > 0) {
 		uint16_t wCount = 0; // For counting # of writes
@@ -170,6 +179,9 @@ boolean takeShot() {
 		if (fileOpen) {
 			wdt_reset();
 			bytesWrittenFS += imgFile.write((const uint8_t *) clientBuf, wCount);
+
+			debugMsg = "Saved " + String(bytesWrittenFS) + " bytes from " + String(wCount);
+			sendRpiDebug(debugMsg, OTA_HOST);
 		}
 		if (millis()-timeOut > 60000) { // if transfer takes more than a minute, stop it
 			if (debugOn) {
@@ -177,6 +189,7 @@ boolean takeShot() {
 			}
 			bytesWrittenFTP = bytesWrittenFS = jpglen = 0;
 			digitalWrite(flashLED, LOW);
+			// Maybe we lost WiFi connection!
 			wmIsConnected = false;
 			break;
 		}
@@ -184,13 +197,6 @@ boolean takeShot() {
 	if (ftpConnected) {
 		wdt_reset();
 		ftpDataClient.stop();
-	}
-	if (fileOpen) {
-		wdt_reset();
-		imgFile.close();
-	}
-
-	if (ftpConnected) {
 		ftpClient.println("QUIT");
 		// Check result
 		wdt_reset();
@@ -199,20 +205,19 @@ boolean takeShot() {
 				debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
 				sendRpiDebug(debugMsg, OTA_HOST);
 			}
-			ftpClient.stop();
-			cam.resumeVideo();
-			comLedFlashStop();
-			digitalWrite(flashLED, LOW);
+			// Maybe we lost WiFi connection!
 			wmIsConnected = false;
-			return false;
 		}
-	}
-	if (debugOn) {
-		sendRpiDebug("STOP FTP", OTA_HOST);
-	}
-	if (ftpConnected) {
+		if (debugOn) {
+			sendRpiDebug("STOP FTP", OTA_HOST);
+		}
 		ftpClient.stop();
 	}
+	if (fileOpen) {
+		wdt_reset();
+		imgFile.close();
+	}
+
 	uint32_t endTime = millis();
 	digitalWrite(flashLED, LOW);
 	if (debugOn) {

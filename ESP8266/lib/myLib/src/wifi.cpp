@@ -169,6 +169,8 @@ void sendRpiDebug(String debugMsg, String senderID) {
 		Serial.println("connection to Debug PC " + String(ipMonitor[0]) + "." + String(ipMonitor[1]) + "." + String(ipMonitor[2]) + "." + String(ipMonitor[3]) + " failed");
 		tcpDebugClient.stop();
 		doubleLedFlashStop();
+		// Send debug message as well to tablet
+		sendDebug(debugMsg, senderID);
 		return;
 	}
 
@@ -177,5 +179,9 @@ void sendRpiDebug(String debugMsg, String senderID) {
 	tcpDebugClient.print(debugMsg);
 
 	tcpDebugClient.stop();
+
 	doubleLedFlashStop();
+
+	// Send debug message as well to tablet
+	sendDebug(debugMsg, "");
 }

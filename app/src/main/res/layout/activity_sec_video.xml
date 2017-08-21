@@ -22,8 +22,8 @@
 
 	</android.support.design.widget.AppBarLayout>
 
-	<LinearLayout
-		android:id="@+id/content_sec_cam_viewer"
+	<RelativeLayout
+		android:id="@+id/ll_cctv_footage"
 		xmlns:android="http://schemas.android.com/apk/res/android"
 		xmlns:app="http://schemas.android.com/apk/res-auto"
 		xmlns:tools="http://schemas.android.com/tools"
@@ -36,58 +36,52 @@
 		app:layout_behavior="@string/appbar_scrolling_view_behavior"
 		tools:context="tk.giesecke.myhomecontrol.security.SecCamViewer"
 		tools:showIn="@layout/activity_sec_video"
-		android:orientation="vertical">
+		android:orientation="vertical"
+		tools:ignore="ButtonStyle">
 
-		<WebView
-			android:id="@+id/wv_seccam1"
+		<TextView
+			android:id="@+id/et_cctv_error"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:visibility="visible"
-			android:layout_weight="1"/>
+			android:ems="50"
+			android:gravity="center"
+			android:text="@string/err_cctv"/>
 
-		<WebView
-			android:id="@+id/wv_seccam2"
+		<VideoView
+			android:id="@+id/vv_cctv_footage"
 			android:layout_width="match_parent"
 			android:layout_height="match_parent"
-			android:visibility="visible"
-			android:layout_weight="1"/>
+			android:visibility="invisible"/>
+
+		<ImageButton
+			android:id="@+id/ib_view_selection"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			app:srcCompat="@android:drawable/ic_menu_more"/>
 
 		<LinearLayout
-			android:orientation="horizontal"
-			android:layout_width="match_parent"
+			android:id="@+id/ll_select_footage"
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_weight="0">
+			android:layout_toEndOf="@+id/ib_view_selection"
+			android:layout_toRightOf="@+id/ib_view_selection"
+			android:orientation="horizontal">
 
-			<ImageButton
+			<Button
+				android:id="@+id/bt_today"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				app:srcCompat="@drawable/ic_refresh"
-				android:id="@+id/ib_refresh"
-				android:contentDescription="@string/ALT_LOCAL_SSID"/>
+				android:text="@string/bt_today_txt"/>
 
-			<ImageButton
+			<Button
+				android:id="@+id/bt_history"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
-				app:srcCompat="@drawable/ic_single_view"
-				android:id="@+id/ib_change_view"
-				android:contentDescription="@string/ALT_LOCAL_SSID"/>
-
-			<ImageButton
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				app:srcCompat="@android:drawable/ic_media_ff"
-				android:id="@+id/ib_switch_video"
-				android:contentDescription="@string/ALT_LOCAL_SSID"/>
-
-			<ImageButton
-				android:layout_width="wrap_content"
-				android:layout_height="match_parent"
-				app:srcCompat="@android:drawable/ic_notification_clear_all"
-				android:id="@+id/ib_close_view"
-				android:contentDescription="@string/ALT_LOCAL_SSID"/>
+				android:text="@string/bt_history_txt"/>
 
 		</LinearLayout>
 
-	</LinearLayout>
+	</RelativeLayout>
 
 </android.support.design.widget.CoordinatorLayout>

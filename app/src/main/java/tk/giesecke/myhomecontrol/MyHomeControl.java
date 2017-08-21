@@ -29,6 +29,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.format.Formatter;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -84,6 +85,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import tk.giesecke.myhomecontrol.security.CCTVfootages;
+import tk.giesecke.myhomecontrol.security.SecCamViewer;
 import uk.co.senab.photoview.PhotoViewAttacher;
 
 import tk.giesecke.myhomecontrol.devices.CheckAvailDevices;
@@ -509,6 +512,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private PhotoViewAttacher snapShotAttacher = null;
 	/** List with available images on image server */
 	private List<String> availImages;
+
+	/** List with available CCTV footage */
+	public static CCTVfootages lists;
 
 	/** Lights device view */
 	private RelativeLayout lightsView = null;
@@ -1441,6 +1447,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			View snackbarView = mySnackbar.getView();
 			TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 			tv.setMaxLines(NSDHelper.mServicesNames.length+2);
+			tv.setVerticalScrollBarEnabled(true);
+			tv.setMovementMethod(new ScrollingMovementMethod());
 		} else { // Scan error
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Device scan stopped with error");
 			message = "Device scan stopped with error";
@@ -1460,6 +1468,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				View snackbarView = mySnackbar.getView();
 				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 				tv.setMaxLines(5);
+				tv.setVerticalScrollBarEnabled(true);
+				tv.setMovementMethod(new ScrollingMovementMethod());
 			}
 		}
 	}
@@ -1560,6 +1570,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				View snackbarView = mySnackbar.getView();
 				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 				tv.setMaxLines(5);
+				tv.setVerticalScrollBarEnabled(true);
+				tv.setMovementMethod(new ScrollingMovementMethod());
 			}
 		}
 	}
@@ -1927,6 +1939,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					View snackbarView = mySnackbar.getView();
 					TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 					tv.setMaxLines(5);
+					tv.setVerticalScrollBarEnabled(true);
+					tv.setMovementMethod(new ScrollingMovementMethod());
 				}
 			}
 			if (!dataBaseIsEmpty) {
@@ -2018,7 +2032,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	/**
-	 * Communication in Async Task between Android and ESP8266 over TCP
+	 * Communication as Runnable between Android and ESP8266 over TCP
 	 */
 	private class ESPbyTCP implements Runnable {
 
@@ -2092,7 +2106,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callGallery = " + urlString);
 
-			/** Request to ESP device */
+			/** Request to gallery server */
 			Request request = new Request.Builder()
 					.url(urlString)
 					.build();
@@ -2152,6 +2166,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					View snackbarView = mySnackbar.getView();
 					TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 					tv.setMaxLines(5);
+					tv.setVerticalScrollBarEnabled(true);
+					tv.setMovementMethod(new ScrollingMovementMethod());
 				}
 			}
 			availImages = Arrays.asList(result.comResult.split("\\s*,\\s*"));
@@ -2176,10 +2192,237 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				View snackbarView = mySnackbar.getView();
 				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 				tv.setMaxLines(5);
+				tv.setVerticalScrollBarEnabled(true);
+				tv.setMovementMethod(new ScrollingMovementMethod());
 			}
 //			} else { // Present a list of available images and let user select which to show
 //				// TODO show downloaded image
 //			}
+		}
+	}
+
+	/**
+	 * Communication as Runnable between Android and CCTV footage Server
+	 */
+	private class cctvCommunication implements Runnable {
+
+		cctvCommunication() {
+			run();
+		}
+
+		public void run() {
+			// If we are not on home WiFi, show error
+			if (!Utilities.isHomeWiFi(getApplicationContext())) {
+				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
+						getApplicationContext().getString(R.string.cctv_impossible),
+						Snackbar.LENGTH_INDEFINITE);
+				mySnackbar.setAction("OK", mOnClickListener);
+				mySnackbar.show();
+			} else {
+				new cctvCommunicationAsync().execute();
+			}
+		}
+	}
+
+	/**
+	 * Communication in Async Task between Android and CCTV footage Server
+	 */
+	private class cctvCommunicationAsync extends AsyncTask<String, String, CCTVfootages> {
+
+		/**
+		 * Background process of communication
+		 *
+		 * @param params
+		 * 		params[0] = URL
+		 * 		params[1] = command to be sent to ESP or Arduino
+		 * 		params[2] = result of communication
+		 * 		params[3] = ID of requester
+		 * 			spm = solar panel monitor view
+		 * 			air = aircon control view
+		 * 			sec = security control view
+		 * 	@return <code>CommResult</code>
+		 * 			Requester ID and result of communication
+		 */
+		@Override
+		protected CCTVfootages doInBackground(String... params) {
+
+			/** Return values for onPostExecute */
+//			CCTVfootages lists = new CCTVfootages();
+
+			// Preset commError
+			lists.commError = "";
+
+			/** Communication result as string */
+			String result;
+
+			Context thisAppContext = getApplicationContext();
+
+			/** A HTTP client to access the cctv footage server */
+			// Set timeout to 5 minutes in case we have a lot of data to load
+			OkHttpClient client = new OkHttpClient.Builder()
+					.connectTimeout(300, TimeUnit.SECONDS)
+					.writeTimeout(10, TimeUnit.SECONDS)
+					.readTimeout(300, TimeUnit.SECONDS)
+					.build();
+
+			/** First get list of directories */
+			String urlString = "http://192.168.0.252:8080/getdir.php";
+
+			/** Request to cctv footage server */
+			Request request = new Request.Builder()
+					.url(urlString)
+					.build();
+
+			if (request != null) {
+				try {
+					/** Response from cctv footage server */
+					Response response = client.newCall(request).execute();
+					if (response != null ) {
+						result = response.body().string();
+						if (result.equalsIgnoreCase("No directory ???")) {
+							lists.commError = lists.commError + result + "\n";
+						} else {
+							String[] todayFiles = result.split(";");
+							Collections.addAll(lists.availDaysList, todayFiles);
+						}
+					} else {
+						lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+					}
+				} catch (IOException e) {
+					result = e.getMessage();
+					try {
+						String errorMsg = thisAppContext.getString(R.string.err_cctv);
+						if (result.contains("EHOSTUNREACH") || result.equalsIgnoreCase("")) {
+							lists.commError = lists.commError + errorMsg + "\n";
+						}
+					} catch (NullPointerException en) {
+						lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+					}
+				}
+			}
+
+			/** Second get list of todays cctv footage */
+			urlString = "http://192.168.0.252:8080/getfiles.php";
+
+			/** Request to cctv footage server */
+			request = new Request.Builder()
+					.url(urlString)
+					.build();
+
+			if (request != null) {
+				try {
+					/** Response from cctv footage server */
+					Response response = client.newCall(request).execute();
+					if (response != null) {
+						result = response.body().string();
+						if (result.equalsIgnoreCase("No directory ???")) {
+							lists.commError = lists.commError + result + "\n";
+						} else {
+							String[] todayFiles = result.split(";");
+							Collections.addAll(lists.todaysList, todayFiles);
+						}
+					} else {
+						lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+					}
+				} catch (IOException e) {
+					result = e.getMessage();
+					try {
+						String errorMsg = thisAppContext.getString(R.string.err_cctv);
+						if (result.contains("EHOSTUNREACH") || result.equalsIgnoreCase("")) {
+							lists.commError = lists.commError + errorMsg + "\n";
+						}
+					} catch (NullPointerException en) {
+						lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+					}
+				}
+			}
+
+			/** Third get all older cctv footage */
+			for (int index = 0; index < lists.availDaysList.size(); index++) {
+				/** List of todays footage and directories as array */
+				ArrayList<String> selDayList = new ArrayList<>();
+
+				urlString = "http://192.168.0.252:8080/getfiles.php?dir="+lists.availDaysList.get(index);
+
+				/** Request to cctv footage server */
+				request = new Request.Builder()
+						.url(urlString)
+						.build();
+
+				if (request != null) {
+					try {
+						/** Response from cctv footage server */
+						Response response = client.newCall(request).execute();
+						if (response != null) {
+							result = response.body().string();
+							if (result.equalsIgnoreCase("No directory ???")) {
+								lists.commError = lists.commError + result + "\n";
+							} else {
+								String[] todayFiles = result.split(";");
+								Collections.addAll(selDayList, todayFiles);
+								lists.daysList.add(selDayList);
+							}
+						} else {
+							lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+						}
+					} catch (IOException e) {
+						result = e.getMessage();
+						try {
+							String errorMsg = thisAppContext.getString(R.string.err_cctv);
+							if (result.contains("EHOSTUNREACH") || result.equalsIgnoreCase("")) {
+								lists.commError = lists.commError + errorMsg + "\n";
+							}
+						} catch (NullPointerException en) {
+							lists.commError = lists.commError + thisAppContext.getString(R.string.err_cctv) + "\n";
+						}
+					}
+				}
+			}
+			return lists;
+		}
+
+		/**
+		 * Called when AsyncTask background process is finished
+		 *
+		 * @param result
+		 * 		CommResult with requester ID and result of communication
+		 */
+		protected void onPostExecute(CCTVfootages result) {
+			if (BuildConfig.DEBUG) {
+				String snackBarText = result.commError;
+				if (!snackBarText.equalsIgnoreCase("")) {
+					snackBarText = "\nAvailable days:\n";
+					for (int index=0; index < result.availDaysList.size(); index++) {
+						snackBarText = snackBarText + result.availDaysList.get(index) + "\n";
+					}
+					snackBarText = snackBarText + "-----------------\n";
+					snackBarText = snackBarText + "Todays footage:\n";
+					for (int index = 0; index < result.todaysList.size(); index++) {
+						snackBarText = snackBarText + result.todaysList.get(index) + "\n";
+					}
+					for (int dayIndex = 0; dayIndex < result.availDaysList.size(); dayIndex++) {
+						snackBarText = snackBarText + "-----------------\n";
+						snackBarText = snackBarText + "Content of " + result.availDaysList.get(dayIndex) + ":\n";
+						for (int index=0; index < result.daysList.get(dayIndex).size(); index++) {
+							snackBarText = snackBarText + result.daysList.get(dayIndex).get(index) + "\n";
+						}
+					}
+				}
+
+				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
+						snackBarText,
+						Snackbar.LENGTH_INDEFINITE);
+				mySnackbar.setAction("OK", mOnClickListener);
+				mySnackbar.show();
+				View snackbarView = mySnackbar.getView();
+				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+				tv.setVerticalScrollBarEnabled(true);
+				tv.setMovementMethod(new ScrollingMovementMethod());
+				tv.setMaxLines(50);
+			}
+			// Open the CCTV footage viewer
+			Intent myIntent = new Intent(getApplicationContext(), SecCamViewer.class);
+			startActivity(myIntent);
 		}
 	}
 
@@ -3828,6 +4071,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					mySnackbar.setAction("OK", mOnClickListener);
 					mySnackbar.show();
 				}
+				break;
+			case R.id.ib_cctv:
+				/** Prepare lists for CCTV footage */
+				lists = new CCTVfootages();
+				new cctvCommunication();
 				break;
 			default:
 				wasSecButton = false;

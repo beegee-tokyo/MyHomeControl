@@ -6,8 +6,6 @@
 #include <Ticker.h>
 #include <ESP8266WiFi.h>
 #include "ESP8266mDNS.h"
-#include <IRremoteESP8266.h>
-#include <IRremoteInt.h>
 #include <ArduinoJson.h>
 #include <WiFiClient.h>
 #include <FS.h>

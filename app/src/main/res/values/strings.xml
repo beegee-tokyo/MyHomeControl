@@ -19,6 +19,7 @@
 	<string name="err_spMonitor">spMonitor device is offline</string>
 	<string name="err_aircon">All aircon devices are offline</string>
 	<string name="err_gallery">Communication with image gallery failed. Make sure you have internet connection.</string>
+	<string name="err_cctv">Communication with cctv server failed. Make sure it is switched on and is connected to the same WiFi network.</string>
 	<string name="snd_alarm">Alarm</string>
 	<string name="snd_alert">Alert</string>
 	<string name="snd_dog">Dog</string>
@@ -27,6 +28,7 @@
 	<string name="not_home">Not on home WiFi - Slow status update!</string>
 	<string name="at_home">On home WiFi - Wait for status</string>
 	<string name="scan_impossible">Not on home WiFi - Cannot scan for devices!</string>
+	<string name="cctv_impossible">Not on home WiFi - Cannot scan for cctv footage!</string>
 
 	<string name="dot_txt_alarm_status">Alarm status</string>
 	<string name="dot_txt_light">Light status</string>
@@ -41,6 +43,8 @@
 	<string name="tv_sec_alarm_off">Deactivation time</string>
 	<string name="tv_set_alarm_txt">Set activation hours</string>
 	<string name="sec_missing_app">CCTV viewer is not installed</string>
+	<string name="bt_today_txt">Today</string>
+	<string name="bt_history_txt">History</string>
 
 	<string name="bt_prev_txt" translatable="false">&lt;&lt;</string>
 	<string name="bt_next_txt" translatable="false">&gt;&gt;</string>

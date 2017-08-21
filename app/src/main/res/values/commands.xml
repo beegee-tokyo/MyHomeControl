@@ -117,6 +117,7 @@
 		<item>r</item>
 		<item>x</item>
 		<item>y=</item>
+		<item>z</item>
 	</string-array>
 
 	<string-array name="cam_cmds_txt">
@@ -125,6 +126,7 @@
 		<item>Reset WiFi config</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
+		<item>Format SPIFFS</item>
 	</string-array>
 
 	<string-array name="bed_light_cmds">

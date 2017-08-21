@@ -1,34 +1,55 @@
 package tk.giesecke.myhomecontrol.security;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.VideoView;
 
+import tk.giesecke.myhomecontrol.BuildConfig;
+import tk.giesecke.myhomecontrol.MyHomeControl;
 import tk.giesecke.myhomecontrol.R;
 
-public class SecCamViewer extends AppCompatActivity {
+import static android.R.id.list;
+import static tk.giesecke.myhomecontrol.MyHomeControl.lists;
 
-	/** Flag for viewing mode */
-	private boolean multiWindow;
-	/** Number of video to show */
-	private int selectedWindow;
+public class SecCamViewer extends AppCompatActivity implements View.OnClickListener{
+
+	/** Debug tag */
+	static final String DEBUG_LOG_TAG = "MHC-CCTV";
+
 	/** Video selection button */
-	private ImageButton switchCam;
-	/** WebView for video 1 */
-	private WebView cam1WebView;
-	/** WebView for video 2 */
-	private WebView cam2WebView;
+	private ImageButton showSelector;
+	/** Error text view */
+	private TextView errorMessage;
+	/** Layout with selector buttons */
+	private LinearLayout selectorButtonsFrame;
+	/** Button to show todays footage */
+	private Button todaysFootage;
+	/** Button to show history footage */
+	private Button historyFootage;
+	/** VideoView for CCTV footage */
+	private VideoView camVideoView;
 
-	private String urlCam1;
-	private String urlCam2;
+	/** URL of footage to be played */
+	private String urlFootage;
+	/** Flag if video is playing */
+	private boolean isPlaying;
 
 	public SecCamViewer() {
 		super();
@@ -56,115 +77,89 @@ public class SecCamViewer extends AppCompatActivity {
 			toolbar.setBackground(toolBarDrawable);
 		}
 
-		// URLs for mjpg-streamer
-		String camIP = getString(R.string.SECURITY_CAM_FRONT);
-		String camPort1 = getString(R.string.SECURITY_CAM_FRONT_PORT1);
-		String camPort2 = getString(R.string.SECURITY_CAM_FRONT_PORT2);
-		urlCam1 = "http://" + camIP + ":" + camPort1 + "/?action=stream";
-//	urlCam1 = "http://192.168.1.5:8080/?action=stream";
-		urlCam2 = "http://" + camIP + ":" + camPort2 + "/?action=stream";
-//	urlCam2 = "http://192.168.1.5:8081/?action=stream";
+		// Initialize variables
+		showSelector = (ImageButton) findViewById(R.id.ib_view_selection);
+		showSelector.setOnClickListener(this);
+		/** Error text view */
+		errorMessage = (TextView) findViewById(R.id.et_cctv_error);
+		/** Layout with selector buttons */
+		selectorButtonsFrame = (LinearLayout) findViewById(R.id.ll_select_footage);
+		/** Button to show todays footage */
+		todaysFootage = (Button) findViewById(R.id.bt_today);
+		todaysFootage.setOnClickListener(this);
+		/** Button to show todays footage */
+		historyFootage = (Button) findViewById(R.id.bt_history);
+		historyFootage.setOnClickListener(this);
+		/** VideoView for CCTV footage */
+		camVideoView = (VideoView) findViewById(R.id.vv_cctv_footage);
 
-		multiWindow = false;
-		selectedWindow = 0;
+		camVideoView.setVisibility(View.INVISIBLE);
 
-		// Find the views in view_video.xml layout
-		cam1WebView = (WebView) findViewById(R.id.wv_seccam1);
-		cam2WebView = (WebView) findViewById(R.id.wv_seccam2);
-		ImageButton camRefresh = (ImageButton) findViewById((R.id.ib_refresh));
-		ImageButton closeView = (ImageButton) findViewById((R.id.ib_close_view));
-		final ImageButton viewSelect = (ImageButton) findViewById((R.id.ib_change_view));
-		switchCam = (ImageButton) findViewById((R.id.ib_switch_video));
+		// Check if there are any stored CCTV footage
+		if (!lists.commError.equalsIgnoreCase("")) {
+			showSelector.setVisibility(View.INVISIBLE);
+			selectorButtonsFrame.setVisibility(View.INVISIBLE);
+			errorMessage.setText(lists.commError);
+			errorMessage.setVisibility(View.VISIBLE);
+		} else {
+			showSelector.setVisibility(View.VISIBLE);
+			selectorButtonsFrame.setVisibility(View.VISIBLE);
+			errorMessage.setVisibility(View.INVISIBLE);
+		}
 
-		cam1WebView.getSettings().setJavaScriptEnabled(true);
-		cam1WebView.getSettings().setLoadWithOverviewMode(true);
-		cam1WebView.getSettings().setUseWideViewPort(true);
-		cam1WebView.setWebViewClient(new WebViewClient());
-		cam1WebView.setWebChromeClient(new WebChromeClient());
-		cam1WebView.getSettings().setAppCacheEnabled(false);
-
-		cam1WebView.setWebViewClient(new WebViewClient() {
-		});
-
-		cam2WebView.getSettings().setJavaScriptEnabled(true);
-		cam2WebView.getSettings().setLoadWithOverviewMode(true);
-		cam2WebView.getSettings().setUseWideViewPort(true);
-		cam2WebView.setWebViewClient(new WebViewClient());
-		cam2WebView.setWebChromeClient(new WebChromeClient());
-		cam2WebView.getSettings().setAppCacheEnabled(false);
-
-		cam2WebView.setWebViewClient(new WebViewClient() {
-		});
-
-		handleWebViews();
-
-		camRefresh.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				handleWebViews();
-			}
-		});
-		switchCam.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				selectedWindow = (selectedWindow==0) ? 1 : 0;
-				handleWebViews();
-			}
-		});
-		closeView.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				finish();
-			}
-		});
-		switchCam.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				selectedWindow = (selectedWindow==0) ? 1 : 0;
-				handleWebViews();
-			}
-		});
-		viewSelect.setOnClickListener(new View.OnClickListener() {
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onClick(View v) {
-				if (multiWindow) {
-					multiWindow = false;
-					viewSelect.setImageDrawable(getResources().getDrawable(R.drawable.ic_multi_view));
-					switchCam.setVisibility(View.VISIBLE);
-				} else {
-					multiWindow = true;
-					viewSelect.setImageDrawable(getResources().getDrawable(R.drawable.ic_single_view));
-					switchCam.setVisibility(View.GONE);
-				}
-				handleWebViews();
-			}
-		});
+		// Done, wait for user to select a stored CCTV footage to play
 	}
 
-	@SuppressWarnings("deprecation")
-	private void handleWebViews() {
-		/* Pointer to Image button */
-		ImageButton viewSelect = (ImageButton) findViewById((R.id.ib_change_view));
-		if (multiWindow) {
-			cam1WebView.setVisibility(View.VISIBLE);
-			cam2WebView.setVisibility(View.VISIBLE);
-			cam1WebView.loadUrl(urlCam1);
-			cam2WebView.loadUrl(urlCam2);
-			viewSelect.setImageDrawable(getResources().getDrawable(R.drawable.ic_single_view));
-			switchCam.setVisibility(View.GONE);
-		} else {
-			viewSelect.setImageDrawable(getResources().getDrawable(R.drawable.ic_multi_view));
-			if (selectedWindow == 0) {
-				cam1WebView.setVisibility(View.VISIBLE);
-				cam2WebView.setVisibility(View.GONE);
-				cam1WebView.loadUrl(urlCam1);
-			} else {
-				cam1WebView.setVisibility(View.GONE);
-				cam2WebView.setVisibility(View.VISIBLE);
-				cam2WebView.loadUrl(urlCam2);
-			}
-			switchCam.setVisibility(View.VISIBLE);
+	@Override
+	public void onClick(View view) {
+		switch (view.getId()) { // Handle buttons
+			case R.id.ib_view_selection:
+				if (selectorButtonsFrame.getVisibility() == View.INVISIBLE) {
+					selectorButtonsFrame.setVisibility(View.VISIBLE);
+					if (isPlaying) {
+						stopVideoStream();
+					}
+				} else {
+					selectorButtonsFrame.setVisibility(View.INVISIBLE);
+				}
+				break;
+			case R.id.bt_today:
+				// Show list with todays CCTV footage
+				CharSequence[] todaysListAlert = lists.todaysList.toArray(new CharSequence[lists.todaysList.size()]);
+				AlertDialog.Builder cmdListBuilder = new AlertDialog.Builder(this);
+				cmdListBuilder.setTitle("Select command");
+				cmdListBuilder.setItems(todaysListAlert, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						urlFootage = lists.todaysList.get(which);
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected day = " + urlFootage);
+						urlFootage = "192.168.0.252:8080/MHCV/" + urlFootage;
+						startVideoStream();
+						dialog.dismiss();
+					}
+				});
+				cmdListBuilder.create();
+				cmdListBuilder.show();
+				break;
+			case R.id.bt_history:
+				// Show list with days available
+				break;
 		}
+	}
+
+	public void startVideoStream() {
+		Uri vidUri = Uri.parse(urlFootage);
+		camVideoView.setVisibility(View.VISIBLE);
+		selectorButtonsFrame.setVisibility(View.INVISIBLE);
+		camVideoView.setVideoURI(vidUri);
+		camVideoView.start();
+
+		isPlaying = true;
+	}
+
+	public void stopVideoStream() {
+		camVideoView.stopPlayback();
+
+		isPlaying = false;
 	}
 }

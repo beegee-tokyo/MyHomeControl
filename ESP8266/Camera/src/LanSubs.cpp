@@ -65,6 +65,7 @@ void sendBroadCast(boolean shotResult) {
 	*		r	to reset saved WiFi configuration
   *		x to reset the device
 	*		y=YYYY,MM,DD,HH,mm,ss to set time and date
+	*		z to format SPIFFS
 	*/
 void socketServer(WiFiClient tcpClient) {
 	comLedFlashStart(0.4);
@@ -174,6 +175,9 @@ void socketServer(WiFiClient tcpClient) {
 		delay(3000);
 		ESP.reset();
 		delay(5000);
+		// Format SPIFFS
+	} else if (req.substring(0, 1) == "z") {
+		formatSPIFFS();
 	}
 	comLedFlashStop();
 	tcpClient.flush();

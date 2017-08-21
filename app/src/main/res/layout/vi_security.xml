@@ -319,4 +319,17 @@
 		android:backgroundTint="@color/colorAccent"
 		tools:targetApi="lollipop"/>
 
+	<ImageButton
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/tv_change_alarm"
+		android:id="@+id/ib_cctv"
+		android:onClick="onClick"
+		android:src="@android:drawable/ic_menu_mapmode"
+		android:contentDescription="@string/sec_auto_alarm_off"
+		android:layout_toLeftOf="@+id/ib_seccam"
+		android:layout_toStartOf="@+id/ib_seccam"
+		android:backgroundTint="@color/colorAccent"
+		tools:targetApi="lollipop"/>
+
 </RelativeLayout>
