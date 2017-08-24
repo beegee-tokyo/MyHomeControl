@@ -1,6 +1,6 @@
 package tk.giesecke.myhomecontrol.security;
 
-import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -10,53 +10,48 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.VideoView;
+
+import io.vov.vitamio.MediaPlayer;
+import io.vov.vitamio.widget.MediaController;
+import io.vov.vitamio.widget.VideoView;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
-import tk.giesecke.myhomecontrol.MyHomeControl;
 import tk.giesecke.myhomecontrol.R;
 
-import static android.R.id.list;
 import static tk.giesecke.myhomecontrol.MyHomeControl.lists;
 
-public class SecCamViewer extends AppCompatActivity implements View.OnClickListener{
+public class SecCamViewer extends AppCompatActivity {
 
 	/** Debug tag */
 	static final String DEBUG_LOG_TAG = "MHC-CCTV";
 
-	/** Video selection button */
-	private ImageButton showSelector;
-	/** Error text view */
-	private TextView errorMessage;
-	/** Layout with selector buttons */
-	private LinearLayout selectorButtonsFrame;
-	/** Button to show todays footage */
-	private Button todaysFootage;
-	/** Button to show history footage */
-	private Button historyFootage;
+	/** This activities context */
+	Context seccamContext;
+
 	/** VideoView for CCTV footage */
-	private VideoView camVideoView;
+	private VideoView footageVV;
+	/** Action menu */
+	private Menu actionMenu;
+	/** Menu item for status message */
+	MenuItem statusMenuItem;
+	/** Layout for status message */
+	RelativeLayout statusMenuLayout;
+	/** Text view for status message */
+	TextView statusMenuText;
 
+	/** Media controller for CCTV footage */
+	private MediaController footageMC;
+	/** Error text view */
+	TextView errorMsg;
 	/** URL of footage to be played */
-	private String urlFootage;
-	/** Flag if video is playing */
-	private boolean isPlaying;
-
-	public SecCamViewer() {
-		super();
-	}
+	private String urlFootage = "";
 
 	@SuppressWarnings("deprecation")
-	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -78,88 +73,177 @@ public class SecCamViewer extends AppCompatActivity implements View.OnClickListe
 		}
 
 		// Initialize variables
-		showSelector = (ImageButton) findViewById(R.id.ib_view_selection);
-		showSelector.setOnClickListener(this);
+		seccamContext = this;
 		/** Error text view */
-		errorMessage = (TextView) findViewById(R.id.et_cctv_error);
-		/** Layout with selector buttons */
-		selectorButtonsFrame = (LinearLayout) findViewById(R.id.ll_select_footage);
-		/** Button to show todays footage */
-		todaysFootage = (Button) findViewById(R.id.bt_today);
-		todaysFootage.setOnClickListener(this);
-		/** Button to show todays footage */
-		historyFootage = (Button) findViewById(R.id.bt_history);
-		historyFootage.setOnClickListener(this);
+		errorMsg = (TextView) findViewById(R.id.et_cctv_error);
 		/** VideoView for CCTV footage */
-		camVideoView = (VideoView) findViewById(R.id.vv_cctv_footage);
-
-		camVideoView.setVisibility(View.INVISIBLE);
+		footageVV = (VideoView) findViewById(R.id.vv_cctv_footage);
+		footageVV.setVisibility(View.INVISIBLE);
 
 		// Check if there are any stored CCTV footage
 		if (!lists.commError.equalsIgnoreCase("")) {
-			showSelector.setVisibility(View.INVISIBLE);
-			selectorButtonsFrame.setVisibility(View.INVISIBLE);
-			errorMessage.setText(lists.commError);
-			errorMessage.setVisibility(View.VISIBLE);
+			errorMsg.setText(lists.commError);
 		} else {
-			showSelector.setVisibility(View.VISIBLE);
-			selectorButtonsFrame.setVisibility(View.VISIBLE);
-			errorMessage.setVisibility(View.INVISIBLE);
+			errorMsg.setVisibility(View.INVISIBLE);
 		}
 
 		// Done, wait for user to select a stored CCTV footage to play
 	}
 
 	@Override
-	public void onClick(View view) {
-		switch (view.getId()) { // Handle buttons
-			case R.id.ib_view_selection:
-				if (selectorButtonsFrame.getVisibility() == View.INVISIBLE) {
-					selectorButtonsFrame.setVisibility(View.VISIBLE);
-					if (isPlaying) {
-						stopVideoStream();
-					}
-				} else {
-					selectorButtonsFrame.setVisibility(View.INVISIBLE);
-				}
-				break;
-			case R.id.bt_today:
+	public void onResume() {
+		if (!urlFootage.equalsIgnoreCase("")) {
+			startVideoStream();
+		}
+		super.onResume();
+	}
+
+	@Override
+	public void onPause() {
+		if (footageVV.isPlaying()) {
+			stopVideoStream();
+		}
+		super.onPause();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.menu_seccam, menu);
+		actionMenu = menu;
+		statusMenuItem = actionMenu.findItem(R.id.action_status);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+		switch (item.getItemId()) {
+			case R.id.action_today:
+				// If playback is running, stop it first
+				stopVideoStream();
 				// Show list with todays CCTV footage
 				CharSequence[] todaysListAlert = lists.todaysList.toArray(new CharSequence[lists.todaysList.size()]);
-				AlertDialog.Builder cmdListBuilder = new AlertDialog.Builder(this);
-				cmdListBuilder.setTitle("Select command");
-				cmdListBuilder.setItems(todaysListAlert, new DialogInterface.OnClickListener() {
+				AlertDialog.Builder todaysListBuilder = new AlertDialog.Builder(this);
+				todaysListBuilder.setTitle("Select footage");
+				todaysListBuilder.setItems(todaysListAlert, new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						urlFootage = lists.todaysList.get(which);
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected day = " + urlFootage);
-						urlFootage = "192.168.0.252:8080/MHCV/" + urlFootage;
+						urlFootage = "http://192.168.0.252:8080/MHCV/" + urlFootage;
 						startVideoStream();
 						dialog.dismiss();
 					}
 				});
-				cmdListBuilder.create();
-				cmdListBuilder.show();
+				todaysListBuilder.create();
+				todaysListBuilder.show();
 				break;
-			case R.id.bt_history:
+			case R.id.action_history:
+				// If playback is running, stop it first
+				stopVideoStream();
 				// Show list with days available
+				CharSequence[] availDaysListAlert = lists.availDaysList.toArray(new CharSequence[lists.availDaysList.size()]);
+				AlertDialog.Builder availDaysBuilder = new AlertDialog.Builder(this);
+				availDaysBuilder.setTitle("Select day");
+				availDaysBuilder.setItems(availDaysListAlert, new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+
+						// Show list with selected days CCTV footage
+						final int daySelected = which;
+						CharSequence[] thisDayListAlert = lists.daysList.get(which).toArray(new CharSequence[lists.daysList.get(which).size()]);
+						AlertDialog.Builder thisDayListBuilder = new AlertDialog.Builder(seccamContext);
+						thisDayListBuilder.setTitle("Select command");
+						thisDayListBuilder.setItems(thisDayListAlert, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								urlFootage = lists.daysList.get(daySelected).get(which);
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected day = " + urlFootage);
+								urlFootage = "http://192.168.0.252:8080/MHCV/"
+										+ lists.availDaysList.get(daySelected)
+										+ "/"
+										+ urlFootage;
+								startVideoStream();
+								dialog.dismiss();
+							}
+						});
+						thisDayListBuilder.create();
+						thisDayListBuilder.show();
+					}
+				});
+				availDaysBuilder.create();
+				availDaysBuilder.show();
+				break;
+			case R.id.action_close:
+				// If playback is running, stop it first
+				stopVideoStream();
+				// Go back to main app
+				this.finish();
 				break;
 		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	public void startVideoStream() {
 		Uri vidUri = Uri.parse(urlFootage);
-		camVideoView.setVisibility(View.VISIBLE);
-		selectorButtonsFrame.setVisibility(View.INVISIBLE);
-		camVideoView.setVideoURI(vidUri);
-		camVideoView.start();
+		footageVV.setVisibility(View.VISIBLE);
+		// Start the video stream
+		footageVV.setVideoURI(vidUri);
+		footageVV.setHardwareDecoder(true);
+		footageVV.start();
+		statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+		statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+		statusMenuText.setText(getString(R.string.buffer_msg));
 
-		isPlaying = true;
+		footageVV.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+			@Override
+			public void onPrepared(MediaPlayer mediaPlayer) {
+				footageMC = new MediaController(seccamContext) {
+					@Override
+					public void hide() {
+						//Do not hide.
+					}
+				};
+				footageVV.setMediaController(footageMC);
+				footageMC.setAnchorView(footageVV);
+				footageMC.show();
+				footageMC.requestFocus();
+				mediaPlayer.setVideoQuality(MediaPlayer.VIDEOQUALITY_LOW);
+				mediaPlayer.setPlaybackSpeed(1.0f);
+				mediaPlayer.setBufferSize(2000);
+				mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+					@Override
+					public boolean onInfo(MediaPlayer mp, int what, int extra) {
+						switch (what) {
+							case MediaPlayer.MEDIA_INFO_BUFFERING_START:
+								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
+								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+								statusMenuText.setText(getString(R.string.buffer_msg));
+								break;
+							case MediaPlayer.MEDIA_INFO_BUFFERING_END:
+								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
+								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+								statusMenuText.setText("");
+								break;
+						}
+						return false;
+					}
+				});
+			}
+		});
 	}
 
 	public void stopVideoStream() {
-		camVideoView.stopPlayback();
-
-		isPlaying = false;
+		if (footageVV.isPlaying()) {
+			footageVV.stopPlayback();
+		}
+		footageVV.setVisibility(View.INVISIBLE);
+		statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
+		statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+		statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+		statusMenuText.setText(getString(R.string.cctv_footage_info));
 	}
 }

@@ -82,7 +82,7 @@ void setup() {
 	Serial.println("====================");
 	if (!readStatus()) {
 		sendDebug("No status file found, try to format the SPIFFS", OTA_HOST);
-		if (SPIFFS.format()){
+		if (formatSPIFFS(OTA_HOST)){
 			sendDebug("SPIFFS formatted", OTA_HOST);
 		} else {
 			sendDebug("SPIFFS format failed", OTA_HOST);

@@ -25,7 +25,7 @@
 #include <leds.h>
 #include <wifi.h>
 #include <wifiAPinfo.h>
-// #include <pitches.h>
+#include <spiffs.h>
 
 /* globals.h contains defines and global variables */
 #include "globals.h"

@@ -1,6 +1,7 @@
 package tk.giesecke.myhomecontrol;
 
 import android.annotation.SuppressLint;
+import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -13,7 +14,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -54,6 +54,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 
 import tk.giesecke.myhomecontrol.aircon.AirconWidget;
+import tk.giesecke.myhomecontrol.devices.DeviceStatus;
 import tk.giesecke.myhomecontrol.lights.BackYardLightWidget;
 import tk.giesecke.myhomecontrol.lights.BedRoomLightWidget;
 import tk.giesecke.myhomecontrol.security.SecAlarmWidget;
@@ -74,11 +75,16 @@ public class MessageListener extends Service {
 	public static final String BROADCAST_RECEIVED = "BC_RECEIVED";
 
 	/** Flag if UDP/TCP listener is restarted after a broadcast was received */
-	static Boolean shouldRestartSocketListen=true;
+	static boolean shouldRestartSocketListen=true;
 	/** Socket for broadcast datagram */
 	static DatagramSocket socket;
 	/** Socket for TCP messages */
 	static ServerSocket serverSocket;
+
+	/** Flag for change in last known connection status */
+	static boolean connStatusChanged = true;
+	/**Last known connection status */
+	static boolean[] bLastConnFlags = {true, true, true};
 
 	/** Multicast wifiWakeLock to keep WiFi awake until broadcast is received */
 	private WifiManager.MulticastLock wifiWakeLock = null;
@@ -100,24 +106,45 @@ public class MessageListener extends Service {
 	/** Flag if user UI has just started */
 	public static boolean uiStarted = false;
 
+	/** Pending intent to update device status widget every 5 minutes */
+	public static PendingIntent devStatpi;
+	/** Alarm manager to update device status widget every 5 minutes */
+	public static AlarmManager am;
+
 	/** Last message from SPM */
 	private String lastSPM = "";
+	public static boolean spmOK = false;
 	/** Last message from AC1 */
 	private String lastAC1= "";
+	public static boolean ac1OK = false;
 	/** Last message from AC2 */
 	private String lastAC2 = "";
+	public static boolean ac2OK = false;
+	/** Last message from AC3 */
+	private String lastAC3 = "";
+	public static boolean ac3OK = false;
 	/** Last message from SF1 */
 	private String lastSF1 = "";
+	public static boolean sf1OK = false;
 	/** Last message from SB1 */
 	private String lastSB1 = "";
+	public static boolean sb1OK = false;
 	/** Last message from LB1 */
 	private String lastLB1 = "";
+	public static boolean lb1OK = false;
 	/** Last message from LY1 */
 	private String lastLY1 = "";
+	public static boolean ly1OK = false;
 	/** Last message from WEO */
 	private String lastWEO = "";
 	/** Last message from WEI */
 	private String lastWEI = "";
+	/** Last message from CM1 */
+	private String lastCM1 = "";
+	public static boolean cm1OK = false;
+	/** Last message from VC1 */
+	private String lastVC1 = "";
+	public static boolean vc1OK = false;
 
 	/** Broker status structure */
 	public static int clientsConn = 0; // $SYS/broker/clients/connected
@@ -159,22 +186,33 @@ public class MessageListener extends Service {
 		startForeground(1, ServiceNotification(this));
 
 		boolean hasConnection[] = Utilities.connectionAvailable(this);
-		if (hasConnection[0] && Utilities.isHomeWiFi(this)) {
+		if (hasConnection[2]) { // Home WiFi connection available?
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start UDP listener");
 			shouldRestartSocketListen = true;
+			shouldRestartMQTTListen = false;
 			try {
 				// Start listener for UDP broadcast messages
 				startListenForUDPBroadcast();
 			} catch (Exception ignore) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Failed to start UDP listener");
 			}
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start TCP listener");
 			try {
 				// Start listener for TCP messages
 				startListenForTCPMessage();
 			} catch (Exception ignore) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Failed to start TCP listener");
 			}
+			/** Pending intent to update device status widget every 5 minutes */
+			devStatpi = PendingIntent.getService(this, 5003,
+					new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+			/** Alarm manager to update device status widget every 3 minutes */
+			am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+			am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 180000,
+					180000, devStatpi);
 		} else if (hasConnection[1] || hasConnection[0]) { // Mobile or WiFi connection available?
+			shouldRestartMQTTListen = true;
+			shouldRestartSocketListen = false;
 			// Connect to MQTT broker
 			if ((mqttClient == null) || (!mqttClient.isConnected())) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start MQTT listener");
@@ -182,10 +220,16 @@ public class MessageListener extends Service {
 					new doConnect().execute();
 				}
 			}
-			shouldRestartMQTTListen = true;
-		} else {
+			if (devStatpi != null && am != null) {
+				am.cancel(devStatpi);
+			}
+		} else { // No connection available
 			shouldRestartSocketListen = false;
 			shouldRestartMQTTListen = false;
+			if (devStatpi != null && am != null) {
+				am.cancel(devStatpi);
+			}
+			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "No active connection found");
 		}
 
 		/** IntentFilter to receive screen on/off & connectivity broadcast msgs */
@@ -196,10 +240,7 @@ public class MessageListener extends Service {
 		BroadcastReceiver mReceiver = new Events();
 		registerReceiver(mReceiver, filter);
 
-		IntentFilter intentf = new IntentFilter();
-		intentf.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-		registerReceiver(connChangeReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-		//this service should run until we stop it
+		// this service should run until we stop it
 		return START_STICKY;
 	}
 
@@ -207,10 +248,6 @@ public class MessageListener extends Service {
 	public void onDestroy() {
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Service onDestroy()");
 		shouldRestartSocketListen = false;
-		if (connChangeReceiver != null) {
-			unregisterReceiver(connChangeReceiver);
-			connChangeReceiver = null;
-		}
 		if (wifiWakeLock != null) { // In case we restart after receiver problem
 			wifiWakeLock.release();
 		}
@@ -230,6 +267,9 @@ public class MessageListener extends Service {
 			} catch (MqttException ignore) {
 			}
 		}
+		if (devStatpi != null && am != null) {
+			am.cancel(devStatpi);
+		}
 		// Restart service with a delay of 5 seconds
 		final Handler handler = new Handler();
 		handler.postDelayed(new Runnable() {
@@ -241,84 +281,7 @@ public class MessageListener extends Service {
 		}, 5000);
 	}
 
-	private BroadcastReceiver connChangeReceiver = new BroadcastReceiver() {
-		@SuppressWarnings("deprecation")
-		@Override
-		public void onReceive(final Context context, Intent intent) {
-
-			// Connectivity has changed
-			if (intent.getAction().equals (android.net.ConnectivityManager.CONNECTIVITY_ACTION)) {
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Connection Change (MessageListener)");
-
-				boolean bHasConnection[] = Utilities.connectionAvailable(context);
-				if (bHasConnection[0] && Utilities.isHomeWiFi(context)) { // WiFi connection available?
-					// Start/Restart service to listen to UDP/MQTT broadcast messages
-					shouldRestartSocketListen = true;
-					shouldRestartMQTTListen = true;
-					// Reconnect listeners
-					// MQTT
-					if (mqttClient == null || !mqttClient.isConnected()) {
-						if (!mqttIsConnecting) { // Check if already trying to connect?
-							new doConnect().execute();
-						}
-					}
-					// UDP
-					if (socket != null) { // Socket still open?
-						socket.disconnect();
-						socket.close();
-						socket = null;
-					}
-					startListenForUDPBroadcast();
-					// TCP
-					if (serverSocket != null) { // Socket still open?
-						try {
-							serverSocket.close();
-							serverSocket = null;
-						} catch (IOException ignore) {
-						}
-					}
-					startListenForTCPMessage();
-				} else if (bHasConnection[1] || bHasConnection[0]) { // Mobile or WiFi connection available?
-					// Start/Restart service to listen to UDP/MQTT broadcast messages
-					shouldRestartSocketListen = false;
-					shouldRestartMQTTListen = true;
-					if (mqttClient == null || !mqttClient.isConnected()) {
-						if (!mqttIsConnecting) { // Check if already trying to connect?
-							new doConnect().execute();
-						}
-					}
-				} else { // No connection available
-					shouldRestartSocketListen = false;
-					shouldRestartMQTTListen = false;
-					if (socket != null) { // Socket still open?
-						socket.disconnect();
-						socket.close();
-						socket = null;
-					}
-					if (serverSocket != null) { // Socket still open?
-						try {
-							serverSocket.close();
-							serverSocket = null;
-						} catch (IOException ignore) {
-						}
-					}
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stop Message listener because no connection");
-				}
-			} else if(intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
-				if (mqttClient == null || !mqttClient.isConnected()) {
-					if (!mqttIsConnecting) { // Check if already trying to connect?
-						new doConnect().execute();
-					}
-					Toast.makeText(getApplicationContext(),
-							"MQTT connection was lost!",
-							Toast.LENGTH_LONG).show();
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT connection was lost!");
-				}
-			}
-		}
-	};
-
-	// TCP & UDP stuff starts here
+	// UDP stuff starts here
 	/**
 	 * Start listener for UDP messages
 	 */
@@ -334,22 +297,6 @@ public class MessageListener extends Service {
 					while (runForEver) {
 						if (shouldRestartSocketListen) { // Should we listen to UDP broadcasts???
 							listenUDPBroadCast(broadcastIP, port);
-							// Check if MQTT is still connected
-							if (mqttClient != null && !mqttClient.isConnected() && !mqttIsConnecting) {
-								if (!mqttIsConnecting) { // Check if already trying to connect?
-									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect to MQTT");
-									// Reconnect to MQTT
-									final Handler handler = new Handler();
-									handler.post(new Runnable() {
-										@Override
-										public void run() {
-											if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
-											mqttIsConnecting = true;
-											new doConnect().execute();
-										}
-									});
-								}
-							}
 							// Check if UI started
 							if (uiStarted) {
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Send last status to UI");
@@ -475,6 +422,7 @@ public class MessageListener extends Service {
 		}
 	}
 
+	// TCP stuff starts here
 	/**
 	 * Start listener for TCP messages
 	 */
@@ -502,13 +450,6 @@ public class MessageListener extends Service {
 								while ((inMsg = in.readLine()) != null) {
 									// Send broadcast to listening activities
 									sendMyBroadcast(inMsg, "DEBUG");
-//									// Check MQTT connection
-//									if (mqttClient == null || !mqttClient.isConnected()) {
-//										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP listener detected MQTT disconnect");
-//										// Reconnect to MQTT
-//										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Reconnect MQTT listener");
-//										new doConnect().execute();
-//									}
 									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received TCP data from: "
 											+ client.getInetAddress().toString().substring(1) + " :" + inMsg);
 									SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
@@ -672,7 +613,6 @@ public class MessageListener extends Service {
 			if (isConnected) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT connection successful");
 				sendMyBroadcast("MQTT connected", "STATUS");
-				mqttIsConnecting = false;
 				IMqttToken token;
 				SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
 				int currMqttUser = mPrefs.getInt("MQTT_User",0);
@@ -764,10 +704,11 @@ public class MessageListener extends Service {
 				}
 			} else { // retry in 30 seconds
 				boolean bHasConnection[] = Utilities.connectionAvailable(getApplicationContext());
-				if (bHasConnection[0] || bHasConnection[1]) {
+				if (bHasConnection[0] || bHasConnection[1] || bHasConnection[2]) {
 					new doConnect().execute();
 				}
 			}
+			mqttIsConnecting = false;
 		}
 	}
 
@@ -1120,6 +1061,7 @@ public class MessageListener extends Service {
 			switch (broadCastDevice) {
 				case "spm":
 					lastSPM = message;
+					spmOK = true;
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update solar panel widgets");
 
 					/** Value of solar production */
@@ -1132,6 +1074,7 @@ public class MessageListener extends Service {
 					break;
 				case "fd1":
 					lastAC1 = message;
+					ac1OK = true;
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
 
 					/** Flag for alarm switched on or off */
@@ -1146,11 +1089,19 @@ public class MessageListener extends Service {
 					break;
 				case "ca1":
 					lastAC2 = message;
+					ac2OK = true;
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
 					// TODO add aircon 2 widget */
 					break;
+				case "am1":
+					lastAC3 = message;
+					ac3OK = true;
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update office aircon widgets");
+					// TODO add aircon 3 widget */
+					break;
 				case "sf1":
 					lastSF1 = message;
+					sf1OK = true;
 					// Broadcast from front security
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update security widgets");									/** Flag for alarm on or off */
 
@@ -1162,6 +1113,7 @@ public class MessageListener extends Service {
 					break;
 				case "sb1":
 					lastSB1 = message;
+					sb1OK = true;
 					// Broadcast from front security
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update security widgets");									/** Flag for alarm on or off */
 
@@ -1173,6 +1125,7 @@ public class MessageListener extends Service {
 					break;
 				case "lb1":
 					lastLB1 = message;
+					lb1OK = true;
 					// Broadcast from bedroom lights
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update light control widgets");									/** Flag for alarm on or off */
 
@@ -1192,6 +1145,7 @@ public class MessageListener extends Service {
 					break;
 				case "ly1":
 					lastLY1 = message;
+					ly1OK = true;
 					// Broadcast from bedroom lights
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update light control widgets");									/** Flag for alarm on or off */
 
@@ -1208,6 +1162,14 @@ public class MessageListener extends Service {
 				case "wei":
 					lastWEI = message;
 					break;
+				case "cm1":
+					lastCM1 = message;
+					cm1OK = true;
+					break;
+				case "vc1":
+					lastVC1 = message;
+					vc1OK = true;
+					break;
 			}
 		} catch (JSONException e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String <"+ message +"> failed " + e.getMessage());
@@ -1220,21 +1182,36 @@ public class MessageListener extends Service {
 	private class sendLastMsgs extends AsyncTask<String, Void, Void> {
 
 		protected Void doInBackground(String... params) {
-			sendMyBroadcast(lastSPM, "LAST");
-			handleMsgs(lastSPM);
-			sendMyBroadcast(lastAC1, "LAST");
-			handleMsgs(lastAC1);
-			sendMyBroadcast(lastAC2, "LAST");
-			sendMyBroadcast(lastSF1, "LAST");
-			handleMsgs(lastSF1);
-			sendMyBroadcast(lastSB1, "LAST");
-			handleMsgs(lastSB1);
-			sendMyBroadcast(lastLB1, "LAST");
-			handleMsgs(lastLB1);
-			sendMyBroadcast(lastLY1, "LAST");
-			handleMsgs(lastLY1);
-			sendMyBroadcast(lastWEO, "LAST");
-			sendMyBroadcast(lastWEI, "LAST");
+			if (!lastSPM.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastSPM, "LAST");
+				handleMsgs(lastSPM);
+			}
+			if (!lastAC1.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastAC1, "LAST");
+				handleMsgs(lastAC1);
+			}
+			if (!lastAC2.equalsIgnoreCase("")) sendMyBroadcast(lastAC2, "LAST");
+			if (!lastAC3.equalsIgnoreCase("")) sendMyBroadcast(lastAC3, "LAST");
+			if (!lastSF1.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastSF1, "LAST");
+				handleMsgs(lastSF1);
+			}
+			if (!lastSB1.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastSB1, "LAST");
+				handleMsgs(lastSB1);
+			}
+			if (!lastLB1.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastLB1, "LAST");
+				handleMsgs(lastLB1);
+			}
+			if (!lastLY1.equalsIgnoreCase("")) {
+				sendMyBroadcast(lastLY1, "LAST");
+				handleMsgs(lastLY1);
+			}
+			if (!lastWEO.equalsIgnoreCase("")) sendMyBroadcast(lastWEO, "LAST");
+			if (!lastWEI.equalsIgnoreCase("")) sendMyBroadcast(lastWEI, "LAST");
+			if (!lastCM1.equalsIgnoreCase("")) sendMyBroadcast(lastCM1, "LAST");
+			if (!lastVC1.equalsIgnoreCase("")) sendMyBroadcast(lastVC1, "LAST");
 			return null;
 		}
 	}

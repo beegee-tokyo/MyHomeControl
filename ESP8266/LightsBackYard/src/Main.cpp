@@ -53,8 +53,10 @@ void loop() {
 			}
 		}
 		if (!wmIsConnected) { // Connection to WiFi failed, retry to connect
+			wdt_disable();
 			// Try to connect to WiFi with captive portal
 			ipAddr = connectWiFi(ipAddr, ipGateWay, ipSubNet, "ESP8266 Security Front");
+			wdt_enable(WDTO_8S);
 		}
  		if (!gotTime) { // Got no time from the NTP server, retry to get it
  			if (!tryGetTime(debugOn)) {

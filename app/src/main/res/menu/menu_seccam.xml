@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:tools="http://schemas.android.com/tools"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      tools:ignore="AlwaysShowAction">
+
+	<item
+		android:id="@+id/action_status"
+		android:actionLayout="@layout/vi_seccam_buffer"
+		android:title="@string/cctv_footage_info"
+		app:showAsAction="always"/>
+
+	<item
+		android:id="@+id/action_today"
+		android:icon="@android:drawable/ic_menu_today"
+		android:title="@string/bt_today_txt"
+		app:showAsAction="always"/>
+	<item
+		android:id="@+id/action_history"
+		android:icon="@android:drawable/ic_menu_recent_history"
+		android:title="@string/bt_history_txt"
+		app:showAsAction="always"/>
+	<item
+		android:id="@+id/action_close"
+		android:icon="@mipmap/ic_launcher"
+		android:title="@string/action_close"
+		app:showAsAction="always"/>
+</menu>

@@ -177,7 +177,7 @@ void socketServer(WiFiClient tcpClient) {
 		delay(5000);
 		// Format SPIFFS
 	} else if (req.substring(0, 1) == "z") {
-		formatSPIFFS();
+		formatSPIFFS(OTA_HOST);
 	}
 	comLedFlashStop();
 	tcpClient.flush();

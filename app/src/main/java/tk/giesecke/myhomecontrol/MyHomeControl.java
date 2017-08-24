@@ -2388,38 +2388,38 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		 * 		CommResult with requester ID and result of communication
 		 */
 		protected void onPostExecute(CCTVfootages result) {
-			if (BuildConfig.DEBUG) {
-				String snackBarText = result.commError;
-				if (!snackBarText.equalsIgnoreCase("")) {
-					snackBarText = "\nAvailable days:\n";
-					for (int index=0; index < result.availDaysList.size(); index++) {
-						snackBarText = snackBarText + result.availDaysList.get(index) + "\n";
-					}
-					snackBarText = snackBarText + "-----------------\n";
-					snackBarText = snackBarText + "Todays footage:\n";
-					for (int index = 0; index < result.todaysList.size(); index++) {
-						snackBarText = snackBarText + result.todaysList.get(index) + "\n";
-					}
-					for (int dayIndex = 0; dayIndex < result.availDaysList.size(); dayIndex++) {
-						snackBarText = snackBarText + "-----------------\n";
-						snackBarText = snackBarText + "Content of " + result.availDaysList.get(dayIndex) + ":\n";
-						for (int index=0; index < result.daysList.get(dayIndex).size(); index++) {
-							snackBarText = snackBarText + result.daysList.get(dayIndex).get(index) + "\n";
-						}
-					}
+//			if (BuildConfig.DEBUG) {
+				String snackBarText = getString(R.string.cctv_footage_wait);
+				if (!result.commError.equalsIgnoreCase("")) {
+					snackBarText = result.commError;
+//					for (int index=0; index < result.availDaysList.size(); index++) {
+//						snackBarText = snackBarText + result.availDaysList.get(index) + "\n";
+//					}
+//					snackBarText = snackBarText + "-----------------\n";
+//					snackBarText = snackBarText + "Todays footage:\n";
+//					for (int index = 0; index < result.todaysList.size(); index++) {
+//						snackBarText = snackBarText + result.todaysList.get(index) + "\n";
+//					}
+//					for (int dayIndex = 0; dayIndex < result.availDaysList.size(); dayIndex++) {
+//						snackBarText = snackBarText + "-----------------\n";
+//						snackBarText = snackBarText + "Content of " + result.availDaysList.get(dayIndex) + ":\n";
+//						for (int index=0; index < result.daysList.get(dayIndex).size(); index++) {
+//							snackBarText = snackBarText + result.daysList.get(dayIndex).get(index) + "\n";
+//						}
+//					}
 				}
-
+//
 				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
 						snackBarText,
-						Snackbar.LENGTH_INDEFINITE);
-				mySnackbar.setAction("OK", mOnClickListener);
+						Snackbar.LENGTH_LONG);
+//				mySnackbar.setAction("OK", mOnClickListener);
 				mySnackbar.show();
-				View snackbarView = mySnackbar.getView();
-				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-				tv.setVerticalScrollBarEnabled(true);
-				tv.setMovementMethod(new ScrollingMovementMethod());
-				tv.setMaxLines(50);
-			}
+//				View snackbarView = mySnackbar.getView();
+//				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+//				tv.setVerticalScrollBarEnabled(true);
+//				tv.setMovementMethod(new ScrollingMovementMethod());
+//				tv.setMaxLines(50);
+//			}
 			// Open the CCTV footage viewer
 			Intent myIntent = new Intent(getApplicationContext(), SecCamViewer.class);
 			startActivity(myIntent);
@@ -4075,6 +4075,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			case R.id.ib_cctv:
 				/** Prepare lists for CCTV footage */
 				lists = new CCTVfootages();
+				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
+						getString(R.string.cctv_footage_wait),
+						Snackbar.LENGTH_LONG);
+				mySnackbar.show();
 				new cctvCommunication();
 				break;
 			default:

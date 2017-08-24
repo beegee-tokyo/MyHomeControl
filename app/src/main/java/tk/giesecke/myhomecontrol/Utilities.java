@@ -10,6 +10,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +27,9 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import static tk.giesecke.myhomecontrol.MessageListener.bLastConnFlags;
+import static tk.giesecke.myhomecontrol.MessageListener.connStatusChanged;
 
 public class Utilities extends MyHomeControl {
 
@@ -69,31 +73,53 @@ public class Utilities extends MyHomeControl {
 	 *
 	 * @param thisAppContext
 	 * 		Context of application
-	 * @return <code>boolean</code>
-	 * True if we have connection
-	 * False if we do not have connection
+	 * @return <code>boolean[]</code>
+	 * [0] True if we have WiFi connection
+	 * [1] True if we have Mobile connection
+	 * [2] True if we have Home WiFi connection
+	 *  both false if we do not have connection
 	 */
 	@SuppressWarnings("deprecation")
 	public static boolean[] connectionAvailable(Context thisAppContext) {
 		/** Flags for connections */
-		boolean[] bConnFlags = new boolean[3];
+		boolean[] bConnFlags = {false, false, false};
 
 		/** Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-		NetworkInfo mobileOn = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
 
-		// Check if wifi is available && if we are connected
-		// Result is false if there is no Wifi on the device
-		// Result is true if we have Wifi
-		// else result is false
-		bConnFlags[0] = wifiOn != null && wifiOn.isConnected();
+		// Check if there is any network connected
+		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+		if (null != activeNetwork) {
+			if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
+				// Active network is WiFi
+				if (isHomeWiFi(thisAppContext)) {
+					bConnFlags[2] = true;
+				} else {
+					bConnFlags[0] = true;
+				}
+			} else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
+				// Active network is Mobile
+				bConnFlags[1] = true;
+			} else {
+				// No Active network found
+				bConnFlags[0] = bConnFlags[1] = bConnFlags[2] = false;
+			}
+		} else {
+			// No Active network found
+			bConnFlags[0] = bConnFlags[1] = bConnFlags[2] = false;
+		}
 
-		// Check if we have mobile && if mobile is allowed
-		// Result is false if there is no mobile on the device
-		// Result is true if we have mobile
-		bConnFlags[1] = mobileOn != null && mobileOn.isConnected();
-
+		// Check if we have really a connection change
+		if ((bConnFlags[0] != bLastConnFlags[0])
+				|| (bConnFlags[1] != bLastConnFlags[1])
+				|| (bConnFlags[2] != bLastConnFlags[2])) {
+			connStatusChanged = true;
+			bLastConnFlags[0] = bConnFlags[0];
+			bLastConnFlags[1] = bConnFlags[1];
+			bLastConnFlags[2] = bConnFlags[2];
+		} else {
+			connStatusChanged = false;
+		}
 		return bConnFlags;
 	}
 

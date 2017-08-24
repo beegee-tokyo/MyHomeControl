@@ -223,7 +223,7 @@
 		android:layout_below="@+id/cb_sec_auto_alarm"
 		android:id="@+id/ib_snapshot_gallery"
 		android:onClick="onClick"
-		android:src="@android:drawable/ic_menu_mapmode"
+		android:src="@android:drawable/ic_menu_week"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:backgroundTint="@color/colorAccent"
 		tools:targetApi="lollipop"/>
@@ -233,7 +233,7 @@
 		android:layout_height="wrap_content"
 		android:id="@+id/ib_seccam"
 		android:onClick="onClick"
-		android:src="@android:drawable/ic_menu_view"
+		android:src="@drawable/ic_cctv"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_toEndOf="@+id/ib_snapshot_gallery"
 		android:layout_toRightOf="@+id/ib_snapshot_gallery"

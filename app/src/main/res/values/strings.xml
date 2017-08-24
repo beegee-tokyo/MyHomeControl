@@ -45,6 +45,8 @@
 	<string name="sec_missing_app">CCTV viewer is not installed</string>
 	<string name="bt_today_txt">Today</string>
 	<string name="bt_history_txt">History</string>
+	<string name="cctv_footage_info">Select footage to start playing</string>
+	<string name="cctv_footage_wait">Wait for footage list</string>
 
 	<string name="bt_prev_txt" translatable="false">&lt;&lt;</string>
 	<string name="bt_next_txt" translatable="false">&gt;&gt;</string>
@@ -121,5 +123,7 @@
 	<string name="tv_device_status_txt">Devices</string>
 	<string name="txt_cmd_send">Send Command</string>
 	<string name="title_activity_sec_cam_viewer">SecCamViewer</string>
+
+	<string name="buffer_msg">Loading data, please wait!</string>
 
 </resources>

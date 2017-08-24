@@ -45,7 +45,7 @@ void setup() {
 	if (!foundStatus) // Could not get last status or file system not ready
 	{
 		sendRpiDebug("SPIFFS failure, try to format", OTA_HOST);
-		if (SPIFFS.format()){
+		if (formatSPIFFS(OTA_HOST)){
 			sendRpiDebug("SPIFFS formatted", OTA_HOST);
 		} else {
 			sendRpiDebug("SPIFFS format failed", OTA_HOST);
