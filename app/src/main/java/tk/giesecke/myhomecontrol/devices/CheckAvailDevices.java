@@ -70,7 +70,7 @@ public class CheckAvailDevices extends Service {
 	/** Handler for looper to resolve the found services */
 	private Handler mHandler;
 	/** Looper for resolving the found services */
-	Runnable queryLooper;
+	private Runnable queryLooper;
 
 	@Override
 	public IBinder onBind(Intent intent) {
