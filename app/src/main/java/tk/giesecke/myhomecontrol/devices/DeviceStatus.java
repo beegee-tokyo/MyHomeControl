@@ -1,13 +1,17 @@
 package tk.giesecke.myhomecontrol.devices;
 
+import android.app.ActivityManager;
 import android.app.IntentService;
-import android.appwidget.AppWidgetManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
+
+import static tk.giesecke.myhomecontrol.devices.MessageListener.connStatus;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.mqttClient;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.tcpListenerActive;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.udpListenerActive;
 
 
 public class DeviceStatus extends IntentService {
@@ -22,23 +26,60 @@ public class DeviceStatus extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
-			Context intentContext = getApplicationContext();
+			final Context intentContext = getApplicationContext();
 			// Update light control widget
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update device status widget");
+			MessageListener.deviceStatusWidgetUpdate(intentContext, true);
 
-			/** App widget manager for all widgets of this app */
-			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(intentContext);
-			/** Component name of this widget */
-			ComponentName thisAppWidget;
+			if (serviceIsRunning(MessageListener.class, intentContext)) {
+				if (BuildConfig.DEBUG)
+					Log.d(DEBUG_LOG_TAG, "MessageListener still running");
+				// Sockets are closed or MQTT connection is closed ???
+				if (connStatus == MessageListener.HOME_WIFI && (!udpListenerActive || !tcpListenerActive)) {
+					Log.d(DEBUG_LOG_TAG, "Restart MessageListener because sockets were closed");
+					// Restart MessageListener Service
+					intentContext.startService(new Intent(intentContext, MessageListener.class));
+				} else if (connStatus == MessageListener.WIFI_MOBILE && (mqttClient == null || !mqttClient.isConnected())) {
+					Log.d(DEBUG_LOG_TAG, "Restart MessageListener because MQTT is disconnected");
+					// Restart MessageListener Service
+					intentContext.startService(new Intent(intentContext, MessageListener.class));
+				}
+			} else {
+				// Restart MessageListener Service
+				intentContext.startService(new Intent(intentContext, MessageListener.class));
 
-			thisAppWidget = new ComponentName(intentContext.getPackageName(),
-					DeviceStatusWidget.class.getName());
-			/** List of all active widgets */
-			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+//				// Restart service with a delay of 5 seconds to let connection settle down
+//				final Handler handler = new Handler();
+//				handler.postDelayed(new Runnable() {
+//					@Override
+//					public void run() {
+//						if (BuildConfig.DEBUG)
+//							Log.d(DEBUG_LOG_TAG, "Start/Restart UDP/TCP/MQTT listener");
+//						intentContext.startService(new Intent(intentContext, MessageListener.class));
+//					}
+//				}, 5000);
+			}
 
-			for (int appWidgetId : appWidgetIds) {
-				DeviceStatusWidget.updateAppWidget(intentContext, appWidgetManager, appWidgetId);
+		}
+	}
+
+	/**
+	 * Check if a service is running
+	 *
+	 * @param serviceClass
+	 *              Service class we want to check if it is running
+	 * @return <code>boolean</code>
+	 *              True if service is running
+	 *              False if service is not running
+	 */
+	private static boolean serviceIsRunning(Class<?> serviceClass, Context context) {
+		/** Activity manager for services */
+		ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+		for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+			if (serviceClass.getName().equals(service.service.getClassName())) {
+				return true;
 			}
 		}
+		return false;
 	}
 }

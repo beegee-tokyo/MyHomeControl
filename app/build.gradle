@@ -6,9 +6,10 @@ android {
 	defaultConfig {
 		applicationId "tk.giesecke.myhomecontrol"
 		minSdkVersion 16
-		targetSdkVersion 26
+		targetSdkVersion 25
 		versionCode 1
 		versionName "1.0"
+		project.ext.set("archivesBaseName", "tk.giesecke.mhc-" + defaultConfig.versionName);
 	}
 	buildTypes {
 		release {
@@ -17,15 +18,15 @@ android {
 			pseudoLocalesEnabled true
 			useProguard false
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-			applicationVariants.all { variant ->
-				variant.outputs.each { output ->
-					def date = new Date();
-					def formattedDate = date.format('yy-MM-dd-HH-mm')
-					output.outputFile = new File(output.outputFile.parent,
-							output.outputFile.name.replace("app-release", "tk.giesecke.mhc-" + formattedDate)
-					)
-				}
-			}
+//			applicationVariants.all { variant ->
+//				variant.outputs.each { output ->
+//					def date = new Date();
+//					def formattedDate = date.format('yy-MM-dd-HH-mm')
+//					output.outputFile = new File(output.outputFile.parent,
+//							output.outputFile.name.replace("app-release", "tk.giesecke.mhc-" + formattedDate)
+//					)
+//				}
+//			}
 		}
 		debug {
 			minifyEnabled false
@@ -33,15 +34,15 @@ android {
 			pseudoLocalesEnabled true
 			useProguard false
 //			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-			applicationVariants.all { variant ->
-				variant.outputs.each { output ->
-					def date = new Date();
-					def formattedDate = date.format('yy-MM-dd-HH-mm')
-					output.outputFile = new File(output.outputFile.parent,
-							output.outputFile.name.replace("app-debug", "tk.giesecke.mhc-" + formattedDate)
-					)
-				}
-			}
+//			applicationVariants.all { variant ->
+//				variant.outputs.each { output ->
+//					def date = new Date();
+//					def formattedDate = date.format('yy-MM-dd-HH-mm')
+//					output.outputFile = new File(output.outputFile.parent,
+//							output.outputFile.name.replace("app-debug", "tk.giesecke.mhc-" + formattedDate)
+//					)
+//				}
+//			}
 		}
 	}
 	compileOptions {
@@ -69,5 +70,7 @@ dependencies {
 	compile 'com.squareup.okhttp3:okhttp:3.4.1'
 	compile 'com.github.chrisbanes:PhotoView:1.3.1'
 	compile 'com.android.support:gridlayout-v7:25.3.1'
+	compile 'com.github.andriydruk:dnssd:0.9.1'
+	compile 'com.github.andriydruk:rxdnssd:0.9.1'
 	compile project(':vitamio')
 }

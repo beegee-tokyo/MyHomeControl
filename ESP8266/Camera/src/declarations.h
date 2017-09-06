@@ -43,7 +43,8 @@ time_t lastSyncTime;
 boolean heartBeatTriggered = false;
 
 /** On ESP: camera TX connected to GPIO14, camera RX to GPIO12: */
-SoftwareSerial cameraconnection = SoftwareSerial(14, 12);
+// SoftwareSerial cameraconnection = SoftwareSerial(14, 12);
+SoftwareSerial cameraconnection = SoftwareSerial(14, 12, false, 256);
 /** Camera connection */
 Adafruit_VC0706 cam = Adafruit_VC0706(&cameraconnection);
 /** Flag if camera was found */

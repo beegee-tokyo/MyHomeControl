@@ -20,7 +20,7 @@
 		android:label="@string/app_name"
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme"
-		tools:ignore="GoogleAppIndexingWarning">
+		tools:ignore="GoogleAppIndexingWarning,UnpackedNativeCode">
 		<activity
 			android:name=".MyHomeControl"
 			android:configChanges="orientation"
@@ -45,10 +45,19 @@
 			android:launchMode="singleTask"
 			android:theme="@style/AppTheme.NoActionBar">
 		</activity>
-		<activity android:name=".solar.SolarPanelWidgetHelper">
+		<activity android:name=".solar.SolarPanelWidgetConfig">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
 			</intent-filter>
+		</activity>
+		<activity
+			android:name=".security.SecCamViewer"
+			android:label="@string/title_activity_sec_cam_viewer"
+			android:parentActivityName=".MyHomeControl"
+			android:theme="@style/AppTheme.NoActionBar">
+			<meta-data
+				android:name="android.support.PARENT_ACTIVITY"
+				android:value="tk.giesecke.myhomecontrol.MyHomeControl"/>
 		</activity>
 
 		<receiver
@@ -60,10 +69,8 @@
 			</intent-filter>
 		</receiver>
 		<receiver
-			android:name=".Events"
-			android:enabled="true">
-		</receiver>
-		<receiver android:name=".security.SecAlarmWidget">
+			android:name=".security.SecAlarmWidget"
+			android:label="@string/alarm_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 				<action android:name="android.appwidget.action.APPWIDGET_DELETED"/>
@@ -75,7 +82,9 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_alarm"/>
 		</receiver>
-		<receiver android:name=".solar.SolarPanelWidget">
+		<receiver
+			android:name=".solar.SolarPanelWidget"
+			android:label="@string/solar_panel_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -84,7 +93,9 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_solar_panel"/>
 		</receiver>
-		<receiver android:name=".security.SecLightWidget">
+		<receiver
+			android:name=".security.SecLightWidget"
+			android:label="@string/lights_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -93,7 +104,9 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_light"/>
 		</receiver>
-		<receiver android:name=".aircon.AirconWidget">
+		<receiver
+			android:name=".aircon.AirconWidget"
+			android:label="@string/aircon_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -102,7 +115,9 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_aircon"/>
 		</receiver>
-		<receiver android:name=".security.PanicButtonWidget">
+		<receiver
+			android:name=".security.PanicButtonWidget"
+			android:label="@string/panic_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -111,7 +126,9 @@
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_sec_panic"/>
 		</receiver>
-		<receiver android:name=".lights.BedRoomLightWidget">
+		<receiver
+			android:name=".lights.BedRoomLightWidget"
+			android:label="@string/bedroom_light_widget_name">
 			<intent-filter>
 				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
 			</intent-filter>
@@ -119,6 +136,39 @@
 			<meta-data
 				android:name="android.appwidget.provider"
 				android:resource="@xml/wi_light_ctrl"/>
+		</receiver>
+		<receiver
+			android:name=".security.SecCamWidget"
+			android:label="@string/cctv_widget_name">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/wi_sec_video"/>
+		</receiver>
+		<receiver
+			android:name=".lights.BackYardLightWidget"
+			android:label="@string/backyard_light_widget_name">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/wi_by_light_ctrl_info"/>
+		</receiver>
+		<receiver
+			android:name=".devices.DeviceStatusWidget"
+			android:label="@string/dev_stat_widget_name">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+			</intent-filter>
+
+			<meta-data
+				android:name="android.appwidget.provider"
+				android:resource="@xml/device_status_info"/>
 		</receiver>
 
 		<service
@@ -142,17 +192,13 @@
 			android:exported="false">
 		</service>
 		<service
-			android:name=".MessageListener"
+			android:name=".devices.MessageListener"
 			android:enabled="true"
 			android:exported="false">
 		</service>
 		<service
 			android:name=".security.PanicButtonWidgetHelper"
 			android:exported="false">
-		</service>
-		<service
-			android:name=".devices.CheckAvailDevices"
-			android:enabled="true">
 		</service>
 		<service
 			android:name=".lights.BedRoomLightWidgetOn"
@@ -166,54 +212,25 @@
 			android:name=".lights.BedRoomLightWidgetDim"
 			android:exported="false">
 		</service>
-
-		<receiver android:name=".security.SecCamWidget">
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-			</intent-filter>
-
-			<meta-data
-				android:name="android.appwidget.provider"
-				android:resource="@xml/wi_sec_video"/>
-		</receiver>
-
-		<activity
-			android:name=".security.SecCamViewer"
-			android:label="@string/title_activity_sec_cam_viewer"
-			android:parentActivityName=".MyHomeControl"
-			android:theme="@style/AppTheme.NoActionBar">
-			<meta-data
-				android:name="android.support.PARENT_ACTIVITY"
-				android:value="tk.giesecke.myhomecontrol.MyHomeControl"/>
-		</activity>
-
-		<receiver android:name=".lights.BackYardLightWidget">
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-			</intent-filter>
-
-			<meta-data
-				android:name="android.appwidget.provider"
-				android:resource="@xml/wi_by_light_ctrl_info"/>
-		</receiver>
-
 		<service
 			android:name=".lights.BackYardLightWidgetHelper"
 			android:exported="false">
 		</service>
-
-		<receiver android:name=".devices.DeviceStatusWidget">
-			<intent-filter>
-				<action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-			</intent-filter>
-
-			<meta-data
-				android:name="android.appwidget.provider"
-				android:resource="@xml/device_status_info"/>
-		</receiver>
-
 		<service
 			android:name=".devices.DeviceStatus"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".devices.DeviceStatusWidgetHelper"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".solar.SolarPanelWidgetHelper"
+			android:exported="false">
+		</service>
+		<service
+			android:name=".devices.CheckAvailDevices"
+			android:enabled="true"
 			android:exported="false">
 		</service>
 	</application>

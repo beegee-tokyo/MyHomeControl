@@ -73,7 +73,7 @@ void sendToMQTT() {
     mqttMsg.length = ac1Status.length();
     mqttClient.publish(&mqttMsg);
 	}
-	if ((ac1On != 2) && (elapsedSecsToday(now()) - lastAC1status >= 600)) { // more than 10 minutes since last updae
+	if ((ac1On != 2) && (elapsedSecsToday(now()) - lastAC1status >= 600)) { // more than 10 minutes since last update
 		ac1Status = "";
 		ac1On = 2;
 	}
@@ -83,7 +83,7 @@ void sendToMQTT() {
     mqttMsg.length = ac2Status.length();
     mqttClient.publish(&mqttMsg);
 	}
-	if ((ac2On != 2) && (elapsedSecsToday(now()) - lastAC2status >= 600)) { // more than 10 minutes since last updae
+	if ((ac2On != 2) && (elapsedSecsToday(now()) - lastAC2status >= 600)) { // more than 10 minutes since last update
 		ac2Status = "";
 		ac2On = 2;
 	}
@@ -106,7 +106,7 @@ void sendToMQTT() {
     mqttMsg.length = secFrontStatus.length();
     mqttClient.publish(&mqttMsg);
 	}
-	if ((secFrontOn != 2) && (elapsedSecsToday(now()) - lastSEFstatus >= 600)) { // more than 10 minutes since last updae
+	if ((secFrontOn != 2) && (elapsedSecsToday(now()) - lastSEFstatus >= 600)) { // more than 10 minutes since last update
 		secFrontStatus = "";
 		secFrontOn = 2;
 	}
@@ -116,7 +116,7 @@ void sendToMQTT() {
     mqttMsg.length = secBackStatus.length();
     mqttClient.publish(&mqttMsg);
 	}
-	if ((secBackOn != 2) && (elapsedSecsToday(now()) - lastSEBstatus >= 600)) { // more than 10 minutes since last updae
+	if ((secBackOn != 2) && (elapsedSecsToday(now()) - lastSEBstatus >= 600)) { // more than 10 minutes since last update
 		secBackStatus = "";
 		secBackOn = 2;
 	}
@@ -213,81 +213,81 @@ void socketServer(WiFiClient tcpClient) {
 	Called when subscribed message was received from MQTT broker
 */
 void messageReceived(String topic, String payload, char * bytes, unsigned int length) {
-	actLedFlashStart(0.2);
-
-	if (debugOn) {
-		String debugMsg = "incoming: " + topic + " message " + payload;
-		sendDebug(debugMsg, OTA_HOST);
-	}
-
-	/** Buffer for incoming JSON string */
-	DynamicJsonBuffer jsonInBuffer;
-	/** Char buffer for incoming data */
-	char json[payload.length()];
-	payload.toCharArray(json, payload.length() + 1);
-	/** Json object for incoming data */
-	JsonObject& jsonIn = jsonInBuffer.parseObject(json);
-	if (!jsonIn.success()) {
-		if (debugOn) {
-			String debugMsg = "incoming: " + topic + " message " + payload + " parseObject() failed";
-			sendDebug(debugMsg, OTA_HOST);
-		}
-		actLedFlashStop();
-		return;
-	}
-
-	String deviceID = "";
-	String deviceCMD = "";
-	if (!jsonIn.containsKey("ip")) {
-		if (debugOn) {
-			String debugMsg = "incoming: " + topic + " missing deviceID";
-			sendDebug(debugMsg, OTA_HOST);
-		}
-		actLedFlashStop();
-		return;
-	} else {
-		deviceID = jsonIn["ip"].as<String>();
-		if (!jsonIn.containsKey("cm")) {
-			if (debugOn) {
-				String debugMsg = "incoming: " + topic + " missing command";
-				sendDebug(debugMsg, OTA_HOST);
-			}
-			actLedFlashStop();
-			return;
-		} else {
-			deviceCMD = jsonIn["cm"].as<String>();
-		}
-	}
-
-	// IP address of target device
-	IPAddress deviceIP;
-	// Check if deviceID or deviceCMD are empty
-	if ((deviceID == "") || (deviceCMD == "")) {
-		actLedFlashStop();
-		return;
-	} else if (deviceID == "sf1") { // front security
-		deviceIP = ipSecFront;
-	} else if (deviceID == "sb1") { // back security
-		deviceIP = ipSecBack;
-	} else if (deviceID == "fd1") { // office aircon
-		deviceIP = ipAC1;
-	} else if (deviceID == "ca1") { // living room aircon
-		deviceIP = ipAC2;
-	} else if (deviceID == "cm1") { // front camera
-		deviceIP = ipCam1;
-	} else if (deviceID == "lb1") { // bedroom lights
-		deviceIP = ipBedLight;
-	} else {
-		actLedFlashStop();
-		return;
-	}
-	if (debugOn) {
-		String debugMsg = "sending command " + deviceCMD + " to device " + deviceID + " at IP ";
-		debugMsg +=  String(deviceIP[0]) + "." + String(deviceIP[1]) + "." + String(deviceIP[2]) + "." + String(deviceIP[3]);
-		sendDebug(debugMsg, OTA_HOST);
-	}
-	sendCmd(deviceIP, deviceCMD);
-	actLedFlashStop();
+// 	actLedFlashStart(0.2);
+//
+// 	if (debugOn) {
+// 		String debugMsg = "incoming: " + topic + " message " + payload;
+// 		sendDebug(debugMsg, OTA_HOST);
+// 	}
+//
+// 	/** Buffer for incoming JSON string */
+// 	DynamicJsonBuffer jsonInBuffer;
+// 	/** Char buffer for incoming data */
+// 	char json[payload.length()];
+// 	payload.toCharArray(json, payload.length() + 1);
+// 	/** Json object for incoming data */
+// 	JsonObject& jsonIn = jsonInBuffer.parseObject(json);
+// 	if (!jsonIn.success()) {
+// 		if (debugOn) {
+// 			String debugMsg = "incoming: " + topic + " message " + payload + " parseObject() failed";
+// 			sendDebug(debugMsg, OTA_HOST);
+// 		}
+// 		actLedFlashStop();
+// 		return;
+// 	}
+//
+// 	String deviceID = "";
+// 	String deviceCMD = "";
+// 	if (!jsonIn.containsKey("ip")) {
+// 		if (debugOn) {
+// 			String debugMsg = "incoming: " + topic + " missing deviceID";
+// 			sendDebug(debugMsg, OTA_HOST);
+// 		}
+// 		actLedFlashStop();
+// 		return;
+// 	} else {
+// 		deviceID = jsonIn["ip"].as<String>();
+// 		if (!jsonIn.containsKey("cm")) {
+// 			if (debugOn) {
+// 				String debugMsg = "incoming: " + topic + " missing command";
+// 				sendDebug(debugMsg, OTA_HOST);
+// 			}
+// 			actLedFlashStop();
+// 			return;
+// 		} else {
+// 			deviceCMD = jsonIn["cm"].as<String>();
+// 		}
+// 	}
+//
+// 	// IP address of target device
+// 	IPAddress deviceIP;
+// 	// Check if deviceID or deviceCMD are empty
+// 	if ((deviceID == "") || (deviceCMD == "")) {
+// 		actLedFlashStop();
+// 		return;
+// 	} else if (deviceID == "sf1") { // front security
+// 		deviceIP = ipSecFront;
+// 	} else if (deviceID == "sb1") { // back security
+// 		deviceIP = ipSecBack;
+// 	} else if (deviceID == "fd1") { // office aircon
+// 		deviceIP = ipAC1;
+// 	} else if (deviceID == "ca1") { // living room aircon
+// 		deviceIP = ipAC2;
+// 	} else if (deviceID == "cm1") { // front camera
+// 		deviceIP = ipCam1;
+// 	} else if (deviceID == "lb1") { // bedroom lights
+// 		deviceIP = ipBedLight;
+// 	} else {
+// 		actLedFlashStop();
+// 		return;
+// 	}
+// 	if (debugOn) {
+// 		String debugMsg = "sending command " + deviceCMD + " to device " + deviceID + " at IP ";
+// 		debugMsg +=  String(deviceIP[0]) + "." + String(deviceIP[1]) + "." + String(deviceIP[2]) + "." + String(deviceIP[3]);
+// 		sendDebug(debugMsg, OTA_HOST);
+// 	}
+// 	sendCmd(deviceIP, deviceCMD);
+// 	actLedFlashStop();
 }
 
 /**

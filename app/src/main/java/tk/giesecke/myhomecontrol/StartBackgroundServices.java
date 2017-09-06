@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.IBinder;
 
 import tk.giesecke.myhomecontrol.devices.CheckAvailDevices;
+import tk.giesecke.myhomecontrol.devices.MessageListener;
 import tk.giesecke.myhomecontrol.solar.SolarSyncDataBase;
 
 public class StartBackgroundServices extends Service {
@@ -34,7 +35,7 @@ public class StartBackgroundServices extends Service {
 				new Intent(this, SolarSyncDataBase.class), PendingIntent.FLAG_UPDATE_CURRENT);
 		/** Alarm manager for sync every 2 hours */
 		AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-		am.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3600000,
+		am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 3600000,
 				7200000, pi);
 		stopSelf();
 	}

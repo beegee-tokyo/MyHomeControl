@@ -18,9 +18,9 @@ WiFiServer tcpServer(tcpComPort);
 
 /** IP address of this module */
 #ifdef BREADBOARD
-	IPAddress ipAddr = IPSPARE4;
+	IPAddress ipAddr = ipDisplay;
 #else
-	IPAddress ipAddr = ipMonitor;
+	IPAddress ipAddr = ipDisplay;
 #endif
 /** Instance of the display */
 Ucglib_ILI9163_18x128x128_SWSPI ucg(/*sclk=*/ disSCLK, /*data=*/ disMOSI, /*cd=*/ disA0 , /*cs=*/ disCS); //, /*reset=*/ 4);

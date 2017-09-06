@@ -1,4 +1,4 @@
-/*************************************************** 
+/***************************************************
   This is a library for the Adafruit TTL JPEG Camera (VC0706 chipset)
 
   Pick one up today in the adafruit shop!
@@ -6,11 +6,11 @@
 
   These displays use Serial to communicate, 2 pins are required to interface
 
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit and open-source hardware by purchasing
   products from Adafruit!
 
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
+  Written by Limor Fried/Ladyada for Adafruit Industries.
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
@@ -18,7 +18,7 @@
 #if ARDUINO >= 100
  #include "Arduino.h"
  #if not defined (_VARIANT_ARDUINO_DUE_X_) && not defined (_VARIANT_ARDUINO_ZERO_)
-  #include <SoftwareSerial.h>
+  #include "SoftwareSerial.h"
  #endif
 #else
  #include "WProgram.h"
@@ -75,7 +75,7 @@ class Adafruit_VC0706 {
   Adafruit_VC0706(HardwareSerial *ser); // Constructor when using HardwareSerial
   boolean begin(uint32_t baud = 38400);
   boolean reset(void);
-  uint32_t autoDetectBaudRate(); 
+  uint32_t autoDetectBaudRate();
   boolean TVon(void);
   boolean TVoff(void);
   boolean takePicture(void);
@@ -96,7 +96,7 @@ class Adafruit_VC0706 {
   boolean cameraFrameBuffCtrl(uint8_t command);
   uint8_t getCompression();
   boolean setCompression(uint8_t c);
-  
+
   boolean getPTZ(uint16_t &w, uint16_t &h, uint16_t &wz, uint16_t &hz, uint16_t &pan, uint16_t &tilt);
   boolean setPTZ(uint16_t wz, uint16_t hz, uint16_t pan, uint16_t tilt);
 
@@ -107,7 +107,7 @@ char* setBaud19200();
 char* setBaud38400();
 char* setBaud57600();
 char* setBaud115200();
-  
+
  private:
   uint8_t  serialNum;
   uint8_t  camerabuff[CAMERABUFFSIZ+1];
@@ -124,8 +124,8 @@ char* setBaud115200();
   HardwareSerial *hwSerial;
 
   void common_init(void);
-  boolean runCommand(uint8_t cmd, uint8_t args[], uint8_t argn, uint8_t resp, boolean flushflag = true); 
-  void sendCommand(uint8_t cmd, uint8_t args[], uint8_t argn); 
+  boolean runCommand(uint8_t cmd, uint8_t args[], uint8_t argn, uint8_t resp, boolean flushflag = true);
+  void sendCommand(uint8_t cmd, uint8_t args[], uint8_t argn);
   uint8_t readResponse(uint8_t numbytes, uint8_t timeout);
   boolean verifyResponse(uint8_t command);
   void printBuff(void);

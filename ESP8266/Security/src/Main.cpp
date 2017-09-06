@@ -30,7 +30,7 @@ void loop() {
 	*	if there is a detection
 	*	- the detection led starts to flash
 	*	- the relay is switched on (if flag switchLights is true)
-	*	- piezo alarm buzzer is activated (if flag switchLights is true)
+	*	- piezo alarm buzzer is activated (if flag alarmOn is true)
 	*	- msgText is set to detection message
 	*	if detection is finished
 	*	- the detection led stops flashing
@@ -79,7 +79,7 @@ void loop() {
 	if (lightLDRTriggered) {
 		lightLDRTriggered = false;
 		if (getLDR()) {
-			sendAlarm(true);
+			// sendAlarm(true);
 			sendLightStatus(switchLights);
 		}
 	}
@@ -136,19 +136,6 @@ void loop() {
 			actLedFlashStop();
 			sendAlarm(true);
 		}
-
-		// if ((hour()==autoActivOn) && !alarmOn) {
-		// 	// Set alarm_on to active
-		// 	alarmOn = true;
-		// 	actLedFlashStart(1);
-		// 	sendAlarm(true);
-		// }
-		// if ((hour()== autoActivOff) && alarmOn) {
-		// 	// Set alarm_on to inactive
-		// 	alarmOn = false;
-		// 	actLedFlashStop();
-		// 	sendAlarm(true);
-		// }
 	}
 
 	wdt_reset();

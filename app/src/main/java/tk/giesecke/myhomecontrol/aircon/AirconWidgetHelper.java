@@ -28,11 +28,12 @@ import java.util.Locale;
 import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.MyHomeControl;
 import tk.giesecke.myhomecontrol.R;
-import tk.giesecke.myhomecontrol.MessageListener;
+import tk.giesecke.myhomecontrol.devices.MessageListener;
 import tk.giesecke.myhomecontrol.Utilities;
 
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
-import static tk.giesecke.myhomecontrol.MessageListener.TCP_CLIENT_PORT;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.TCP_CLIENT_PORT;
 
 /**
  * Handles clicks on specific parts of the aircon widget
@@ -60,14 +61,12 @@ public class AirconWidgetHelper extends IntentService {
 					timerTime--;
 					espComm("t=" + Integer.toString(timerTime));
 				}
-			}
-			if (intent.getAction().equals("p")){
+			} else if (intent.getAction().equals("p")){
 				if (timerTime < 9) {
 					timerTime++;
 					espComm("t=" + Integer.toString(timerTime));
 				}
-			}
-			if (intent.getAction().equals("s")){
+			} else if (intent.getAction().equals("s")){
 				if (!isRunning) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Starting timer");
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(timerTime));
@@ -86,6 +85,11 @@ public class AirconWidgetHelper extends IntentService {
 						mPrefs.edit().putBoolean("acTimerOn", false).apply();
 					}
 				}
+			} else if (intent.getAction().equals("a")) {
+				Intent appIntent = new Intent(this, MyHomeControl.class);
+				appIntent.putExtra("vID",MyHomeControl.view_aircon_id);
+				appIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
+				startActivity(appIntent);
 			}
 			mPrefs.edit().putInt("acTimerTime", timerTime).apply();
 			Calendar calendar = Calendar.getInstance();

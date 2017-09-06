@@ -101,6 +101,7 @@ void socketServer(WiFiClient tcpClient) {
 	req[index] = 0;
 
 	tcpClient.flush();
+	tcpClient.print(DEVICE_ID);
 	tcpClient.stop();
 	if (req.length() < 1) { // No data received
 		if (debugOn) {
@@ -148,8 +149,14 @@ void socketServer(WiFiClient tcpClient) {
 		} else if (req.substring(2, 3) == "3") { // Alarm auto off
 			hasAutoActivation = false;
 		} else if (req.substring(2, 3) == "4") { // Auto lights on
+			if (switchLights) {
+				 return; // Auto lights already on, nothing to do
+			 }
 			switchLights = true;
 		} else if (req.substring(2, 3) == "5") { // Auto lights off
+			if (!switchLights) {
+				 return; // Auto lights already off, nothing to do
+			 }
 			switchLights = false;
 		}
 		// Send back status over UDP
@@ -275,8 +282,8 @@ void triggerPic() {
 		sendDebug("triggerPic", OTA_HOST);
 	}
 
-	if (!tcpClient.connect(ipSpare, tcpComPort)) {
-		Serial.println("connection to backyard camera " + String(ipSpare[0]) + "." + String(ipSpare[1]) + "." + String(ipSpare[2]) + "." + String(ipSpare[3]) + " failed");
+	if (!tcpClient.connect(ipCam1, tcpComPort)) {
+		Serial.println("connection to backyard camera " + String(ipCam1[0]) + "." + String(ipCam1[1]) + "." + String(ipCam1[2]) + "." + String(ipCam1[3]) + " failed");
 		tcpClient.stop();
 		comLedFlashStop();
 		// wmIsConnected = false;

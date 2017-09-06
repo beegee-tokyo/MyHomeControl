@@ -84,7 +84,7 @@ void loop() {
 				getUDPbroadcast(udpMsgLength);
 			}
 		}
-		mqttClient.subscribe("/CMD");
+		// mqttClient.subscribe("/CMD");
 	}
 
 	// Handle new request on tcp socket server if available
@@ -110,6 +110,14 @@ void loop() {
 		statusUpdated = false;
 		getHomeInfo(false);
 		delay(10); // <- fixes some issues with WiFi stability
-		sendToMQTT();
+		// sendToMQTT();
+		if (inWeatherStatus.length() != 0) {
+			MQTTMessage mqttMsg;
+	    mqttMsg.topic = (char *)"/WEI";
+	    mqttMsg.payload = (char *)&inWeatherStatus[0];
+	    mqttMsg.length = inWeatherStatus.length();
+	    mqttClient.publish(&mqttMsg);
+			sendWEIBroadCast(inWeatherStatus);
+		}
 	}
 }

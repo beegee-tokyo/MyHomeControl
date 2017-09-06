@@ -30,7 +30,7 @@ void loop() {
 	*	if there is a detection
 	*	- the detection led starts to flash
 	*	- the relay is switched on (if flag switchLights is true)
-	*	- piezo alarm buzzer is activated (if flag switchLights is true)
+	*	- piezo alarm buzzer is activated (if flag alarmOn is true)
 	*	- msgText is set to detection message
 	*	if detection is finished
 	*	- the detection led stops flashing
@@ -51,9 +51,9 @@ void loop() {
 			// if (alarmOn || switchLights) {
 			// 	triggerPic(); // Trigger picture from security camera
 			// }
-			if (alarmOn) {
+			// if (alarmOn) {
 				sendAlarm(true);
-			}
+			// }
 			if (debugOn) {
 				sendDebug("Detection interrupt from PIR pin", OTA_HOST);
 			}

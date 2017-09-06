@@ -22,9 +22,7 @@ boolean takeShot() {
 	uint32_t startTime = millis();
 	wdt_reset();
 	if (!cam.takePicture()) {
-		if (debugOn) {
-			sendRpiDebug("Failed to snap!", OTA_HOST);
-		}
+		sendRpiDebug("Failed to take picture!", OTA_HOST);
 		wdt_reset();
 		cam.resumeVideo();
 		comLedFlashStop();
@@ -39,11 +37,9 @@ boolean takeShot() {
 	}
 
 	wdt_reset();
-	if (jpglen == 0) {
-		if (debugOn) {
-			debugMsg = "Image size wrong: " + String(jpglen);
-			sendRpiDebug(debugMsg, OTA_HOST);
-		}
+	if (jpglen <= 5000) {
+		debugMsg = "Image size wrong: " + String(jpglen);
+		sendRpiDebug(debugMsg, OTA_HOST);
 		cam.resumeVideo();
 		comLedFlashStop();
 		digitalWrite(flashLED, LOW);
@@ -77,9 +73,7 @@ boolean takeShot() {
 	File imgFile = SPIFFS.open("/last.jpg", "w");
 	if (imgFile == 0) {
 		fileOpen = false;
-		if (debugOn) {
-			sendRpiDebug("Failed to open file /last.jpg", OTA_HOST);
-		}
+		sendRpiDebug("Failed to open file /last.jpg", OTA_HOST);
 	}
 
 	// Prepare FTP connection
@@ -90,9 +84,7 @@ boolean takeShot() {
 	wdt_reset();
 	if (!ftpConnect()) {
 		ftpConnected = false;
-		if (debugOn) {
-			sendRpiDebug("Connecting to FTP failed", OTA_HOST);
-		}
+		sendRpiDebug("Connecting to FTP failed", OTA_HOST);
 		// Maybe we lost WiFi connection!
 		wmIsConnected = false;
 	}
@@ -103,10 +95,8 @@ boolean takeShot() {
 		// Check result
 		wdt_reset();
 		if (!ftpReceive()) {
-			if (debugOn) {
-				debugMsg = "FTP: CD failed: " + String(ftpBuf);
-				sendRpiDebug(debugMsg, OTA_HOST);
-			}
+			debugMsg = "FTP: CD failed: " + String(ftpBuf);
+			sendRpiDebug(debugMsg, OTA_HOST);
 			ftpDataClient.stop();
 			ftpClient.stop();
 			ftpConnected = false;
@@ -118,10 +108,8 @@ boolean takeShot() {
 			// Check result
 			wdt_reset();
 			if (!ftpReceive()) {
-				if (debugOn) {
-					debugMsg = "FTP: Passive mode not available: " + String(ftpBuf);
-					sendRpiDebug(debugMsg, OTA_HOST);
-				}
+				debugMsg = "FTP: Passive mode not available: " + String(ftpBuf);
+				sendRpiDebug(debugMsg, OTA_HOST);
 				ftpDataClient.stop();
 				ftpClient.stop();
 				ftpConnected = false;
@@ -157,12 +145,30 @@ boolean takeShot() {
 			buffer = cam.readPicture(bytesToRead);
 
 			if (buffer == 0) {
-				if (debugOn) {
-					sendRpiDebug("Read from camera failed", OTA_HOST);
-				}
+				sendRpiDebug("Read from camera failed", OTA_HOST);
 				readFailures++;
-				if (readFailures > 100) { // Too many read errors, better to stop
+				if (readFailures > 10) { // Too many read errors, better to stop
 					jpglen = 0;
+					if (ftpConnected) {
+						wdt_reset();
+						ftpDataClient.stop();
+						ftpClient.println("QUIT");
+						// Check result
+						wdt_reset();
+						if (!ftpReceive()) {
+							debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
+							sendRpiDebug(debugMsg, OTA_HOST);
+						}
+						if (debugOn) {
+							sendRpiDebug("STOP FTP", OTA_HOST);
+						}
+						ftpClient.stop();
+					}
+					if (fileOpen) {
+						wdt_reset();
+						imgFile.close();
+					}
+					return false;
 					break;
 				}
 			} else {
@@ -179,14 +185,9 @@ boolean takeShot() {
 		if (fileOpen) {
 			wdt_reset();
 			bytesWrittenFS += imgFile.write((const uint8_t *) clientBuf, wCount);
-
-			debugMsg = "Saved " + String(bytesWrittenFS) + " bytes from " + String(wCount);
-			sendRpiDebug(debugMsg, OTA_HOST);
 		}
 		if (millis()-timeOut > 60000) { // if transfer takes more than a minute, stop it
-			if (debugOn) {
-				sendRpiDebug("Timeout saving picture", OTA_HOST);
-			}
+			sendRpiDebug("Timeout saving picture", OTA_HOST);
 			bytesWrittenFTP = bytesWrittenFS = jpglen = 0;
 			digitalWrite(flashLED, LOW);
 			// Maybe we lost WiFi connection!
@@ -201,10 +202,8 @@ boolean takeShot() {
 		// Check result
 		wdt_reset();
 		if (!ftpReceive()) {
-			if (debugOn) {
-				debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
-				sendRpiDebug(debugMsg, OTA_HOST);
-			}
+			debugMsg = "FTP: Disconnect failed: " + String(ftpBuf);
+			sendRpiDebug(debugMsg, OTA_HOST);
 			// Maybe we lost WiFi connection!
 			wmIsConnected = false;
 		}

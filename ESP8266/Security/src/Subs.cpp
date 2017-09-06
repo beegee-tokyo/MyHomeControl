@@ -87,8 +87,8 @@ void pirTrigger() {
 void createStatus(JsonObject& root, boolean makeShort) {
 	// Create status
 	// structure is:
-	// {"device":DEVICE_ID,"alarm":0/1,"alarm_on":0/1,"light_on":0/1,"boot":0/1,"auto":0/1,"auto_on":1...24,"auto_off":1...24,
-	//			"rssi":-100...+100,"reboot":rebootReason,"temp":-20...+40,"humid":0...100,"heat":-20...+40,"build":"Build version"}
+	// {"de":DEVICE_ID,"al":0/1,"ao":0/1,"lo":0/1,"bo":0/1,"au":0/1,"an":1...24,"af":1...24,
+	//			"rs":-100...+100,"re":"rebootReason","te":-20...+40,"hu":0...100,"hi":-20...+40,"bu":"Build version"}
 
 	root["de"] = DEVICE_ID; //root["device"] = DEVICE_ID;
 	if (hasDetection) {

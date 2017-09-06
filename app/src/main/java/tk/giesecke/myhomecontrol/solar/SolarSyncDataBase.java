@@ -25,7 +25,7 @@ import tk.giesecke.myhomecontrol.MyHomeControl;
 import tk.giesecke.myhomecontrol.Utilities;
 
 import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
-import static tk.giesecke.myhomecontrol.MessageListener.BROADCAST_RECEIVED;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.BROADCAST_RECEIVED;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in

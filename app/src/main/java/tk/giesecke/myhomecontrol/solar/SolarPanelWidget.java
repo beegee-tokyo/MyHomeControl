@@ -15,7 +15,7 @@ import tk.giesecke.myhomecontrol.R;
 
 /**
  * Implementation of App Widget functionality.
- * App Widget Configuration implemented in {@link SolarPanelWidgetHelper SolarPanelWidgetHelper}
+ * App Widget Configuration implemented in {@link SolarPanelWidgetConfig SolarPanelWidgetConfig}
  */
 public class SolarPanelWidget extends AppWidgetProvider {
 
@@ -62,11 +62,9 @@ public class SolarPanelWidget extends AppWidgetProvider {
 		}
 
 		/** Intent to start app if widget is pushed */
-		Intent intent1 = new Intent(context, MyHomeControl.class);
-		intent1.putExtra("view", MyHomeControl.view_solar_id);
-		intent1.putExtra("spm", MyHomeControl.view_solar_id);
+		Intent intent1 = new Intent(context, SolarPanelWidgetHelper.class);
 		/** Pending intent to start app if widget is pushed */
-		PendingIntent pendingIntent1 = PendingIntent.getActivity(context, 0,
+		PendingIntent pendingIntent1 = PendingIntent.getService(context, 0,
 				intent1, PendingIntent.FLAG_UPDATE_CURRENT);
 		//  Attach an on-click listener to the battery icon
 		views.setOnClickPendingIntent(R.id.rlSPwidget, pendingIntent1);

@@ -17,6 +17,7 @@
 #include <ESP8266WebServer.h>
 
 #include <Adafruit_VC0706.h>
+// #include <SoftwareSerial.h>
 #include <SoftwareSerial.h>
 
 /* We are using NodeMCU board! */

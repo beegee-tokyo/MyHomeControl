@@ -48,6 +48,7 @@ extern boolean sendUpdateTriggered;
 extern boolean sendUpdateTriggered;
 
 // On ESP: camera TX connected to GPIO15, camera RX to GPIO13:
+// extern SoftwareSerial cameraconnection;
 extern SoftwareSerial cameraconnection;
 // Camera connection
 extern Adafruit_VC0706 cam;

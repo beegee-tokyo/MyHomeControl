@@ -126,4 +126,14 @@
 
 	<string name="buffer_msg">Loading data, please wait!</string>
 
+	<string name="dev_stat_widget_name">Device Status</string>
+	<string name="backyard_light_widget_name">Backyard light</string>
+	<string name="cctv_widget_name">CCTV</string>
+	<string name="bedroom_light_widget_name">Bedroom light</string>
+	<string name="panic_widget_name">Panic button</string>
+	<string name="aircon_widget_name">Aircon ctrl</string>
+	<string name="lights_widget_name">Light button</string>
+	<string name="solar_panel_widget_name">Solar panel monitor</string>
+	<string name="alarm_widget_name">Alarm button</string>
+
 </resources>

@@ -15,7 +15,7 @@ import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.R;
 import tk.giesecke.myhomecontrol.Utilities;
 
-import static tk.giesecke.myhomecontrol.MessageListener.TCP_CLIENT_PORT;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.TCP_CLIENT_PORT;
 
 public class BedRoomLightWidgetOn extends IntentService {
 

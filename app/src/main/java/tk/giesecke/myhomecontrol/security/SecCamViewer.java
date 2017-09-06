@@ -28,26 +28,22 @@ import static tk.giesecke.myhomecontrol.MyHomeControl.lists;
 public class SecCamViewer extends AppCompatActivity {
 
 	/** Debug tag */
-	static final String DEBUG_LOG_TAG = "MHC-CCTV";
+	private static final String DEBUG_LOG_TAG = "MHC-CCTV";
 
 	/** This activities context */
-	Context seccamContext;
+	private Context seccamContext;
 
 	/** VideoView for CCTV footage */
 	private VideoView footageVV;
-	/** Action menu */
-	private Menu actionMenu;
 	/** Menu item for status message */
-	MenuItem statusMenuItem;
+	private MenuItem statusMenuItem;
 	/** Layout for status message */
-	RelativeLayout statusMenuLayout;
+	private RelativeLayout statusMenuLayout;
 	/** Text view for status message */
-	TextView statusMenuText;
+	private TextView statusMenuText;
 
 	/** Media controller for CCTV footage */
 	private MediaController footageMC;
-	/** Error text view */
-	TextView errorMsg;
 	/** URL of footage to be played */
 	private String urlFootage = "";
 
@@ -75,7 +71,8 @@ public class SecCamViewer extends AppCompatActivity {
 		// Initialize variables
 		seccamContext = this;
 		/** Error text view */
-		errorMsg = (TextView) findViewById(R.id.et_cctv_error);
+		/* Error text view */
+		TextView errorMsg = (TextView) findViewById(R.id.et_cctv_error);
 		/** VideoView for CCTV footage */
 		footageVV = (VideoView) findViewById(R.id.vv_cctv_footage);
 		footageVV.setVisibility(View.INVISIBLE);
@@ -110,8 +107,8 @@ public class SecCamViewer extends AppCompatActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.menu_seccam, menu);
-		actionMenu = menu;
-		statusMenuItem = actionMenu.findItem(R.id.action_status);
+		/* Action menu */
+		statusMenuItem = menu.findItem(R.id.action_status);
 		return true;
 	}
 
@@ -185,7 +182,7 @@ public class SecCamViewer extends AppCompatActivity {
 		return super.onOptionsItemSelected(item);
 	}
 
-	public void startVideoStream() {
+	private void startVideoStream() {
 		Uri vidUri = Uri.parse(urlFootage);
 		footageVV.setVisibility(View.VISIBLE);
 		// Start the video stream
@@ -236,7 +233,7 @@ public class SecCamViewer extends AppCompatActivity {
 		});
 	}
 
-	public void stopVideoStream() {
+	private void stopVideoStream() {
 		if (footageVV.isPlaying()) {
 			footageVV.stopPlayback();
 		}

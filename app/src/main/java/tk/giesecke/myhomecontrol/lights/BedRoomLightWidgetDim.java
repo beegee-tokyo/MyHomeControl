@@ -18,7 +18,7 @@ import tk.giesecke.myhomecontrol.Utilities;
 
 import static tk.giesecke.myhomecontrol.MyHomeControl.prefsLightBedDim;
 import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
-import static tk.giesecke.myhomecontrol.MessageListener.TCP_CLIENT_PORT;
+import static tk.giesecke.myhomecontrol.devices.MessageListener.TCP_CLIENT_PORT;
 
 public class BedRoomLightWidgetDim extends IntentService {
 

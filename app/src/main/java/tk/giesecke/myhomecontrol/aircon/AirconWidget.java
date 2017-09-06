@@ -61,15 +61,22 @@ public class AirconWidget extends AppWidgetProvider {
 		// Attach a click listener to the button
 		rvACview.setOnClickPendingIntent(R.id.bt_ac_wid_timer, pendingServiceIntent);
 
-		/** Intent to start app if widget is pushed */
-		Intent appIntent = new Intent(context, MyHomeControl.class);
-		appIntent.putExtra("view", MyHomeControl.view_aircon_id);
-		appIntent.putExtra("aircon", MyHomeControl.view_aircon_id);
-		/** Pending intent to start app if widget is pushed */
-		PendingIntent pendingAppIntent = PendingIntent.getActivity(context, 2,
-				appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		//  Attach an on-click listener to the battery icon
-		rvACview.setOnClickPendingIntent(R.id.iv_ac_wid_icon, pendingAppIntent);
+//		/** Intent to start app if widget is pushed */
+//		Intent appIntent = new Intent(context, MyHomeControl.class);
+//		appIntent.putExtra("view", MyHomeControl.view_aircon_id);
+//		/** Pending intent to start app if widget is pushed */
+//		PendingIntent pendingAppIntent = PendingIntent.getActivity(context, 2,
+//				appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		/** Intent to start method to start aircon in timer mode */
+		serviceIntent = new Intent(context, AirconWidgetHelper.class);
+		serviceIntent.setAction("a");
+		/** Pending intent to start method when widget is clicked */
+		pendingServiceIntent =
+				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		//  Attach an on-click listener to the aircon icon
+//		rvACview.setOnClickPendingIntent(R.id.iv_ac_wid_icon, pendingAppIntent);
+		rvACview.setOnClickPendingIntent(R.id.iv_ac_wid_icon, pendingServiceIntent);
 
 		// Instruct the widget manager to update the widget
 		appWidgetManager.updateAppWidget(appWidgetId, rvACview);

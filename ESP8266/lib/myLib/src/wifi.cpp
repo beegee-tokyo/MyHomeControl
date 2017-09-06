@@ -165,7 +165,7 @@ void sendRpiDebug(String debugMsg, String senderID) {
 	/** WiFiClient class to create TCP communication */
 	WiFiClient tcpDebugClient;
 
-	if (!tcpDebugClient.connect(ipMonitor, tcpDebugPort)) {
+	if (!tcpDebugClient.connect(ipMonitor, tcpRpiDebugPort)) {
 		Serial.println("connection to Debug PC " + String(ipMonitor[0]) + "." + String(ipMonitor[1]) + "." + String(ipMonitor[2]) + "." + String(ipMonitor[3]) + " failed");
 		tcpDebugClient.stop();
 		doubleLedFlashStop();

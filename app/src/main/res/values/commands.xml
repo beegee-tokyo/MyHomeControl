@@ -9,6 +9,7 @@
 		<item>Lights Bedroom</item>
 		<item>Aircon Fuji Denzo</item>
 		<item>Aircon Carrier</item>
+		<item>MHControl</item>
 		<item>Toggle Debug status</item>
 		<item>Request status</item>
 	</string-array>
@@ -189,6 +190,24 @@
 		<item>Reset WiFi config</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
+	</string-array>
+
+	<string-array name="mhc_cmds">
+		<item>r</item>
+		<item>dg</item>
+		<item>dc</item>
+		<item>dd</item>
+		<item>dm</item>
+		<item>du</item>
+	</string-array>
+
+	<string-array name="mhc_cmds_txt">
+		<item>Reset device</item>
+		<item>General Debug on/off</item>
+		<item>Camera Debug on/off</item>
+		<item>DHT11 Debug on/off</item>
+		<item>MQTT Debug on/off</item>
+		<item>UDP Debug on/off</item>
 	</string-array>
 
 </resources>
