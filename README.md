@@ -31,5 +31,5 @@ Remote control for air con using Adafruit HUZZAH ESP8266 modules<br />
  
 ## Software
  * Source code for Android is in subfolder app<br />
- * Source code for Arduino Yun is in subfolder Arduino<br />
- * Source code for ESP8266 modules is in subfolder ESP8266<br />
+ * Source code for Arduino Yun is in Github repo [Yun-spMonitor](https://github.com/beegee-tokyo?tab=repositories)<br />
+ * Source code for ESP8266 modules is in Github repo [Yun-spMonitor](https://github.com/beegee-tokyo?tab=repositories)<br />
