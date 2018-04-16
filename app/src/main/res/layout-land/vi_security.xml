@@ -13,7 +13,8 @@
 	tools:showIn="@layout/activity_my_home_control"
 	android:id="@+id/view_security"
 	android:visibility="visible"
-	android:orientation="vertical">
+	android:orientation="vertical"
+	tools:ignore="KeyboardInaccessibleWidget">
 
 	<TableLayout
 		android:layout_width="match_parent"

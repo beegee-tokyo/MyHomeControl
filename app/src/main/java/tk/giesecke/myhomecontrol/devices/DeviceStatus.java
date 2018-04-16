@@ -27,7 +27,7 @@ public class DeviceStatus extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
 			final Context intentContext = getApplicationContext();
-			// Update light control widget
+			// Update device status widget
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update device status widget");
 			MessageListener.deviceStatusWidgetUpdate(intentContext, true);
 
@@ -47,19 +47,7 @@ public class DeviceStatus extends IntentService {
 			} else {
 				// Restart MessageListener Service
 				intentContext.startService(new Intent(intentContext, MessageListener.class));
-
-//				// Restart service with a delay of 5 seconds to let connection settle down
-//				final Handler handler = new Handler();
-//				handler.postDelayed(new Runnable() {
-//					@Override
-//					public void run() {
-//						if (BuildConfig.DEBUG)
-//							Log.d(DEBUG_LOG_TAG, "Start/Restart UDP/TCP/MQTT listener");
-//						intentContext.startService(new Intent(intentContext, MessageListener.class));
-//					}
-//				}, 5000);
 			}
-
 		}
 	}
 
@@ -75,9 +63,11 @@ public class DeviceStatus extends IntentService {
 	private static boolean serviceIsRunning(Class<?> serviceClass, Context context) {
 		/** Activity manager for services */
 		ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-		for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-			if (serviceClass.getName().equals(service.service.getClassName())) {
-				return true;
+		if (manager != null) {
+			for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+				if (serviceClass.getName().equals(service.service.getClassName())) {
+					return true;
+				}
 			}
 		}
 		return false;

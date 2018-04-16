@@ -1,5 +1,6 @@
 package tk.giesecke.myhomecontrol;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
@@ -34,6 +35,7 @@ public class BrightnessControl extends android.support.v7.widget.AppCompatSeekBa
 		super.onDraw(c);
 	}
 
+	@SuppressLint("ClickableViewAccessibility")
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);

@@ -40,7 +40,6 @@
 		<item>t=</item>
 		<item>d</item>
 		<item>i</item>
-		<item>r</item>
 		<item>s</item>
 		<item>x</item>
 		<item>y=</item>
@@ -72,7 +71,6 @@
 		<item>Manual timer (fd1 only)</item>
 		<item>Debug on/off</item>
 		<item>AC init request</item>
-		<item>Reset WiFi config</item>
 		<item>Request status</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
@@ -90,7 +88,6 @@
 		<item>i</item>
 		<item>b</item>
 		<item>d</item>
-		<item>r</item>
 		<item>x</item>
 		<item>y=</item>
 	</string-array>
@@ -107,7 +104,6 @@
 		<item>Request ext. status</item>
 		<item>Lights on (2min)</item>
 		<item>Debug on/off</item>
-		<item>Reset WiFi config</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
 	</string-array>
@@ -115,7 +111,6 @@
 	<string-array name="cam_cmds">
 		<item>t</item>
 		<item>d</item>
-		<item>r</item>
 		<item>x</item>
 		<item>y=</item>
 		<item>z</item>
@@ -124,7 +119,6 @@
 	<string-array name="cam_cmds_txt">
 		<item>Take picture</item>
 		<item>Debug on/off</item>
-		<item>Reset WiFi config</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
 		<item>Format SPIFFS</item>
@@ -174,7 +168,6 @@
 		<item>p</item>
 		<item>b</item>
 		<item>d</item>
-		<item>r</item>
 		<item>x</item>
 		<item>y=</item>
 	</string-array>
@@ -187,7 +180,6 @@
 		<item>Panic mode on/off</item>
 		<item>Lights on 5min</item>
 		<item>Debug on/off</item>
-		<item>Reset WiFi config</item>
 		<item>Reset device</item>
 		<item>Date/Time update</item>
 	</string-array>

@@ -124,7 +124,7 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 					mMediaPlayer.setDataSource(confContext, Uri.parse(notifUri.get(pos)));
 					final AudioManager audioManager = (AudioManager) confContext
 							.getSystemService(Context.AUDIO_SERVICE);
-					if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
+					if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
 						mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
 						mMediaPlayer.prepare();
 						mMediaPlayer.start();

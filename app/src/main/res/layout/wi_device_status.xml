@@ -6,7 +6,7 @@
               android:background="@drawable/round_corner_bg_filled"
               android:clickable="true"
               android:padding="@dimen/widget_margin"
-              tools:ignore="HardcodedText">
+              tools:ignore="HardcodedText, KeyboardInaccessibleWidget" >
 
 	<TextView
 		android:id="@+id/tv_spm"

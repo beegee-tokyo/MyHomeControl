@@ -93,9 +93,7 @@ public class ChartHelper extends MyHomeControl {
 		consPSeries.clear();
 		consMSeries.clear();
 		if (!isContinuous) {
-			for (int i=0; i<timeStamps.size(); i++) {
-				timeSeries.add(timeStamps.get(i));
-			}
+			timeSeries.addAll(timeStamps);
 			for (int i=0; i<solarPower.size(); i++) {
 				solarSeries.add(new Entry(solarPower.get(i), i));
 			}
@@ -107,9 +105,7 @@ public class ChartHelper extends MyHomeControl {
 			}
 		} else {
 			if (timeStampsCont.size() != 0) {
-				for (int i=0; i<timeStampsCont.size(); i++) {
-					timeSeries.add(timeStampsCont.get(i));
-				}
+				timeSeries.addAll(timeStampsCont);
 				for (int i=0; i<solarPowerCont.size(); i++) {
 					solarSeries.add(new Entry(solarPowerCont.get(i), i));
 				}

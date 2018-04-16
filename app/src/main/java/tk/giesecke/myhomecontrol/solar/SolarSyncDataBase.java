@@ -139,6 +139,13 @@ public class SolarSyncDataBase extends IntentService {
 						[MyHomeControl.spMonitorIndex],
 				"NA");
 		String urlString = "http://" + solarURL + "/sd/spMonitor/query2.php"; // URL to call
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + MyHomeControl.deviceNames
+				[MyHomeControl.spMonitorIndex]);
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + mPrefs.getString(
+				MyHomeControl.deviceNames
+						[MyHomeControl.spMonitorIndex],
+				"NA"));
+		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + urlString);
 
 		/** Instance of DataBaseHelper */
 		DataBaseHelper dbHelper;

@@ -11,6 +11,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
@@ -27,6 +28,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import tk.giesecke.myhomecontrol.devices.MessageListener;
+
+import static tk.giesecke.myhomecontrol.devices.MessageListener.currentSSID;
+
 public class Utilities extends MyHomeControl {
 
 	/**
@@ -42,25 +47,43 @@ public class Utilities extends MyHomeControl {
 		/** Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 		/** WiFi connection information  */
-		NetworkInfo wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		NetworkInfo wifiOn;
+		if (cm != null) {
+			wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+			if (!wifiOn.isConnected()) {
+				return false;
+			} else {
+				/** WiFi manager to check current connection */
+				@SuppressLint("WifiManagerPotentialLeak")
+				final WifiManager wifiManager = (WifiManager) thisAppContext.getSystemService(Context.WIFI_SERVICE);
+				/** Info of current connection */
+				final WifiInfo connectionInfo;
+				if (wifiManager != null) {
+					connectionInfo = wifiManager.getConnectionInfo();
+					if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+						currentSSID = connectionInfo.getSSID();
+						currentSSID = currentSSID.substring(1, currentSSID.length() - 1);
+						String primLocalSSID = thisAppContext.getResources().getString(R.string.LOCAL_SSID);
+						String altLocalSSID = thisAppContext.getResources().getString(R.string.ALT_LOCAL_SSID);
 
-		if (!wifiOn.isConnected()) {
-			return false;
-		} else {
-			/** WiFi manager to check current connection */
-			@SuppressLint("WifiManagerPotentialLeak")
-			final WifiManager wifiManager = (WifiManager) thisAppContext.getSystemService(Context.WIFI_SERVICE);
-			/** Info of current connection */
-			final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-			if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())) {
-				String currentSSID = connectionInfo.getSSID();
-				currentSSID = currentSSID.substring(1, currentSSID.length() - 1);
-				String primLocalSSID = thisAppContext.getResources().getString(R.string.LOCAL_SSID);
-				String altLocalSSID = thisAppContext.getResources().getString(R.string.ALT_LOCAL_SSID);
-				return ((currentSSID.equalsIgnoreCase(primLocalSSID)) || (currentSSID.equalsIgnoreCase(altLocalSSID)));
+						int newIP = connectionInfo.getIpAddress();
+						MessageListener.broadCastIP = Formatter.formatIpAddress(newIP);
+						String[] splitIP = MessageListener.broadCastIP.split("\\.");
+						if (splitIP.length == 4) {
+							MessageListener.broadCastIP = splitIP[0]
+											+ "." + splitIP[1]
+											+ "." + splitIP[2]
+											+ "." + "255";
+						} else {
+							MessageListener.broadCastIP = "192.168.0.255";
+						}
+						return ((currentSSID.equalsIgnoreCase(primLocalSSID)) || (currentSSID.equalsIgnoreCase(altLocalSSID)));
 //				return currentSSID.equalsIgnoreCase(MY_LOCAL_SSID);
+					}
+				}
 			}
 		}
+
 		return false;
 	}
 
@@ -84,29 +107,35 @@ public class Utilities extends MyHomeControl {
 		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		// Check if there is any network connected
-		NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-		if (null != activeNetwork) {
-			if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI) {
-				// Active network is WiFi
-				if (isHomeWiFi(thisAppContext)) {
-					bConnFlags[2] = true;
-				} else {
-					bConnFlags[0] = true;
+		NetworkInfo activeNetwork;
+		if (cm != null) {
+			activeNetwork = cm.getActiveNetworkInfo();
+			if (null != activeNetwork) {
+				switch (activeNetwork.getType()) {
+					case ConnectivityManager.TYPE_WIFI:
+						// Active network is WiFi
+						if (isHomeWiFi(thisAppContext)) {
+							bConnFlags[2] = true;
+						} else {
+							bConnFlags[0] = true;
+						}
+						bConnFlags[3] = true;
+						break;
+					case ConnectivityManager.TYPE_MOBILE:
+						// Active network is Mobile
+						bConnFlags[1] = true;
+						bConnFlags[3] = true;
+						break;
+					default:
+						// No Active network found
+						bConnFlags[3] = false;
+						break;
 				}
-				bConnFlags[3] = true;
-			} else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE) {
-				// Active network is Mobile
-				bConnFlags[1] = true;
-				bConnFlags[3] = true;
 			} else {
 				// No Active network found
 				bConnFlags[3] = false;
 			}
-		} else {
-			// No Active network found
-			bConnFlags[3] = false;
 		}
-
 		return bConnFlags;
 	}
 
@@ -588,17 +617,17 @@ public class Utilities extends MyHomeControl {
 		}
 		char[] arr = str.toCharArray();
 		boolean capitalizeNext = true;
-		String phrase = "";
+		StringBuilder phrase = new StringBuilder();
 		for (char c : arr) {
 			if (capitalizeNext && Character.isLetter(c)) {
-				phrase += Character.toUpperCase(c);
+				phrase.append(Character.toUpperCase(c));
 				capitalizeNext = false;
 				continue;
 			} else if (Character.isWhitespace(c)) {
 				capitalizeNext = true;
 			}
-			phrase += c;
+			phrase.append(c);
 		}
-		return phrase;
+		return phrase.toString();
 	}
 }

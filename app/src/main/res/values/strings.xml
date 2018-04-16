@@ -6,7 +6,7 @@
 	<string name="action_aircon">Aircon</string>
 	<string name="action_selAlarm">Select Alarm sound</string>
 	<string name="action_selWarning">Select Solar sound</string>
-	<string name="action_refresh">Scan devices</string>
+	<string name="action_refresh">Clear devices</string>
 	<string name="action_location">Locations</string>
 	<string name="action_debug">Show debug messages</string>
 	<string name="action_debug_off">Hide debug messages</string>
@@ -27,7 +27,7 @@
 	<string name="txt_empty"> </string>
 	<string name="not_home">Not on home WiFi - Slow status update!</string>
 	<string name="at_home">On home WiFi - Wait for status</string>
-	<string name="scan_impossible">Not on home WiFi - Cannot scan for devices!</string>
+	<!--<string name="scan_impossible">Not on home WiFi - Cannot scan for devices!</string>-->
 	<string name="cctv_impossible">Not on home WiFi - Cannot scan for cctv footage!</string>
 
 	<string name="dot_txt_alarm_status">Alarm status</string>

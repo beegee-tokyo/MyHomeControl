@@ -16,6 +16,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -53,6 +56,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.List;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.MyHomeControl;
@@ -64,12 +68,27 @@ import tk.giesecke.myhomecontrol.lights.BedRoomLightWidget;
 import tk.giesecke.myhomecontrol.security.SecAlarmWidget;
 import tk.giesecke.myhomecontrol.solar.SolarPanelWidget;
 
+import static tk.giesecke.myhomecontrol.MyHomeControl.aircon1Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.aircon2Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.aircon3Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.cam1Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.deviceIPs;
+import static tk.giesecke.myhomecontrol.MyHomeControl.deviceIsOn;
+import static tk.giesecke.myhomecontrol.MyHomeControl.lb1Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.ly1Index;
+import static tk.giesecke.myhomecontrol.MyHomeControl.mhcIndex;
+import static tk.giesecke.myhomecontrol.MyHomeControl.secBackIndex;
+import static tk.giesecke.myhomecontrol.MyHomeControl.secFrontIndex;
+import static tk.giesecke.myhomecontrol.MyHomeControl.spMonitorIndex;
+
 public class MessageListener extends Service {
 
 	/** Tag for debug messages of service*/
 	private static final String DEBUG_LOG_TAG = "MHC-LISTENER";
 	/** Tag for debug messages of event receiver*/
 	private static final String DEBUG_LOG_TAG_EVE = "MHC-LEVE";
+	/** Tag for debug messages of WiFi switcher */
+	private static final String DEBUG_LOG_TAG_SW = "MHC-LSW";
 
 	/** TCP client port to send commands */
 	public static final int TCP_CLIENT_PORT = 9998;
@@ -77,6 +96,8 @@ public class MessageListener extends Service {
 	private static final int UDP_SERVER_PORT = 9997;
 	/** TCP server port where we receive the TCP debug messages */
 	private static final int TCP_SERVER_PORT = 9999;
+	/** Broadcast IP address */
+	public static String broadCastIP = "192.168.0.255";
 	/** Action for broadcast message to main activity */
 	public static final String BROADCAST_RECEIVED = "BC_RECEIVED";
 
@@ -104,6 +125,16 @@ public class MessageListener extends Service {
 
 	/** Multicast wifiWakeLock to keep WiFi awake until broadcast is received */
 	private WifiManager.MulticastLock wifiWakeLock = null;
+
+	/** WiFi manager to detect changes in home Wifi signal strength */
+	private WifiManager wifiMgr;
+	/** Connected SSID */
+	public static String currentSSID = "";
+	/** Flag if WiFi AP switch is expected */
+	private boolean wifiSwitchExpected = false;
+
+	/** String for toast used in handler */
+	private static String toastMsg;
 
 	/** MQTT client */
 	public static volatile IMqttAsyncClient mqttClient = null;
@@ -178,7 +209,14 @@ public class MessageListener extends Service {
 	public static Double bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
 	public static Double bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
 	public static Double bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
+	private static Double lastBytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
+	private static Double lastBytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
+	private static Double lastBytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
+	private static Double lastBytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
 	public static final ArrayList<String> mqttClientList = new ArrayList<>();
+
+	/** Doorbell flag */
+	private boolean doorBellActive = false;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -216,7 +254,7 @@ public class MessageListener extends Service {
 			connStatus = HOME_WIFI;
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Start UDP listener");
 			shouldRestartSocketListen = true;
-			shouldRestartMQTTListen = false;
+			shouldRestartMQTTListen = true;
 			try {
 				if (!udpListenerActive) {
 					// Start listener for UDP broadcast messages
@@ -242,11 +280,11 @@ public class MessageListener extends Service {
 			}
 			/** Pending intent to update device status widget every 3 minutes */
 			devStatpi = PendingIntent.getService(this, 5003,
-					new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+							new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
 			/** Alarm manager to update device status widget every 3 minutes */
 			am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 			am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 120000,
-					180000, devStatpi);
+							180000, devStatpi);
 		} else if (hasConnection[1] || hasConnection[0]) { // Mobile or WiFi connection available?
 			connStatus = WIFI_MOBILE;
 			shouldRestartMQTTListen = true;
@@ -266,11 +304,11 @@ public class MessageListener extends Service {
 			}
 			/** Pending intent to update device status widget every 5 minutes */
 			devStatpi = PendingIntent.getService(this, 5003,
-					new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+							new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
 			/** Alarm manager to update device status widget every 5 minutes */
 			am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 			am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 120000,
-					300000, devStatpi);
+							300000, devStatpi);
 		} else { // No connection available
 			connStatus = NO_CONNECTION;
 			shouldRestartSocketListen = false;
@@ -284,11 +322,20 @@ public class MessageListener extends Service {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "No active connection found");
 		}
 
+		// Get WifiManager to receive WiFi scan results
+		wifiMgr = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
 		/** IntentFilter to receive screen on/off & connectivity broadcast msgs */
+		if (eventReceiverRegistered) {
+			unregisterReceiver(eventReceiver);
+			eventReceiverRegistered = false;
+		}
 		if (!eventReceiverRegistered) {
 			IntentFilter intentf = new IntentFilter();
 			intentf.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-			registerReceiver(eventReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+			intentf.addAction(WifiManager.RSSI_CHANGED_ACTION);
+			intentf.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+			registerReceiver(eventReceiver, intentf);
 			eventReceiverRegistered = true;
 		}
 
@@ -343,8 +390,8 @@ public class MessageListener extends Service {
 		@Override
 		public void onReceive(final Context context, Intent intent) {
 			// Screen on/off
-			if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)
-					|| intent.getAction().equals(android.net.ConnectivityManager.CONNECTIVITY_ACTION)) {
+			if (intent.getAction() != null && intent.getAction().equals(Intent.ACTION_SCREEN_ON)
+							|| intent.getAction().equals(android.net.ConnectivityManager.CONNECTIVITY_ACTION)) {
 				if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "Screen on Event");
 				}
@@ -353,6 +400,7 @@ public class MessageListener extends Service {
 				}
 				final boolean bHasConnection[] = Utilities.connectionAvailable(context);
 				if (bHasConnection[2]) { // Home WiFi connection available?
+					wifiSwitchExpected = false;
 					if (connStatus == HOME_WIFI) { // Was status HOME_WIFI already?
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "No connection change!");
 					} else {
@@ -365,11 +413,11 @@ public class MessageListener extends Service {
 						if (devStatpi == null && am == null) {
 							/** Pending intent to update device status widget every 3 minutes */
 							devStatpi = PendingIntent.getService(context, 5003,
-									new Intent(context, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+											new Intent(context, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
 							/** Alarm manager to update device status widget every 3 minutes */
 							am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 							am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 120000,
-									180000, devStatpi);
+											180000, devStatpi);
 						}
 						if (!udpListenerActive) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "Restart UDP listener");
@@ -381,11 +429,19 @@ public class MessageListener extends Service {
 							// Start listener for TCP messages
 							startListenForTCPMessage();
 						}
+						// Connect to MQTT broker
+						if ((mqttClient == null) || (!mqttClient.isConnected())) {
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "Start MQTT listener");
+							if (!mqttIsConnecting) { // Check if already trying to connect?
+								new doConnect().execute();
+							}
+						}
 					}
 				} else if (bHasConnection[1] || bHasConnection[0]) { // Mobile or WiFi connection available?
 					if (connStatus == WIFI_MOBILE) { // Was status WIFI_MOBILE already?
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "No connection change!");
 					} else {
+						currentSSID = "";
 						connStatus = WIFI_MOBILE;
 						if (bHasConnection[1]) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "Mobile connection");
@@ -415,11 +471,11 @@ public class MessageListener extends Service {
 						if (devStatpi == null && am == null) {
 							/** Pending intent to update device status widget every 5 minutes */
 							devStatpi = PendingIntent.getService(context, 5003,
-									new Intent(context, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+											new Intent(context, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
 							/** Alarm manager to update device status widget every 5 minutes */
 							am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 							am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 120000,
-									300000, devStatpi);
+											300000, devStatpi);
 						}
 						// Connect to MQTT broker
 						if ((mqttClient == null) || (!mqttClient.isConnected())) {
@@ -433,6 +489,7 @@ public class MessageListener extends Service {
 					if (connStatus == NO_CONNECTION) { // Was status NO_CONNECTION already?
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_EVE, "No connection change!");
 					} else {
+						currentSSID = "";
 						connStatus = NO_CONNECTION;
 						shouldRestartSocketListen = false;
 						shouldRestartMQTTListen = false;
@@ -487,6 +544,76 @@ public class MessageListener extends Service {
 				}
 				connStatus = UNKNOWN_STATUS;
 			}
+
+			if (intent.getAction().equals(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) && wifiSwitchExpected) {
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW, "SCAN_RESULTS_AVAILABLE_ACTION");
+				int net1Level = -100;
+				String net1SSID = getResources().getString(R.string.LOCAL_SSID);
+				int net2Level = -100;
+				String net2SSID = getResources().getString(R.string.ALT_LOCAL_SSID);
+				String newNetSSID = "";
+
+				List<ScanResult> wifiList = wifiMgr.getScanResults();
+				for (int i = 0; i < wifiList.size(); i++) {
+					if (BuildConfig.DEBUG)
+						Log.d(DEBUG_LOG_TAG_SW, "Frequence of "
+										+ wifiList.get(i).SSID
+										+ " is  "
+										+ wifiList.get(i).frequency
+										+ " with RSSI of "
+										+ wifiList.get(i).level);
+
+					if (wifiList.get(i).SSID.equalsIgnoreCase(net1SSID)) {
+						net1Level = wifiList.get(i).level;
+					} else if (wifiList.get(i).SSID.equalsIgnoreCase(net2SSID)) {
+						net2Level = wifiList.get(i).level;
+					}
+				}
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW,
+								net1SSID + " level = " + net1Level + " "
+												+ net2SSID + " level = " + net2Level);
+				if (net1Level > net2Level && net2Level < net1Level-15) {
+					// Change if net2Level is better by more than 15db
+					newNetSSID = net1SSID;
+				} else if (net2Level > net1Level && net1Level < net2Level-15) {
+					// Change if net1Level is better by more than 15db
+					newNetSSID = net2SSID;
+				}
+
+//				newNetSSID = net1Level > net2Level ? net1SSID : net2SSID;
+
+				if (!newNetSSID.isEmpty()) {
+					final WifiInfo connectionInfo = wifiMgr.getConnectionInfo();
+					String currentSSID = connectionInfo.getSSID();
+					if (currentSSID.equalsIgnoreCase("\""+newNetSSID+"\"")) {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW, "No change needed");
+						wifiSwitchExpected = false;
+					} else {
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW, "Switch to " + newNetSSID);
+						new requestNewConnAsync().execute("\"" + newNetSSID + "\"");
+					}
+				} else {
+					wifiSwitchExpected = false;
+				}
+			}
+
+			if(intent.getAction().equals(WifiManager.RSSI_CHANGED_ACTION)
+							&& connStatus == HOME_WIFI
+							&& !wifiSwitchExpected) {
+				int newRssi = intent.getIntExtra(WifiManager.EXTRA_NEW_RSSI, 0);
+				final WifiInfo connectionInfo = wifiMgr.getConnectionInfo();
+				String currentSSID = connectionInfo.getSSID();
+
+				if (currentSSID.equalsIgnoreCase("\""+getString(R.string.LOCAL_SSID)+"\"")
+								|| currentSSID.equalsIgnoreCase("\""+getString(R.string.ALT_LOCAL_SSID)+"\"")) {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW, "RSSI changed to " + newRssi);
+					if (newRssi < -80) { // if RSSI is worse than -80dB check if other network is better
+						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG_SW, "RSSI < -80dB check other network");
+						wifiSwitchExpected = true;
+						wifiMgr.startScan();
+					}
+				}
+			}
 		}
 	};
 
@@ -499,7 +626,7 @@ public class MessageListener extends Service {
 			public void run() {
 				try {
 					/** IP mask from where we expect the UDP broadcasts */
-					InetAddress broadcastIP = InetAddress.getByName(getString(R.string.BROADCAST_IP)); //172.16.238.42 //192.168.1.255
+					InetAddress broadcastIP = InetAddress.getByName(broadCastIP); //172.16.238.42 //192.168.1.255
 					/** Port from where we expect the UDP broadcasts */
 					Integer port = UDP_SERVER_PORT;
 					udpListenerActive = true;
@@ -606,23 +733,96 @@ public class MessageListener extends Service {
 
 		// Check if response is a JSON array
 		if (Utilities.isJSONValid(message)) {
+			/** Json object for received data */
+			JSONObject jsonResult;
+			SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+			String newDeviceName = "";
+			try {
+				jsonResult = new JSONObject(message);
+				/** Device ID from UDP broadcast message */
+				String broadCastDevice = jsonResult.getString("de");
+				/* Store IP address of the device */
+				switch (broadCastDevice) {
+					case "spm":
+						deviceIPs[spMonitorIndex] = senderIP;
+						deviceIsOn[spMonitorIndex] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.spMonitorIndex];
+						break;
+					case "fd1":
+						deviceIPs[aircon1Index] = senderIP;
+						deviceIsOn[aircon1Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.aircon1Index];
+						break;
+					case "ca1":
+						deviceIPs[aircon2Index] = senderIP;
+						deviceIsOn[aircon2Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.aircon2Index];
+						break;
+					case "am1":
+						deviceIPs[aircon3Index] = senderIP;
+						deviceIsOn[aircon3Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.aircon3Index];
+						break;
+					case "sf1":
+						deviceIPs[secFrontIndex] = senderIP;
+						deviceIsOn[secFrontIndex] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.secFrontIndex];
+						break;
+					case "sb1":
+						deviceIPs[secBackIndex] = senderIP;
+						deviceIsOn[secBackIndex] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.secBackIndex];
+						break;
+					case "lb1":
+						deviceIPs[lb1Index] = senderIP;
+						deviceIsOn[lb1Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.lb1Index];
+						break;
+					case "ly1":
+						deviceIPs[ly1Index] = senderIP;
+						deviceIsOn[ly1Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.ly1Index];
+						break;
+					case "weo":
+						lastWEO = message;
+						break;
+					case "wei":
+						lastWEI = message;
+						break;
+					case "cm1":
+						deviceIPs[cam1Index] = senderIP;
+						deviceIsOn[cam1Index] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.cam1Index];
+						break;
+					case "mhc":
+						deviceIPs[mhcIndex] = senderIP;
+						deviceIsOn[mhcIndex] = true;
+						newDeviceName = MyHomeControl.deviceNames[MyHomeControl.mhcIndex];
+						break;
+				}
+				if (!newDeviceName.equalsIgnoreCase("")) {
+					mPrefs.edit().putString(newDeviceName,senderIP).apply();
+				}
+			} catch (JSONException e) {
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String <"+ message +"> failed " + e.getMessage());
+			}
+
 			handleMsgs(message);
 			// Send broadcast to listening activities
 			sendMyBroadcast(message, "UDP");
 
-			SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
-			if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
-				toastMsg = message;
-				Handler handler = new Handler(Looper.getMainLooper());
-				handler.post(new Runnable() {
-					@Override
-					public void run() {
-						Toast.makeText(getApplicationContext(),
-								"Received UDP data: " + toastMsg,
-								Toast.LENGTH_SHORT).show();
-					}
-				});
-			}
+//			if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
+//				toastMsg = message;
+//				Handler handler = new Handler(Looper.getMainLooper());
+//				handler.post(new Runnable() {
+//					@Override
+//					public void run() {
+//						Toast.makeText(getApplicationContext(),
+//								"Received UDP data: " + toastMsg,
+//								Toast.LENGTH_SHORT).show();
+//					}
+//				});
+//			}
 		}
 	}
 
@@ -630,8 +830,6 @@ public class MessageListener extends Service {
 	/**
 	 * Start listener for TCP messages
 	 */
-	private static String toastMsg;
-
 	private void startListenForTCPMessage() {
 		Thread TCPMessageThread = new Thread(new Runnable() {
 			@SuppressWarnings("InfiniteLoopStatement")
@@ -649,13 +847,13 @@ public class MessageListener extends Service {
 							Socket client = tcpSocket.accept();
 							try {
 								BufferedReader in = new BufferedReader(
-										new InputStreamReader(client.getInputStream()));
+												new InputStreamReader(client.getInputStream()));
 								String inMsg;
 								while ((inMsg = in.readLine()) != null) {
 									// Send broadcast to listening activities
 									sendMyBroadcast(inMsg, "DEBUG");
 									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received TCP data from: "
-											+ client.getInetAddress().toString().substring(1) + " :" + inMsg);
+													+ client.getInetAddress().toString().substring(1) + " :" + inMsg);
 									SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
 									if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
 										toastMsg = inMsg;
@@ -664,8 +862,8 @@ public class MessageListener extends Service {
 											@Override
 											public void run() {
 												Toast.makeText(getApplicationContext(),
-														"Received TCP data: " + toastMsg,
-														Toast.LENGTH_SHORT).show();
+																"Received TCP data: " + toastMsg,
+																Toast.LENGTH_SHORT).show();
 											}
 										});
 									}
@@ -712,6 +910,7 @@ public class MessageListener extends Service {
 	/**
 	 * Connect to MQTT broker and subscribe to topics
 	 */
+	@SuppressLint("StaticFieldLeak")
 	private class doConnect extends AsyncTask<String, Void, Boolean> {
 
 		@SuppressLint("CommitPrefEdits")
@@ -958,7 +1157,7 @@ public class MessageListener extends Service {
 
 		@Override
 		@SuppressLint("NewApi")
-		public void messageArrived(final String topic, final MqttMessage msg) throws Exception {
+		public void messageArrived(final String topic, final MqttMessage msg) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT arrived from topic " + topic);
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT topic " + new String(msg.getPayload()));
 			Handler h = new Handler(getMainLooper());
@@ -974,15 +1173,28 @@ public class MessageListener extends Service {
 
 					// Check if topic is a broker status
 					if (topic.startsWith("$SYS")) {
-						if (topic.contains("load/bytes/received/1min")) {
-							bytesLoadRcvd = Double.parseDouble(receivedMessage);
-						} else if (topic.contains("load/bytes/sent/1min")) {
-							bytesLoadSend = Double.parseDouble(receivedMessage);
-						} else if (topic.contains("messages/received/1min")) {
-							bytesMsgsRcvd = Double.parseDouble(receivedMessage);
-						} else if (topic.contains("messages/sent/1min")) {
-							bytesMsgsSend = Double.parseDouble(receivedMessage);
-						} else if (topic.contains("clients/connected")) {
+//						if (topic.contains("load/bytes/received/1min")) {
+						if (topic.contains("bytes/received")) {
+							Double bLRcvd = Double.parseDouble(receivedMessage);
+							bytesLoadRcvd = bLRcvd - lastBytesLoadRcvd;
+							lastBytesLoadRcvd = bLRcvd;
+//						} else if (topic.contains("load/bytes/sent/1min")) {
+						} else if (topic.contains("bytes/sent")) {
+							Double bLSend = Double.parseDouble(receivedMessage);
+							bytesLoadSend = bLSend - lastBytesLoadSend;
+							lastBytesLoadSend = bLSend;
+//						} else if (topic.contains("messages/received/1min")) {
+						} else if (topic.contains("messages/received")) {
+							Double bMRcvd = Double.parseDouble(receivedMessage);
+							bytesMsgsRcvd = bMRcvd - lastBytesMsgsRcvd;
+							lastBytesMsgsRcvd = bMRcvd;
+//						} else if (topic.contains("messages/sent/1min")) {
+						} else if (topic.contains("messages/sent")) {
+							Double bMSend = Double.parseDouble(receivedMessage);
+							bytesMsgsSend = bMSend - lastBytesMsgsSend;
+							lastBytesMsgsSend = bMSend;
+//						} else if (topic.contains("clients/connected")) {
+						} else if (topic.contains("clients/count")) {
 							clientsConn = Integer.parseInt(receivedMessage);
 						}
 						sendMyBroadcast("BrokerStatus", "BROKER");
@@ -1047,20 +1259,23 @@ public class MessageListener extends Service {
 					/** Keyguard manager instance */
 					KeyguardManager myKM = (KeyguardManager) getApplicationContext().getSystemService(Context.KEYGUARD_SERVICE);
 					/** Flag for locked phone */
-					boolean phoneIsLocked = myKM.inKeyguardRestrictedInputMode();
+					boolean phoneIsLocked = false;
+					if (myKM != null) {
+						phoneIsLocked = myKM.inKeyguardRestrictedInputMode();
+					}
 					// Check if screen is off
 					/** Instance of power manager */
 					PowerManager powerManager = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
 					/** Flag for screen off */
 					boolean screenIsOff = true;
 					if (Build.VERSION.SDK_INT >= 20) {
-						if (powerManager.isInteractive()) {
+						if (powerManager != null && powerManager.isInteractive()) {
 							screenIsOff = false;
 						}
 					}
 					else {
 						//noinspection deprecation
-						if(powerManager.isScreenOn()){
+						if(powerManager != null && powerManager.isScreenOn()){
 							screenIsOff = false;
 						}
 					}
@@ -1070,13 +1285,9 @@ public class MessageListener extends Service {
 
 					// If we are not on home Wifi or screen is off or locked => process the message
 					if (notOnHomeWifi || phoneIsLocked || screenIsOff || uiStarted) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Not home or phone is locked or screen is off");
+//						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Not home or phone is locked or screen is off");
 
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Payload is " + receivedMessage);
-
-						if (receivedMessage.length() == 0) { // Empty message
-							return;
-						}
 
 						// Update widgets
 						handleMsgs(receivedMessage);
@@ -1084,20 +1295,20 @@ public class MessageListener extends Service {
 //						// Forward to all local listeners
 						sendMyBroadcast(receivedMessage, "MQTT");
 
-						// Show toast on screen if debug is enabled
-						SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
-						if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
-							toastMsg = receivedMessage;
-							Handler handler = new Handler(Looper.getMainLooper());
-							handler.post(new Runnable() {
-								@Override
-								public void run() {
-									Toast.makeText(getApplicationContext(),
-											"Received TCP data: " + toastMsg,
-											Toast.LENGTH_SHORT).show();
-								}
-							});
-						}
+//						// Show toast on screen if debug is enabled
+//						SharedPreferences mPrefs = getApplicationContext().getSharedPreferences(MyHomeControl.sharedPrefName,0);
+//						if (mPrefs.getBoolean(MyHomeControl.prefsShowDebug, false)) {
+//							toastMsg = receivedMessage;
+//							Handler handler = new Handler(Looper.getMainLooper());
+//							handler.post(new Runnable() {
+//								@Override
+//								public void run() {
+//									Toast.makeText(getApplicationContext(),
+//											"Received TCP data: " + toastMsg,
+//											Toast.LENGTH_SHORT).show();
+//								}
+//							});
+//						}
 					}
 				}
 			});
@@ -1125,24 +1336,33 @@ public class MessageListener extends Service {
 				// Clear old status
 				clientsConn = 0; // $SYS/broker/clients/connected
 				bytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
+				lastBytesLoadRcvd = 0.0; // $SYS/broker/load/bytes/received/15min
 				bytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
+				lastBytesLoadSend = 0.0; // $SYS/broker/load/bytes/sent/15min
 				bytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
+				lastBytesMsgsRcvd = 0.0; // $SYS/broker/load/publish/received/15min
 				bytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
+				lastBytesMsgsSend = 0.0; // $SYS/broker/load/publish/sent/15min
 				mqttClientList.clear();
 
 				IMqttToken token;
 				try {
 					token = mqttClient.unsubscribe("/DEV/#");
 					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("$SYS/broker/load/bytes/received/1min", 0);
+//					token = mqttClient.subscribe("$SYS/broker/load/bytes/received/1min", 0);
+					token = mqttClient.subscribe("$SYS/brokers/+/metrics/bytes/received", 0);
 					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("$SYS/broker/load/bytes/sent/1min", 0);
+//					token = mqttClient.subscribe("$SYS/broker/load/bytes/sent/1min", 0);
+					token = mqttClient.subscribe("$SYS/brokers/+/metrics/bytes/sent", 0);
 					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("$SYS/broker/load/messages/received/1min", 0);
+//					token = mqttClient.subscribe("$SYS/broker/load/messages/received/1min", 0);
+					token = mqttClient.subscribe("$SYS/brokers/+/metrics/messages/received", 0);
 					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("$SYS/broker/load/messages/sent/1min", 0);
+//					token = mqttClient.subscribe("$SYS/broker/load/messages/sent/1min", 0);
+					token = mqttClient.subscribe("$SYS/brokers/+/metrics/messages/sent", 0);
 					token.waitForCompletion(10000);
-					token = mqttClient.subscribe("$SYS/broker/clients/connected", 0);
+//					token = mqttClient.subscribe("$SYS/broker/clients/connected", 0);
+					token = mqttClient.subscribe("$SYS/brokers/+/stats/clients/count", 0);
 					token.waitForCompletion(10000);
 					token = mqttClient.subscribe("/DEV/#", 0);
 					token.waitForCompletion(10000);
@@ -1204,15 +1424,20 @@ public class MessageListener extends Service {
 //			    	token = mqttClient.unsubscribe("");
 //				    token.waitForCompletion(10000);
 
-					token = mqttClient.unsubscribe("$SYS/broker/clients/connected");
+//					token = mqttClient.unsubscribe("$SYS/broker/clients/connected");
+					token = mqttClient.unsubscribe("$SYS/brokers/+/stats/clients/count");
 					token.waitForCompletion(10000);
-					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/received/1min");
+//					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/received/1min");
+					token = mqttClient.unsubscribe("$SYS/brokers/+/metrics/bytes/received");
 					token.waitForCompletion(10000);
-					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/sent/1min");
+//					token = mqttClient.unsubscribe("$SYS/broker/load/bytes/sent/1min");
+					token = mqttClient.unsubscribe("$SYS/brokers/+/metrics/bytes/sent");
 					token.waitForCompletion(10000);
-					token = mqttClient.unsubscribe("$SYS/broker/load/messages/received/1min");
+//					token = mqttClient.unsubscribe("$SYS/broker/load/messages/received/1min");
+					token = mqttClient.unsubscribe("$SYS/brokers/+/metrics/messages/received");
 					token.waitForCompletion(10000);
-					token = mqttClient.unsubscribe("$SYS/broker/load/messages/sent/1min");
+//					token = mqttClient.unsubscribe("$SYS/broker/load/messages/sent/1min");
+					token = mqttClient.unsubscribe("$SYS/brokers/+/metrics/messages/sent");
 					token.waitForCompletion(10000);
 				} catch (MqttException e) {
 					switch (e.getReasonCode()) {
@@ -1388,6 +1613,61 @@ public class MessageListener extends Service {
 					lastMHC = message;
 					lastMhcMsg = timeNow;
 					break;
+				case "db1":
+					int ringDetect = jsonResult.getInt("rd");
+					if ((ringDetect == 1) && !doorBellActive) {
+						doorBellActive = true; // To avoid multiple starts of the notification
+						/** String for notification */
+						String notifText;
+						/** Icon for notification */
+						int notifIcon;
+						/** Background color for notification icon in SDK Lollipop and newer */
+						int notifColor;
+
+						notifIcon = R.mipmap.ic_doorbell;
+						notifText = "Visitor at main gate!";
+
+						//noinspection deprecation
+						notifColor = context.getResources().getColor(android.R.color.holo_red_light);
+
+						/** Pointer to notification builder for alarm message */
+						NotificationCompat.Builder myNotifBuilder;
+						long[] pattern = {500,500,500,500,500,500,500,500,500};
+						myNotifBuilder = new NotificationCompat.Builder(context)
+										.setContentTitle(context.getString(R.string.app_name))
+										.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
+										.setAutoCancel(false)
+										.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+										.setVibrate(pattern)
+										.setWhen(System.currentTimeMillis());
+						if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+							myNotifBuilder.setVisibility(Notification.VISIBILITY_PUBLIC);
+						}
+						/** Pointer to notification manager for alarm message */
+						NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+						myNotifBuilder.setSound(Uri.parse("android.resource://"
+										+ this.getPackageName() + "/"
+										+ R.raw.doorbell));
+
+						myNotifBuilder.setSmallIcon(notifIcon)
+										.setContentText(notifText)
+										.setContentText(notifText)
+										.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
+										.setTicker(notifText);
+						if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							myNotifBuilder.setColor(notifColor);
+						}
+
+						/** Pointer to notification */
+						Notification alarmNotification = myNotifBuilder.build();
+						alarmNotification.flags |= Notification.FLAG_INSISTENT;
+						if (notificationManager != null) {
+							notificationManager.notify(3, alarmNotification);
+						}
+					} else {
+						doorBellActive = false;
+					}
 			}
 		} catch (JSONException e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Create JSONObject from String <"+ message +"> failed " + e.getMessage());
@@ -1398,17 +1678,18 @@ public class MessageListener extends Service {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Home WiFi, but device status update was off");
 			/** Pending intent to update device status widget every 3 minutes */
 			devStatpi = PendingIntent.getService(this, 5003,
-					new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
+							new Intent(this, DeviceStatus.class), PendingIntent.FLAG_UPDATE_CURRENT);
 			/** Alarm manager to update device status widget every 3 minutes */
 			am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 			am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 120000,
-					180000, devStatpi);
+							180000, devStatpi);
 		}
 	}
 
 	/**
 	 * Connect to MQTT broker and subscribe to topics
 	 */
+	@SuppressLint("StaticFieldLeak")
 	private class sendLastMsgs extends AsyncTask<String, Void, Void> {
 
 		protected Void doInBackground(String... params) {
@@ -1459,9 +1740,9 @@ public class MessageListener extends Service {
 	 *            Application context
 	 */
 	private static void securityAlarmAndWidgetUpdate(boolean alarmIsActive,
-	                                                 boolean alarmIsOn,
-	                                                 String device,
-	                                                 Context context) {
+																									 boolean alarmIsOn,
+																									 String device,
+																									 Context context) {
 		// Show notification only if it is an alarm
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Security Notification");
 		if (alarmIsActive && alarmIsOn) {
@@ -1481,38 +1762,38 @@ public class MessageListener extends Service {
 			//noinspection deprecation
 			notifColor = context.getResources().getColor(android.R.color.holo_red_light);
 
-			/** Pointer to notification builder for export/import arrow */
+			/** Pointer to notification builder for alarm message */
 			NotificationCompat.Builder myNotifBuilder;
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
 				myNotifBuilder = new NotificationCompat.Builder(context)
-						.setContentTitle(context.getString(R.string.app_name))
-						.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
-						.setAutoCancel(false)
-						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-						.setVisibility(Notification.VISIBILITY_PUBLIC)
-						.setWhen(System.currentTimeMillis());
+								.setContentTitle(context.getString(R.string.app_name))
+								.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
+								.setAutoCancel(false)
+								.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+								.setVisibility(Notification.VISIBILITY_PUBLIC)
+								.setWhen(System.currentTimeMillis());
 			} else {
 				myNotifBuilder = new NotificationCompat.Builder(context)
-						.setContentTitle(context.getString(R.string.app_name))
-						.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
-						.setAutoCancel(false)
-						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-						.setWhen(System.currentTimeMillis());
+								.setContentTitle(context.getString(R.string.app_name))
+								.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
+								.setAutoCancel(false)
+								.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+								.setWhen(System.currentTimeMillis());
 			}
 
-			/** Pointer to notification manager for export/import arrow */
+			/** Pointer to notification manager for alarm message */
 			NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
 			/** Access to shared preferences of app widget */
 			String selUri = context.getSharedPreferences(MyHomeControl.sharedPrefName, 0)
-					.getString(MyHomeControl.prefsSecurityAlarm, "");/** Uri of selected alarm */
+							.getString(MyHomeControl.prefsSecurityAlarm, "");/** Uri of selected alarm */
 			myNotifBuilder.setSound(Uri.parse(selUri));
 
 			myNotifBuilder.setSmallIcon(notifIcon)
-					.setContentText(notifText)
-					.setContentText(notifText)
-					.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
-					.setTicker(notifText);
+							.setContentText(notifText)
+							.setContentText(notifText)
+							.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
+							.setTicker(notifText);
 			if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 				myNotifBuilder.setColor(notifColor);
 			}
@@ -1520,7 +1801,9 @@ public class MessageListener extends Service {
 			/** Pointer to notification */
 			Notification alarmNotification = myNotifBuilder.build();
 			alarmNotification.flags |= Notification.FLAG_INSISTENT;
-			notificationManager.notify(2, alarmNotification);
+			if (notificationManager != null) {
+				notificationManager.notify(2, alarmNotification);
+			}
 		}
 
 		// Update security widget
@@ -1531,7 +1814,7 @@ public class MessageListener extends Service {
 		ComponentName thisAppWidget;
 		if (device.equalsIgnoreCase("sf1")) {
 			thisAppWidget = new ComponentName(context.getPackageName(),
-					SecAlarmWidget.class.getName());
+							SecAlarmWidget.class.getName());
 			/** List of all active widgets */
 			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
@@ -1554,8 +1837,8 @@ public class MessageListener extends Service {
 	 *            Application context
 	 */
 	private static void lightControlWidgetUpdate(int lightStatus,
-	                                             String device,
-	                                             Context context) {
+																							 String device,
+																							 Context context) {
 		// Update light control widget
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update lights control widget");
 
@@ -1565,7 +1848,7 @@ public class MessageListener extends Service {
 		ComponentName thisAppWidget;
 		if (device.equalsIgnoreCase("lb1")) {
 			thisAppWidget = new ComponentName(context.getPackageName(),
-					BedRoomLightWidget.class.getName());
+							BedRoomLightWidget.class.getName());
 			/** List of all active widgets */
 			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
@@ -1574,7 +1857,7 @@ public class MessageListener extends Service {
 			}
 		} else if (device.equalsIgnoreCase("ly1")) {
 			thisAppWidget = new ComponentName(context.getPackageName(),
-					BackYardLightWidget.class.getName());
+							BackYardLightWidget.class.getName());
 			/** List of all active widgets */
 			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
@@ -1616,9 +1899,9 @@ public class MessageListener extends Service {
 			avgConsumption.add(consPower);
 			if (BuildConfig.DEBUG)
 				Log.d(DEBUG_LOG_TAG,
-						"Building up avg. consumption: i=" +
-								Integer.toString(avgConsIndex)  +
-								" Array = " + Integer.toString(avgConsumption.size()));
+								"Building up avg. consumption: i=" +
+												Integer.toString(avgConsIndex)  +
+												" Array = " + Integer.toString(avgConsumption.size()));
 		} else {
 			avgConsumption.remove(0);
 			avgConsumption.add(consPower);
@@ -1631,64 +1914,68 @@ public class MessageListener extends Service {
 		newAvgConsumption = newAvgConsumption/(avgConsIndex);
 		if (BuildConfig.DEBUG)
 			Log.d(DEBUG_LOG_TAG,
-					"Avg. consumption: " +
-							String.format("%.0f", newAvgConsumption));
+							"Avg. consumption: " +
+											String.format("%.0f", newAvgConsumption));
 
 		notifIcon = Utilities.getNotifIcon(consPower);
 
 		if (consPower > 0.0d) {
 			notifText = context.getString(R.string.tv_result_txt_im) + " " +
-					String.format("%.0f", Math.abs(consPower)) + "W";
+							String.format("%.0f", Math.abs(consPower)) + "W";
 			notifColor = context.getResources()
-					.getColor(android.R.color.holo_red_light);
+							.getColor(android.R.color.holo_red_light);
 		} else {
 			notifText = context.getString(R.string.tv_result_txt_ex) + " " +
-					String.format("%.0f", Math.abs(consPower)) + "W";
+							String.format("%.0f", Math.abs(consPower)) + "W";
 			notifColor = context.getResources()
-					.getColor(android.R.color.holo_green_light);
+							.getColor(android.R.color.holo_green_light);
 			if (newAvgConsumption < -300.0d) {
 				/** Uri of selected alarm */
 				String selUri = mPrefs.getString(MyHomeControl.prefsSolarWarning,"");
 				if (!selUri.equalsIgnoreCase("")) {
 					@SuppressLint("InlinedApi") NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-							.setContentTitle(context.getString(R.string.app_name))
-							.setContentIntent(PendingIntent.getActivity(context, 0,
-									new Intent(context, MyHomeControl.class), 0))
-							.setContentText(context.getString(R.string.notif_export,
-									String.format("%.0f", Math.abs(consPower)),
-									Utilities.getCurrentTime()))
-							.setAutoCancel(true)
-							.setSound(Uri.parse(selUri))
-							.setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
-							.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-							.setVisibility(Notification.VISIBILITY_PUBLIC)
-							.setWhen(System.currentTimeMillis())
-							.setSmallIcon(android.R.drawable.ic_dialog_info);
+									.setContentTitle(context.getString(R.string.app_name))
+									.setContentIntent(PendingIntent.getActivity(context, 0,
+													new Intent(context, MyHomeControl.class), 0))
+									.setContentText(context.getString(R.string.notif_export,
+													String.format("%.0f", Math.abs(consPower)),
+													Utilities.getCurrentTime()))
+									.setAutoCancel(true)
+									.setSound(Uri.parse(selUri))
+									.setDefaults(Notification.FLAG_ONLY_ALERT_ONCE)
+									.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+									.setVisibility(Notification.VISIBILITY_PUBLIC)
+									.setWhen(System.currentTimeMillis())
+									.setSmallIcon(android.R.drawable.ic_dialog_info);
 
 					Notification notification = builder.build();
 					NotificationManager notificationManager =
-							(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-					notificationManager.notify(2, notification);
+									(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+					if (notificationManager != null) {
+						notificationManager.notify(2, notification);
+					}
 				}
 			} else {
 				// Instance of notification manager to cancel the existing notification */
 				NotificationManager nMgr = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-				nMgr.cancel(2);
+				if (nMgr != null) {
+					nMgr.cancel(2);
+				}
 			}
 		}
 
 		/* Pointer to notification builder for export/import arrow */
 		@SuppressLint("InlinedApi") NotificationCompat.Builder builder1 = new NotificationCompat.Builder(context)
-				.setContentTitle(context.getString(R.string.app_name))
-				.setContentIntent(PendingIntent.getActivity(context,
-						0,
-						new Intent(context,MyHomeControl.class),
-						0))
-				.setAutoCancel(false)
-				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-				.setVisibility(Notification.VISIBILITY_PUBLIC)
-				.setWhen(System.currentTimeMillis());
-						/* Pointer to notification manager for export/import arrow */
+						.setContentTitle(context.getString(R.string.app_name))
+						.setContentIntent(PendingIntent.getActivity(context,
+										0,
+										new Intent(context,MyHomeControl.class),
+										0))
+						.setAutoCancel(false)
+						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+						.setVisibility(Notification.VISIBILITY_PUBLIC)
+						.setWhen(System.currentTimeMillis());
+		/* Pointer to notification manager for export/import arrow */
 		NotificationManager notificationManager1 = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		builder1.setSmallIcon(notifIcon);
@@ -1697,9 +1984,11 @@ public class MessageListener extends Service {
 		if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			builder1.setColor(notifColor);
 		}
-						/* Pointer to notification for export/import arrow */
+		/* Pointer to notification for export/import arrow */
 		Notification notification1 = builder1.build();
-		notificationManager1.notify(1, notification1);
+		if (notificationManager1 != null) {
+			notificationManager1.notify(1, notification1);
+		}
 
 		// Update solar panel widgets if any
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update Solar Widget");
@@ -1707,7 +1996,7 @@ public class MessageListener extends Service {
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 		/** Component name of this widget */
 		ComponentName thisAppWidget = new ComponentName(context.getPackageName(),
-				SolarPanelWidget.class.getName());
+						SolarPanelWidget.class.getName());
 		/** List of all active widgets */
 		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
@@ -1733,13 +2022,13 @@ public class MessageListener extends Service {
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 		/** Component name of this widget */
 		ComponentName thisAppWidget = new ComponentName(context.getPackageName(),
-				AirconWidget.class.getName());
+						AirconWidget.class.getName());
 		/** List of all active widgets */
 		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
 		for (int appWidgetId : appWidgetIds) {
 			AirconWidget.updateAppWidget(context, appWidgetManager,
-					appWidgetId, timerTime, stopTime, timerOn);
+							appWidgetId, timerTime, stopTime, timerOn);
 		}
 	}
 
@@ -1759,12 +2048,51 @@ public class MessageListener extends Service {
 		ComponentName thisAppWidget;
 
 		thisAppWidget = new ComponentName(context.getPackageName(),
-				DeviceStatusWidget.class.getName());
+						DeviceStatusWidget.class.getName());
 		/** List of all active widgets */
 		int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
 		for (int appWidgetId : appWidgetIds) {
 			DeviceStatusWidget.updateAppWidget(context, appWidgetManager, appWidgetId, updateType);
+		}
+	}
+
+	/**
+	 * AsyncTask requestNewConnection
+	 * Enables requested WiFi AP and requests reconnect
+	 */
+	@SuppressLint("StaticFieldLeak")
+	private class requestNewConnAsync extends AsyncTask<String, String, Void> {
+
+		@Override
+		protected Void doInBackground(String... params) {
+			String reqSSID = params[0];
+			List<WifiConfiguration> wifiNetworks = wifiMgr.getConfiguredNetworks();
+			if (wifiNetworks != null) {
+				for (int index = 0; index < wifiNetworks.size(); index++) {
+					if (wifiNetworks.get(index).SSID.equalsIgnoreCase(reqSSID)) {
+						wifiMgr.enableNetwork(wifiNetworks.get(index).networkId, true);
+						if (BuildConfig.DEBUG)
+							Log.d(DEBUG_LOG_TAG_SW, "Enabled: " + wifiNetworks.get(index).SSID);
+						break;
+					}
+					wifiMgr.updateNetwork(wifiNetworks.get(index));
+				}
+				wifiMgr.reconnect();
+				toastMsg = "MHC - Switching to " + reqSSID;
+			} else {
+				toastMsg = "MHC - Failed to request WiFi AP switch";
+			}
+			Handler handler = new Handler(Looper.getMainLooper());
+			handler.post(new Runnable() {
+				@Override
+				public void run() {
+					Toast.makeText(getApplicationContext(),
+									toastMsg,
+									Toast.LENGTH_SHORT).show();
+				}
+			});
+			return null;
 		}
 	}
 
@@ -1789,27 +2117,27 @@ public class MessageListener extends Service {
 		notifText = context.getResources().getString(R.string.msg_listener);
 		//noinspection deprecation
 		notifColor = context.getResources()
-				.getColor(android.R.color.holo_green_light);
+						.getColor(android.R.color.holo_green_light);
 
 		/** Pointer to notification builder for export/import arrow */
 		NotificationCompat.Builder myNotifBuilder;
 		myNotifBuilder = new NotificationCompat.Builder(context)
-				.setContentTitle(context.getString(R.string.app_name))
-				.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
-				.setAutoCancel(false)
-				.setPriority(NotificationCompat.PRIORITY_DEFAULT)
-				.setWhen(System.currentTimeMillis());
+						.setContentTitle(context.getString(R.string.app_name))
+						.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, MyHomeControl.class), 0))
+						.setAutoCancel(false)
+						.setPriority(NotificationCompat.PRIORITY_DEFAULT)
+						.setWhen(System.currentTimeMillis());
 
 		myNotifBuilder.setSmallIcon(notifIcon)
-				.setContentText(notifText)
-				.setContentText(notifText)
-				.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
-				.setTicker(notifText);
+						.setContentText(notifText)
+						.setContentText(notifText)
+						.setStyle(new NotificationCompat.BigTextStyle().bigText(notifText))
+						.setTicker(notifText);
 
 		if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			myNotifBuilder
-					.setColor(notifColor)
-					.setVisibility(Notification.VISIBILITY_PUBLIC);
+							.setColor(notifColor)
+							.setVisibility(Notification.VISIBILITY_PUBLIC);
 		}
 		/* Pointer to notification */
 		return myNotifBuilder.build();

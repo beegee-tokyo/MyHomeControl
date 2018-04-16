@@ -72,7 +72,7 @@
 
 	<!-- Menu ID 8 => refresh status -->
 	<item
-		android:id="@+id/action_scan_devices"
+		android:id="@+id/action_clear_devices"
 		android:icon="@drawable/ic_refresh"
 		android:orderInCategory="100"
 		android:title="@string/action_refresh"

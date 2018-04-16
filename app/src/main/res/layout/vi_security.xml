@@ -12,7 +12,8 @@
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
 	tools:showIn="@layout/activity_my_home_control"
 	android:id="@+id/view_security"
-	android:visibility="visible">
+	android:visibility="visible"
+	tools:ignore="KeyboardInaccessibleWidget">
 
 	<TableLayout
 		android:layout_width="match_parent"
@@ -44,7 +45,7 @@
 				android:contentDescription="@string/dot_txt_alarm_status"
 				android:layout_weight="1"
 				android:onClick="onClick"
-				android:clickable="true"/>
+				android:clickable="true" />
 
 			<ImageView
 				android:layout_width="80dp"

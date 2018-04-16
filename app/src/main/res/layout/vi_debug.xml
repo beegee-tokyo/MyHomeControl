@@ -12,7 +12,7 @@
 	android:paddingTop="@dimen/activity_vertical_margin"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior"
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
-	tools:ignore="ButtonStyle"
+	tools:ignore="ButtonStyle, KeyboardInaccessibleWidget"
 	android:id="@+id/view_devdebug"
 	android:visibility="visible">
 	<!--tools:showIn="@layout/activity_my_home_control"-->
@@ -35,7 +35,7 @@
 			android:layout_gravity="center"
 			android:text="@string/txt_cmd_send"
 			android:textSize="12sp"
-			android:layout_margin="5dp"/>
+			android:layout_margin="5dp" />
 
 		<Button
 			android:layout_width="wrap_content"
@@ -67,7 +67,8 @@
 			android:editable="true"
 			android:imeOptions="actionSearch"
 			android:descendantFocusability="beforeDescendants"
-			android:focusableInTouchMode="true"/>
+			android:focusableInTouchMode="true"
+			tools:ignore="LabelFor" />
 
 	</LinearLayout>
 

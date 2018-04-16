@@ -35,19 +35,21 @@ public class BackYardLightWidgetHelper extends IntentService {
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
 			final String action = intent.getAction();
-			String cmd;
-			switch (action) {
-				case "0":
-					cmd = "l=0";
-					break;
-				case "1":
-					cmd = "l=1";
-					break;
-				default:
-					return;
+			if (action != null) {
+				String cmd;
+				switch (action) {
+					case "0":
+						cmd = "l=0";
+						break;
+					case "1":
+						cmd = "l=1";
+						break;
+					default:
+						return;
+				}
+				lightCtrlSend(cmd);
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Send light control: " + cmd);
 			}
-			lightCtrlSend(cmd);
-			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Send light control: " + cmd);
 		}
 	}
 

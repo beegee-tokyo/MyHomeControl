@@ -56,58 +56,68 @@ public class AirconWidgetHelper extends IntentService {
 			boolean isRunning = mPrefs.getBoolean("acTimerOn", false);
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Widget click: " + intent.getAction());
 
-			if (intent.getAction().equals("m")){
-				if (timerTime > 1) {
-					timerTime--;
-					espComm("t=" + Integer.toString(timerTime));
-				}
-			} else if (intent.getAction().equals("p")){
-				if (timerTime < 9) {
-					timerTime++;
-					espComm("t=" + Integer.toString(timerTime));
-				}
-			} else if (intent.getAction().equals("s")){
-				if (!isRunning) {
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Starting timer");
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(timerTime));
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Second command = " + "c="  + MyHomeControl.CMD_OTHER_TIMER);
-					if (espComm("t=" + Integer.toString(timerTime))) {
-						if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
-							isRunning = true;
-							mPrefs.edit().putBoolean("acTimerOn", true).apply();
+			if (intent.getAction() != null) {
+				switch (intent.getAction()) {
+					case "m":
+						if (timerTime > 1) {
+							timerTime--;
+							espComm("t=" + Integer.toString(timerTime));
 						}
-					}
-				} else {
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stopping timer");
-					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "c="  + MyHomeControl.CMD_OTHER_TIMER);
-					if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
-						isRunning = false;
-						mPrefs.edit().putBoolean("acTimerOn", false).apply();
-					}
+						break;
+					case "p":
+						if (timerTime < 9) {
+							timerTime++;
+							espComm("t=" + Integer.toString(timerTime));
+						}
+						break;
+					case "s":
+						if (!isRunning) {
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Starting timer");
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(timerTime));
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "Second command = " + "c=" + MyHomeControl.CMD_OTHER_TIMER);
+							if (espComm("t=" + Integer.toString(timerTime))) {
+								if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
+									isRunning = true;
+									mPrefs.edit().putBoolean("acTimerOn", true).apply();
+								}
+							}
+						} else {
+							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Stopping timer");
+							if (BuildConfig.DEBUG)
+								Log.d(DEBUG_LOG_TAG, "First command = " + "c=" + MyHomeControl.CMD_OTHER_TIMER);
+							if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
+								isRunning = false;
+								mPrefs.edit().putBoolean("acTimerOn", false).apply();
+							}
+						}
+						break;
+					case "a":
+						Intent appIntent = new Intent(this, MyHomeControl.class);
+						appIntent.putExtra("vID", MyHomeControl.view_aircon_id);
+						appIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
+						startActivity(appIntent);
+						break;
 				}
-			} else if (intent.getAction().equals("a")) {
-				Intent appIntent = new Intent(this, MyHomeControl.class);
-				appIntent.putExtra("vID",MyHomeControl.view_aircon_id);
-				appIntent.addFlags(FLAG_ACTIVITY_NEW_TASK);
-				startActivity(appIntent);
-			}
-			mPrefs.edit().putInt("acTimerTime", timerTime).apply();
-			Calendar calendar = Calendar.getInstance();
-			calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY)+2);
-			SimpleDateFormat df = new SimpleDateFormat("HH:mm", Locale.GERMANY);
-			String timerEnd = df.format(calendar.getTime());
-			mPrefs.edit().putString("acTimerEnd", timerEnd).apply();
+				mPrefs.edit().putInt("acTimerTime", timerTime).apply();
+				Calendar calendar = Calendar.getInstance();
+				calendar.set(Calendar.HOUR_OF_DAY, calendar.get(Calendar.HOUR_OF_DAY)+2);
+				SimpleDateFormat df = new SimpleDateFormat("HH:mm", Locale.GERMANY);
+				String timerEnd = df.format(calendar.getTime());
+				mPrefs.edit().putString("acTimerEnd", timerEnd).apply();
 
-			/** App widget manager for all widgets of this app */
-			AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-			/** Component name of this widget */
-			ComponentName thisAppWidget = new ComponentName(this.getPackageName(),
-					AirconWidget.class.getName());
-			/** List of all active widgets */
-			int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
+				/** App widget manager for all widgets of this app */
+				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+				/** Component name of this widget */
+				ComponentName thisAppWidget = new ComponentName(this.getPackageName(),
+								AirconWidget.class.getName());
+				/** List of all active widgets */
+				int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
-			for (int appWidgetId : appWidgetIds) {
-				AirconWidget.updateAppWidget(this,appWidgetManager,appWidgetId, timerTime, timerEnd, isRunning);
+				for (int appWidgetId : appWidgetIds) {
+					AirconWidget.updateAppWidget(this,appWidgetManager,appWidgetId, timerTime, timerEnd, isRunning);
+				}
 			}
 		}
 	}

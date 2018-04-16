@@ -32,9 +32,17 @@ local.properties
 *.ipr
 *~
 *.swp
-
+markdown*
 # PlatformIO
 .pioenvs
 .clang_complete
 .gcc-flags.json
 .piolibdeps
+
+# Arduino & ESP projects
+Arduino/*
+ESP8266/*
+Docs/*
+Hardware/*
+Raspberry Pi/*
+

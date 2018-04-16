@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/transparent">
+	xmlns:tools="http://schemas.android.com/tools"
+	android:orientation="vertical"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:background="@android:color/transparent"
+	tools:ignore="KeyboardInaccessibleWidget">
 
 	<ImageButton
 		android:id="@+id/ib_light_off"
@@ -19,7 +21,7 @@
 		android:paddingEnd="5dp"
 		android:paddingLeft="16dp"
 		android:paddingStart="16dp"
-		android:src="@mipmap/ic_bulb_off"/>
+		android:src="@mipmap/ic_bulb_off" />
 
 	<ImageButton
 		android:id="@+id/ib_light_dim"

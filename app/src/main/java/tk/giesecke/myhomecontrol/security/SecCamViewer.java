@@ -24,6 +24,7 @@ import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.R;
 
 import static tk.giesecke.myhomecontrol.MyHomeControl.lists;
+import static tk.giesecke.myhomecontrol.devices.CheckAvailDevices.dsURL;
 
 public class SecCamViewer extends AppCompatActivity {
 
@@ -128,7 +129,8 @@ public class SecCamViewer extends AppCompatActivity {
 					public void onClick(DialogInterface dialog, int which) {
 						urlFootage = lists.todaysList.get(which);
 						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected day = " + urlFootage);
-						urlFootage = "http://192.168.0.252:8080/MHCV/" + urlFootage;
+						// "http://" + dsURL + ":8080/getdir.php";
+						urlFootage = "http://" + dsURL + ":8080/MHCV/" + urlFootage;
 						startVideoStream();
 						dialog.dismiss();
 					}
@@ -157,7 +159,7 @@ public class SecCamViewer extends AppCompatActivity {
 							public void onClick(DialogInterface dialog, int which) {
 								urlFootage = lists.daysList.get(daySelected).get(which);
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected day = " + urlFootage);
-								urlFootage = "http://192.168.0.252:8080/MHCV/"
+								urlFootage = "http://" + dsURL + ":8080/MHCV/"
 										+ lists.availDaysList.get(daySelected)
 										+ "/"
 										+ urlFootage;

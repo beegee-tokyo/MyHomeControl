@@ -1,9 +1,7 @@
 package tk.giesecke.myhomecontrol.devices;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -33,9 +31,9 @@ public class CheckAvailDevices extends Service {
 	private static final String DEBUG_LOG_TAG  = "MHC-NSD";
 
 	/** Service type for Arduino devices */
-	private static final String SERVICE_TYPE = "_arduino._tcp.";
+	private static final String SERVICE_TYPE2 = "_arduino._tcp.";
 	/** Service type for other devices */
-	private static final String SERVICE_TYPE2 = "_http._tcp.";
+	private static final String SERVICE_TYPE = "_http._tcp.";
 	/* Available services:
 	 _workstation           _UnoWiFi            _udisks-ssh
 	 _airplay               _raop               _xbmc-events
@@ -43,29 +41,25 @@ public class CheckAvailDevices extends Service {
 	 _sftp-ssh              _ssh                _arduino
 	 */
 
-	/** Context of this application */
-	private Context serviceContext;
+	/** Address of Diskstation for still CCTV pictures */
+	public static String dsURL;
 
-	/** Access to activities shared preferences */
-	private static SharedPreferences mPrefs;
-	/** Name of shared preferences */
-	private static final String sharedPrefName = "MyHomeControl";
 	/** Countdown timer to stop the discovery after some time */
 	private CountDownTimer timer = null;
 
-	/** Flag if we are searching for none Arduino type of services */
-	private static boolean searchAlternative = false;
+	//	/** RxDnssd bindable */
+//	private RxDnssd rxDnssd;
+//	/** Service browser subscription */
+//	private Subscription browseSubscription;
 
 	/** mDNS / NSD browser service */
 	private DNSSDService browseService;
 	/** mDNS / NSD bindable */
 	private DNSSD dnssd;
 	/** List of found services */
-	public static final String[] dnssdServicesNames = new String[100];
-	/** List of found services addresses*/
-	public static final InetAddress[] dnssdServicesHosts = new InetAddress[100];
+	private static final String[] dnssdServicesNames = new String[100];
 	/** Number of found services */
-	public static int dnssdFoundServices;
+	private static int dnssdFoundServices;
 
 	/** Handler for looper to resolve the found services */
 	private Handler mHandler;
@@ -80,11 +74,8 @@ public class CheckAvailDevices extends Service {
 	@Override
 	public int onStartCommand( Intent intent, int flags, int startId ) {
 		Bundle extras = intent.getExtras();
-		searchAlternative = extras != null;
-		serviceContext = this;
-
-		// Get pointer to shared preferences
-		mPrefs = getSharedPreferences(sharedPrefName,0);
+		/* Flag if we are searching for none Arduino type of services */
+		boolean searchAlternative = extras != null;
 
 		mHandler = new Handler(Looper.getMainLooper());
 
@@ -105,55 +96,43 @@ public class CheckAvailDevices extends Service {
 			browseService = dnssd.browse(discoverService, new BrowseListener() {
 				@Override
 				public void serviceFound(DNSSDService browser, int flags, int ifIndex,
-				                         final String serviceName, final String regType, final String domain) {
+																 final String serviceName, final String regType, final String domain) {
 					try {
 						dnssd.resolve(flags, ifIndex, serviceName, regType, domain, new ResolveListener() {
 							@Override
 							public void serviceResolved(DNSSDService resolver, int flags, int ifIndex,
-							                            String fullName, final String hostName, final int port,
-							                            final Map<String, String> txtRecord) {
+																					String fullName, final String hostName, final int port,
+																					final Map<String, String> txtRecord) {
 								try {
 									QueryListener listener = new QueryListener() {
 										@Override
 										public void queryAnswered(DNSSDService query, final int flags, final int ifIndex,
-										                          final String fullName, int resolveClass, int resolveType,
-										                          final InetAddress address, int ttl) {
+																							final String fullName, int resolveClass, int resolveType,
+																							final InetAddress address, int ttl) {
 											if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Query address " + fullName);
 											queryLooper = new Runnable() {
 												@Override
 												public void run() {
 													BonjourService.Builder builder =
-															new BonjourService.Builder(flags, ifIndex, serviceName,
-																	regType, domain).dnsRecords(txtRecord).port(port).hostname(hostName);
+																	new BonjourService.Builder(flags, ifIndex, serviceName,
+																					regType, domain).dnsRecords(txtRecord).port(port).hostname(hostName);
 													if (address instanceof Inet4Address) {
 														builder.inet4Address((Inet4Address) address);
 													} else if (address instanceof Inet6Address) {
-														builder.inet6Address((Inet6Address) address);
+														return; // No need to search for IPv6 devices
 													}
-													if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "hostName " + hostName +
-															" fullName " + fullName +
-															" port " + port +
-															" address " + address);
-													for (int index = 0; index < dnssdFoundServices; index++) {
-														if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Search service: "
-																+ serviceName + " found: " + dnssdServicesNames[index]);
-														if (dnssdServicesNames[index].equalsIgnoreCase(serviceName)) {
-															if (dnssdServicesNames[index].equalsIgnoreCase("MHControl")) {
-																dnssdServicesNames[index] = "mhc";
-															}
-															if (dnssdServicesNames[index].equalsIgnoreCase("spMonitor")) {
-																dnssdServicesNames[index] = "spm";
-															}
-															dnssdServicesHosts[index] = address;
-															// Save IP's in the apps preferences
-															String prefsServiceName = dnssdServicesNames[index];
-															String prefsIPaddress = address.toString().substring(1);
-															if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Search service prefs service: "
-																	+ prefsServiceName + " prefs ip: " + prefsIPaddress);
-															mPrefs.edit().putString(dnssdServicesNames[index],
-																	address.toString().substring(1)).apply();
-															return;
-														}
+													if (BuildConfig.DEBUG) {
+														Log.d(DEBUG_LOG_TAG+"FOUND", "\nhostName " + hostName +
+																		"\nfullName " + fullName +
+																		"\nport " + port +
+																		"\naddress " + address +
+																		"\ntxtRecords " + txtRecord.size() +
+																		"\nserviceName " + serviceName);
+													}
+
+													if (serviceName.equalsIgnoreCase("DiskStation")) {
+														dsURL = address.toString();
+														if (dsURL.startsWith("/")) dsURL = dsURL.substring(1);
 													}
 												}
 											};
@@ -194,7 +173,7 @@ public class CheckAvailDevices extends Service {
 
 				@Override
 				public void serviceLost(DNSSDService browser, int flags, int ifIndex,
-				                        String serviceName, String regType, String domain) {
+																String serviceName, String regType, String domain) {
 					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Lost " + serviceName + " domain " + domain);
 				}
 
@@ -205,15 +184,17 @@ public class CheckAvailDevices extends Service {
 			});
 		} catch (DNSSDException e) {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "error", e);
-			sendMyBroadcast(false);
+			// Try to restart the search
+			// Start discovery of mDNS/NSD services available if not running already
+			startService(new Intent(getApplicationContext(), CheckAvailDevices.class));
 		}
 
-		// Start a countdown to stop the service after 15 seconds
+		// Start a countdown to stop the service after 60 seconds
 		if (timer != null) {
 			timer.cancel();
 			timer = null;
 		}
-		timer = new CountDownTimer(15000, 1000) {
+		timer = new CountDownTimer(60000, 30000) {
 			public void onTick(long millisUntilFinished) {
 				//Nothing here!
 			}
@@ -222,7 +203,6 @@ public class CheckAvailDevices extends Service {
 				mHandler.removeCallbacksAndMessages(null);
 				mHandler.removeCallbacks(null);
 				browseService.stop();
-				sendMyBroadcast(true);
 				timer.cancel();
 				timer = null;
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "CheckAvailDevices - Discovery finished!");
@@ -232,24 +212,5 @@ public class CheckAvailDevices extends Service {
 		timer.start();
 
 		return super.onStartCommand( intent, flags, startId );
-	}
-
-	/**
-	 * Inform UI (if listening) that mDNS/NSD discovery is finished
-	 *
-	 * @param resolveSuccess
-	 *          true if mDNS/NSD discovery finished
-	 *          false if any error happened
-	 *
-	 */
-	private void sendMyBroadcast(boolean resolveSuccess) {
-		browseService.stop();
-		/* Intent for activity internal broadcast message */
-		Intent broadCastIntent = new Intent();
-		broadCastIntent.setAction(MessageListener.BROADCAST_RECEIVED);
-		broadCastIntent.putExtra("from", "NSD");
-		broadCastIntent.putExtra("resolved", resolveSuccess);
-		broadCastIntent.putExtra("alternative",searchAlternative);
-		serviceContext.sendBroadcast(broadCastIntent);
 	}
 }

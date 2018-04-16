@@ -8,7 +8,7 @@
 	android:id="@+id/light_widget"
 	android:clickable="true"
 	android:background="@android:color/transparent"
-	tools:ignore="Overdraw">
+	tools:ignore="Overdraw, KeyboardInaccessibleWidget" >
 
 	<ImageView
 		android:layout_width="match_parent"

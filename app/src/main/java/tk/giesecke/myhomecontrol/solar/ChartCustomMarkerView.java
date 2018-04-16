@@ -143,8 +143,11 @@ public class ChartCustomMarkerView extends MarkerView {
 	private static int getDeviceWidth(Context context){
 		/** Window manager instance */
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-		/** Display instance */
-		Display display = wm.getDefaultDisplay();
-		return display.getWidth();
+		if (wm != null) {
+			/** Display instance */
+			Display display = wm.getDefaultDisplay();
+			return display.getWidth();
+		}
+		return 1024; // Guess a screen width
 	}
 }
