@@ -124,6 +124,11 @@
 	<string name="txt_cmd_send">Send Command</string>
 	<string name="title_activity_sec_cam_viewer">SecCamViewer</string>
 
+    <string name="tv_wi_hdr_in">Inside</string>
+    <string name="tv_wi_hdr_out">Outside</string>
+    <string name="tv_wi_temp">20°C</string>
+    <string name="tv_wi_humid">50%</string>
+
 	<string name="buffer_msg">Loading data, please wait!</string>
 
 	<string name="dev_stat_widget_name">Device Status</string>

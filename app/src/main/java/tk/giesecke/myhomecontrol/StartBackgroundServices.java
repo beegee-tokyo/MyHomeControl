@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
+import android.util.Log;
 
 import tk.giesecke.myhomecontrol.devices.CheckAvailDevices;
 import tk.giesecke.myhomecontrol.devices.MessageListener;
@@ -24,6 +25,7 @@ public class StartBackgroundServices extends Service {
 	public void onCreate() {
 		super.onCreate();
 
+		Log.i("BOOTRECEIVER", "StartBackgroundServices was called");
 		// Start service to listen to UDP & MQTT broadcast messages
 		startService(new Intent(this, MessageListener.class));
 

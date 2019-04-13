@@ -96,37 +96,40 @@
 		android:id="@+id/tv_ac1"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="5dp"
-		android:layout_marginLeft="5dp"
-		android:layout_marginRight="5dp"
 		android:layout_marginStart="5dp"
+		android:layout_marginLeft="5dp"
+		android:layout_marginEnd="5dp"
+		android:layout_marginRight="5dp"
 		android:gravity="center"
 		android:text="AC1"
-		android:textColor="@android:color/darker_gray"/>
+		android:textColor="@android:color/darker_gray"
+		android:visibility="gone" />
 
 	<TextView
 		android:id="@+id/tv_ac2"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="5dp"
-		android:layout_marginLeft="5dp"
-		android:layout_marginRight="5dp"
 		android:layout_marginStart="5dp"
+		android:layout_marginLeft="5dp"
+		android:layout_marginEnd="5dp"
+		android:layout_marginRight="5dp"
 		android:gravity="center"
 		android:text="AC2"
-		android:textColor="@android:color/darker_gray"/>
+		android:textColor="@android:color/darker_gray"
+		android:visibility="gone" />
 
 	<TextView
 		android:id="@+id/tv_ac3"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginEnd="5dp"
-		android:layout_marginLeft="5dp"
-		android:layout_marginRight="5dp"
 		android:layout_marginStart="5dp"
+		android:layout_marginLeft="5dp"
+		android:layout_marginEnd="5dp"
+		android:layout_marginRight="5dp"
 		android:gravity="center"
 		android:text="AC3"
-		android:textColor="@android:color/darker_gray"/>
+		android:textColor="@android:color/darker_gray"
+		android:visibility="gone" />
 
 	<TextView
 		android:id="@+id/tv_mqtt"

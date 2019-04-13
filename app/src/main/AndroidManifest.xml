@@ -12,9 +12,14 @@
 	<uses-permission android:name="android.permission.WAKE_LOCK"/>
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
 	<!--<uses-permission android:name="android.permission.CHANGE_CONFIGURATION"/>-->
 
 	<application
+		android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="true"
 		android:allowBackup="false"
 		android:icon="@mipmap/ic_launcher"
 		android:label="@string/app_name"
@@ -59,6 +64,7 @@
 				android:name="android.support.PARENT_ACTIVITY"
 				android:value="tk.giesecke.myhomecontrol.MyHomeControl"/>
 		</activity>
+		<activity android:name=".StartBackgroundActivity" />
 
 		<receiver
 			android:name=".AutoStart"

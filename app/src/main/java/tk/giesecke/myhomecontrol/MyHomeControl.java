@@ -1,5 +1,6 @@
 package tk.giesecke.myhomecontrol;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.Dialog;
@@ -9,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDatabaseLockedException;
@@ -23,6 +25,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -106,21 +109,31 @@ import static tk.giesecke.myhomecontrol.devices.CheckAvailDevices.dsURL;
 
 
 public class MyHomeControl extends AppCompatActivity implements View.OnClickListener
-				, AdapterView.OnItemClickListener , LoadImage.Listener , SeekBar.OnSeekBarChangeListener {
+		, AdapterView.OnItemClickListener , LoadImage.Listener , SeekBar.OnSeekBarChangeListener {
 
-	/** Debug tag */
+	/**
+	 * Debug tag
+	 */
 	static final String DEBUG_LOG_TAG = "MHC-MAIN";
 
-	/** Access to activities shared preferences */
+	/**
+	 * Access to activities shared preferences
+	 */
 	private static SharedPreferences mPrefs;
 	/* Name of shared preferences */
 	public static final String sharedPrefName = "MyHomeControl";
-	/** Context of this application */
+	/**
+	 * Context of this application
+	 */
 	@SuppressLint("StaticFieldLeak")
 	private Context appContext;
-	/** Id of menu, needed to set user selected icons and device names */
+	/**
+	 * Id of menu, needed to set user selected icons and device names
+	 */
 	private Menu abMenu;
-	/** Id's of menu items */
+	/**
+	 * Id's of menu items
+	 */
 //	int action_lightControl_id = 0;
 //	int action_security_id = 1;
 //	int action_solar_id = 2;
@@ -137,7 +150,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private final int action_debug_id = 9;
 	@SuppressWarnings("FieldCanBeLocal")
 	private final int action_devDebug_id = 10;
-	/** Id's of views */
+	/**
+	 * Id's of views
+	 */
 	private final int view_security_id = 0;
 	public final static int view_solar_id = 1;
 	public final static int view_aircon_id = 2;
@@ -146,325 +161,597 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private final int view_seccam_id = 4;
 	private final int view_lights_id = 5;
 	private final static int view_secVideo_id = 6;
-	/** Visible view 0 = security, 1 = solar panel, 2 = aircon */
+	/**
+	 * Visible view 0 = security, 1 = solar panel, 2 = aircon
+	 */
 	private int visibleView = 1;
-	/** Flag for debug output */
+	/**
+	 * Flag for debug output
+	 */
 	private boolean showDebug = false;
-	/** The view of the main UI */
+	/**
+	 * The view of the main UI
+	 */
 	private View appView;
-	/** Text view for the date */
+	/**
+	 * Text view for the date
+	 */
 	private TextView chartTitle;
 
-	/** Shared preferences value for last shown view */
+	/**
+	 * Shared preferences value for last shown view
+	 */
 	private final String prefsLastView = "lastView";
-	/** Shared preferences value for show debug messages flag */
+	/**
+	 * Shared preferences value for show debug messages flag
+	 */
 	public static final String prefsShowDebug = "showDebug";
 
-	/** Shared preferences value security alarm sound */
+	/**
+	 * Shared preferences value security alarm sound
+	 */
 	public static final String prefsSecurityAlarm = "secAlarm";
 
-	/** Shared preferences value for solar alarm sound */
+	/**
+	 * Shared preferences value for solar alarm sound
+	 */
 	public static final String prefsSolarWarning = "solarAlarm";
-	/** Shared preferences value for last synced month */
+	/**
+	 * Shared preferences value for last synced month
+	 */
 	public static final String prefsSolarSynced = "solarLastSynced";
-	/** Shared preferences value for number solar widgets placed */
+	/**
+	 * Shared preferences value for number solar widgets placed
+	 */
 	public static final String prefsSolarWidgetNum = "solarWidgetNum";
-	/** Shared preferences value for large widget */
+	/**
+	 * Shared preferences value for large widget
+	 */
 	public static final String prefsSolarWidgetSize = "solarWidgetSizeLarge";
 
-	/** Shared preferences value for last selected device */
+	/**
+	 * Shared preferences value for last selected device
+	 */
 	private final String prefsSelDevice = "airconSelDevice";
-	/** Shared preferences value for show debug messages flag */
+	/**
+	 * Shared preferences value for show debug messages flag
+	 */
 	private final String prefsLocationName = "airconLocation";
-	/** Shared preferences value for show debug messages flag */
+	/**
+	 * Shared preferences value for show debug messages flag
+	 */
 	private final String prefsDeviceIcon = "airconIcon";
 
-	/** Shared preferences value for dimmed brightness values */
+	/**
+	 * Shared preferences value for dimmed brightness values
+	 */
 	public static final String prefsLightBedDim = "lightBedDimVal";
 
-	/** View for selecting device to change icon and device name */
+	/**
+	 * View for selecting device to change icon and device name
+	 */
 	private View locationSettingsView;
-	/** View of aircon device name and icon change dialog */
+	/**
+	 * View of aircon device name and icon change dialog
+	 */
 	private View airconDialogView;
-	/** Button ids from location selection dialog */
+	/**
+	 * Button ids from location selection dialog
+	 */
 	private final int[] buttonIds = {
-					R.id.dia_sel_device0,
-					R.id.dia_sel_device1,
-					R.id.dia_sel_device2};
-	/** Resource ids of drawables for the icons */
+			R.id.dia_sel_device0,
+			R.id.dia_sel_device1,
+			R.id.dia_sel_device2};
+	/**
+	 * Resource ids of drawables for the icons
+	 */
 	private final int[] iconIDs = {R.drawable.ic_bathroom,
-					R.drawable.ic_bedroom,
-					R.drawable.ic_dining,
-					R.drawable.ic_entertainment,
-					R.drawable.ic_kids,
-					R.drawable.ic_kitchen,
-					R.drawable.ic_livingroom,
-					R.drawable.ic_office};
+			R.drawable.ic_bedroom,
+			R.drawable.ic_dining,
+			R.drawable.ic_entertainment,
+			R.drawable.ic_kids,
+			R.drawable.ic_kitchen,
+			R.drawable.ic_livingroom,
+			R.drawable.ic_office};
 	/* Resource ids of the icon buttons */
 	private final int[] iconButtons = {R.id.im_bath,
-					R.id.im_bed,
-					R.id.im_dining,
-					R.id.im_entertain,
-					R.id.im_kids,
-					R.id.im_kitchen,
-					R.id.im_living,
-					R.id.im_office};
-	/** Index of device handled in dialog box */
+			R.id.im_bed,
+			R.id.im_dining,
+			R.id.im_entertain,
+			R.id.im_kids,
+			R.id.im_kitchen,
+			R.id.im_living,
+			R.id.im_office};
+	/**
+	 * Index of device handled in dialog box
+	 */
 	private int dlgDeviceIndex;
-	/** R.id of selected icon for a device */
+	/**
+	 * R.id of selected icon for a device
+	 */
 	private int dlgIconIndex;
 
-	/** Flag for sound selector (true = security alarm, false = solar panel warning) */
+	/**
+	 * Flag for sound selector (true = security alarm, false = solar panel warning)
+	 */
 	private boolean isSelAlarm = true;
 
 	// SPmonitor, Security front, Security back, Aircon 1, Aircon 2, Aircon 3, Monitor, Camera front
-	/** List of device names */
+	/**
+	 * List of device names
+	 */
 	public static final String[] deviceNames = {"spm", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "mhc", "MHControl"};
 //	public static final String[] deviceNames = {"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "mhc", "MHControl"};
-	/** List of potential control device availability */
+	/**
+	 * List of potential control device availability
+	 */
 	public static final boolean[] deviceIsOn = {false, false, false, false, false, false, false, false, false, false, false, false};
-	/** List of IP addresses of found devices */
+	/**
+	 * List of IP addresses of found devices
+	 */
 	public static final String[] deviceIPs = {"", "", "", "", "", "", "", "", "", "", "", ""};
-	/** deviceIsOn index for SPmonitor */
+	/**
+	 * deviceIsOn index for SPmonitor
+	 */
 	public static final int spMonitorIndex = 0;
-	/** deviceIsOn index for Security front */
+	/**
+	 * deviceIsOn index for Security front
+	 */
 	public static final int secFrontIndex = 1;
-	/** deviceIsOn index for Security back */
+	/**
+	 * deviceIsOn index for Security back
+	 */
 	public static final int secBackIndex = 2;
-	/** deviceIsOn index for Aircon 1 */
+	/**
+	 * deviceIsOn index for Aircon 1
+	 */
 	public static final int aircon1Index = 3;
-	/** deviceIsOn index for Aircon 2 */
+	/**
+	 * deviceIsOn index for Aircon 2
+	 */
 	public static final int aircon2Index = 4;
-	/** deviceIsOn index for Aircon 3 */
+	/**
+	 * deviceIsOn index for Aircon 3
+	 */
 	public static final int aircon3Index = 5;
-	/** deviceIsOn index for Monitoring display */
+	/**
+	 * deviceIsOn index for Monitoring display
+	 */
 	@SuppressWarnings("WeakerAccess")
 	public static final int moniIndex = 6;
-	/** deviceIsOn index for front yard camera */
+	/**
+	 * deviceIsOn index for front yard camera
+	 */
 	public static final int cam1Index = 7;
-	/** deviceIsOn index for bedroom lights */
+	/**
+	 * deviceIsOn index for bedroom lights
+	 */
 	public static final int lb1Index = 8;
-	/** deviceIsOn index for backyard lights */
+	/**
+	 * deviceIsOn index for backyard lights
+	 */
 	public static final int ly1Index = 9;
-	/** deviceIsOn index for gateway */
+	/**
+	 * deviceIsOn index for gateway
+	 */
 	public static final int mhcIndex = 10;
 
 	// Security view related
-	/** Security view */
+	/**
+	 * Security view
+	 */
 	private RelativeLayout secView = null;
-	/** TextView for status message display in security view */
+	/**
+	 * TextView for status message display in security view
+	 */
 	private TextView secStatus;
-	/** ImageView to show status of alarm enabled front sensor */
+	/**
+	 * ImageView to show status of alarm enabled front sensor
+	 */
 	private ImageView ivAlarmStatus;
-	/** ImageView to show status of light enabled front sensor */
+	/**
+	 * ImageView to show status of light enabled front sensor
+	 */
 	private ImageView ivLightStatus;
-	/** TableLayout to show status of back alarm system */
+	/**
+	 * TableLayout to show status of back alarm system
+	 */
 	private TableLayout secBackView;
-	/** ImageView to show status of alarm enabled back sensor */
+	/**
+	 * ImageView to show status of alarm enabled back sensor
+	 */
 	private ImageView ivAlarmStatusBack;
-	/** ImageView to show status of light enabled back sensor */
+	/**
+	 * ImageView to show status of light enabled back sensor
+	 */
 	private ImageView ivLightStatusBack;
-	/** Check box for auto activation of alarm */
+	/**
+	 * Check box for auto activation of alarm
+	 */
 	private CheckBox secAutoAlarmFront;
-	/** Check box for auto activation of alarm */
+	/**
+	 * Check box for auto activation of alarm
+	 */
 	private CheckBox secAutoAlarmBack;
-	/** Clickable text view to change activation times */
+	/**
+	 * Clickable text view to change activation times
+	 */
 	private TextView secChangeAlarm;
 
-	/** Status flag for alarm front sensor */
+	/**
+	 * Status flag for alarm front sensor
+	 */
 	static boolean hasAlarmOnFront = true;
-	/** Status flag for alarm back sensor */
+	/**
+	 * Status flag for alarm back sensor
+	 */
 	static boolean hasAlarmOnBack = true;
-	/** Status flag for auto alarm front sensor */
+	/**
+	 * Status flag for auto alarm front sensor
+	 */
 	static boolean hasAutoOnFront = true;
-	/** Status flag for auto alarm back sensor */
+	/**
+	 * Status flag for auto alarm back sensor
+	 */
 	static boolean hasAutoOnBack = true;
 
-	/** Auto activation on time as string */
+	/**
+	 * Auto activation on time as string
+	 */
 	static String secAutoOn;
-	/** Auto activation off time as string */
+	/**
+	 * Auto activation off time as string
+	 */
 	static String secAutoOff;
-	/** Auto activation on time as integer */
+	/**
+	 * Auto activation on time as integer
+	 */
 	static int secAutoOnStored;
-	/** Auto activation off time as integer */
+	/**
+	 * Auto activation off time as integer
+	 */
 	static int secAutoOffStored;
 
-	/** Array list with available alarm names */
+	/**
+	 * Array list with available alarm names
+	 */
 	private ArrayList<String> notifNames = new ArrayList<>();
-	/** Array list with available alarm uri's */
+	/**
+	 * Array list with available alarm uri's
+	 */
 	private ArrayList<String> notifUri = new ArrayList<>();
-	/** Selected alarm name */
+	/**
+	 * Selected alarm name
+	 */
 	private String notifNameSel = "";
-	/** Selected alarm uri */
+	/**
+	 * Selected alarm uri
+	 */
 	private String notifUriSel = "";
 
 	// Solar monitor view related
-	/** Solar panel view */
+	/**
+	 * Solar panel view
+	 */
 	private RelativeLayout solView = null;
-	/** TextView for status message display in solar panel view */
+	/**
+	 * TextView for status message display in solar panel view
+	 */
 	private TextView solStatus;
-	/** Array with existing log dates on the Arduino */
+	/**
+	 * Array with existing log dates on the Arduino
+	 */
 	private static final List<String> logDates = new ArrayList<>();
-	/** Pointer to current displayed log in logDates array */
+	/**
+	 * Pointer to current displayed log in logDates array
+	 */
 	private static int logDatesIndex = 0;
-	/** Array with existing log dates on the Arduino */
+	/**
+	 * Array with existing log dates on the Arduino
+	 */
 	private static final List<String> lastLogDates = new ArrayList<>();
-	/** Pointer to current displayed log in logDates array */
+	/**
+	 * Pointer to current displayed log in logDates array
+	 */
 	private static int lastLogDatesIndex = 0;
-	/** Flag for showing last month */
+	/**
+	 * Flag for showing last month
+	 */
 	private static boolean showingLast = false;
-	/** Flag for showing a log */
+	/**
+	 * Flag for showing a log
+	 */
 	protected static boolean showingLog = false;
 	// Flag for database empty */
 	private static boolean dataBaseIsEmpty = true;
 
-	/** Instance of DataBaseHelper for this month*/
+	/**
+	 * Instance of DataBaseHelper for this month
+	 */
 	private DataBaseHelper dbHelperNow;
-	/** Instance of DataBaseHelper for last month*/
+	/**
+	 * Instance of DataBaseHelper for last month
+	 */
 	private DataBaseHelper dbHelperLast;
 
-	/** Today's year-month database name */
+	/**
+	 * Today's year-month database name
+	 */
 	private static String[] dbNamesList = new String[2];
 
 	// Aircon view related
-	/** Aircon control view */
+	/**
+	 * Aircon control view
+	 */
 	private RelativeLayout airView = null;
-	/** FujiDenzo control view */
+	/**
+	 * FujiDenzo control view
+	 */
 	private RelativeLayout airFDView = null;
-	/** Carrier control view */
+	/**
+	 * Carrier control view
+	 */
 	private RelativeLayout airCAView = null;
-	/** American Home control view */
+	/**
+	 * American Home control view
+	 */
 	private RelativeLayout airAMView = null;
-	/** TextView for status message display in aircon view */
+	/**
+	 * TextView for status message display in aircon view
+	 */
 	private TextView airStatus;
-	/** Light of button to switch consumption control for FujiDenzo layout */
+	/**
+	 * Light of button to switch consumption control for FujiDenzo layout
+	 */
 	private View btAutoLightFD;
-	/** Light of button to switch consumption control for Carrier layout */
+	/**
+	 * Light of button to switch consumption control for Carrier layout
+	 */
 	private View btAutoLightCA;
-	/** Light of button to switch consumption control for American Home layout */
+	/**
+	 * Light of button to switch consumption control for American Home layout
+	 */
 	private View btAutoLightAM;
-	/** Light of button to switch on/off for FujiDenzo layout */
+	/**
+	 * Light of button to switch on/off for FujiDenzo layout
+	 */
 	private View btOnOffLightFD;
-	/** Light of button to switch on/off for Carrier layout */
+	/**
+	 * Light of button to switch on/off for Carrier layout
+	 */
 	private View btOnOffLightCA;
-	/** Light of button to switch on/off for American Home layout */
+	/**
+	 * Light of button to switch on/off for American Home layout
+	 */
 	private View btOnOffLightAM;
-	/** Light of button to switch fan to high speed for FujiDenzo layout */
+	/**
+	 * Light of button to switch fan to high speed for FujiDenzo layout
+	 */
 	private View btFanHighLightFD;
-	/** Light of button to switch fan to medium speed for FujiDenzo layout */
+	/**
+	 * Light of button to switch fan to medium speed for FujiDenzo layout
+	 */
 	private View btFanMedLightFD;
-	/** Light of button to switch fan to low speed for FujiDenzo layout */
+	/**
+	 * Light of button to switch fan to low speed for FujiDenzo layout
+	 */
 	private View btFanLowLightFD;
-	/** Light of button to switch to cool mode for FujiDenzo layout */
+	/**
+	 * Light of button to switch to cool mode for FujiDenzo layout
+	 */
 	private View btCoolLightFD;
-	/** Light of button to switch to cool mode for Carrier layout */
+	/**
+	 * Light of button to switch to cool mode for Carrier layout
+	 */
 	private View btCoolLightCA;
-	/** Light of button to switch to cool mode for American Home layout */
+	/**
+	 * Light of button to switch to cool mode for American Home layout
+	 */
 	private View btCoolLightAM;
-	/** Light of button to switch to dry mode for FujiDenzo layout */
+	/**
+	 * Light of button to switch to dry mode for FujiDenzo layout
+	 */
 	private View btDryLightFD;
-	/** Light of button to switch to dry mode for Carrier layout */
+	/**
+	 * Light of button to switch to dry mode for Carrier layout
+	 */
 	private View btDryLightCA;
-	/** Light of button to switch to dry mode for American Home layout */
+	/**
+	 * Light of button to switch to dry mode for American Home layout
+	 */
 	private View btDryLightAM;
-	/** Light of button to switch to fan mode for FujiDenzo layout */
+	/**
+	 * Light of button to switch to fan mode for FujiDenzo layout
+	 */
 	private View btFanLightFD;
-	/** Light of button to switch to fan mode for Carrier layout */
+	/**
+	 * Light of button to switch to fan mode for Carrier layout
+	 */
 	private View btFanLightCA;
-	/** Light of button to switch to fan mode for American Home layout */
+	/**
+	 * Light of button to switch to fan mode for American Home layout
+	 */
 	private View btFanLightAM;
-	/** Light of button to switch on sweep for Carrier layout */
+	/**
+	 * Light of button to switch on sweep for Carrier layout
+	 */
 	private View btSweepLightCA;
-	/** Light of button to switch on sweep for American Home layout */
+	/**
+	 * Light of button to switch on sweep for American Home layout
+	 */
 	private View btSweepLightAM;
-	/** Light of button to switch on turbo mode for Carrier layout */
+	/**
+	 * Light of button to switch on turbo mode for Carrier layout
+	 */
 	private View btTurboLightCA;
-	/** Light of button to switch on turbo mode for American Home layout */
+	/**
+	 * Light of button to switch on turbo mode for American Home layout
+	 */
 	private View btSleepLightAM;
-	/** Light of button to switch on ion mode for Carrier layout */
+	/**
+	 * Light of button to switch on ion mode for Carrier layout
+	 */
 	private View btIonLightCA;
-	/** Light of button to switch on auto temp function for Carrier layout */
+	/**
+	 * Light of button to switch on auto temp function for Carrier layout
+	 */
 	private View btAutomLightCA;
-	/** Light of button to switch on auto temp function for American Home layout */
+	/**
+	 * Light of button to switch on auto temp function for American Home layout
+	 */
 	private View btAutomLightAM;
-	/** Button to switch fan speed for Carrier layout */
+	/**
+	 * Button to switch fan speed for Carrier layout
+	 */
 	private Button btFanCA;
-	/** Button to switch fan speed for American Home layout */
+	/**
+	 * Button to switch fan speed for American Home layout
+	 */
 	private Button btFanAM;
-	/** Consumption value display for FujiDenzo layout */
+	/**
+	 * Consumption value display for FujiDenzo layout
+	 */
 	private TextView txtConsValFD;
-	/** Temperature value display for FujiDenzo layout */
+	/**
+	 * Temperature value display for FujiDenzo layout
+	 */
 	private TextView txtTempValFD;
-	/** Status value display for FujiDenzo layout */
+	/**
+	 * Status value display for FujiDenzo layout
+	 */
 	private TextView txtAutoStatusValFD;
-	/** Consumption value display for Carrier layout */
+	/**
+	 * Consumption value display for Carrier layout
+	 */
 	private TextView txtConsValCA;
-	/** Temperature value display for Carrier layout */
+	/**
+	 * Temperature value display for Carrier layout
+	 */
 	private TextView txtTempValCA;
-	/** Status value display for Carrier layout */
+	/**
+	 * Status value display for Carrier layout
+	 */
 	private TextView txtAutoStatusValCA;
-	/** Consumption value display for American Home layout */
+	/**
+	 * Consumption value display for American Home layout
+	 */
 	private TextView txtConsValAM;
-	/** Temperature value display for American Home layout */
+	/**
+	 * Temperature value display for American Home layout
+	 */
 	private TextView txtTempValAM;
-	/** Status value display for American Home layout */
+	/**
+	 * Status value display for American Home layout
+	 */
 	private TextView txtAutoStatusValAM;
 
-	/** Timer button for FujiDenzo layout */
+	/**
+	 * Timer button for FujiDenzo layout
+	 */
 	private Button btTimerFD;
-	/** Timer button for Carrier layout */
+	/**
+	 * Timer button for Carrier layout
+	 */
 	private Button btTimerCA;
-	/** Timer button for American Home layout */
+	/**
+	 * Timer button for American Home layout
+	 */
 	private Button btTimerAM;
 
-	/** Color for activated button */
+	/**
+	 * Color for activated button
+	 */
 	private static int colorRed;
-	/** Color for deactivated button */
+	/**
+	 * Color for deactivated button
+	 */
 	private static int colorGrey;
-	/** Color for deactivated timer button */
+	/**
+	 * Color for deactivated timer button
+	 */
 	private static int colorGreen;
-	/** Color for activated timer button */
+	/**
+	 * Color for activated timer button
+	 */
 	private static int colorOrange;
 
-	/** ID of the selected device */
+	/**
+	 * ID of the selected device
+	 */
 	private static int selDevice = 0;
-	/** Name of the device */
+	/**
+	 * Name of the device
+	 */
 	private static final String[] deviceName = {"", "", ""};
-	/** Layout version for the device */
+	/**
+	 * Layout version for the device
+	 */
 	private static final int[] deviceType = {99, 99, 99};
-	/** Valid device type ids */
+	/**
+	 * Valid device type ids
+	 */
 	private static final int FUJIDENZO = 0;
 	private static final int CARRIER = 1;
 	private static final int AMERICANHOME = 2;
-	/** Location of the device */
+	/**
+	 * Location of the device
+	 */
 	private final String[] locationName = {"Office", "Living", "Office"};
-	/** Icon for the device */
+	/**
+	 * Icon for the device
+	 */
 	private final int[] deviceIcon = {7, 6, 7};
-	/** Fan speed of device */
+	/**
+	 * Fan speed of device
+	 */
 	private static final int[] fanStatus = {0, 0, 0};
-	/** Mode status of device */
+	/**
+	 * Mode status of device
+	 */
 	private static final int[] modeStatus = {0, 0, 0};
-	/** Power status of device */
+	/**
+	 * Power status of device
+	 */
 	private static final int[] powerStatus = {0, 0, 0};
-	/** Cooling temperature of device */
+	/**
+	 * Cooling temperature of device
+	 */
 	private static final int[] coolStatus = {0, 0, 0};
-	/** Timer setting of device */
+	/**
+	 * Timer setting of device
+	 */
 	private static final int[] deviceTimer = {1, 1, 1};
-	/** Off time of timer of device */
+	/**
+	 * Off time of timer of device
+	 */
 	private static final String[] deviceOffTime = {"", "", ""};
-	/** Consumption status of device (only from master device */
+	/**
+	 * Consumption status of device (only from master device
+	 */
 	private static double consStatus = 0;
-	/** Auto power status of device (only from master device */
+	/**
+	 * Auto power status of device (only from master device
+	 */
 	private static int autoStatus = 0;
-	/** Auto power enabled status of device */
+	/**
+	 * Auto power enabled status of device
+	 */
 	private static final int[] autoOnStatus = {0, 0, 0};
-	/** Sweep enabled status of device */
+	/**
+	 * Sweep enabled status of device
+	 */
 	private static final int[] sweepStatus = {0, 0, 0};
-	/** Turbo enabled status of device */
+	/**
+	 * Turbo enabled status of device
+	 */
 	private static final int[] turboStatus = {0, 0, 0};
-	/** Ion enabled status of device */
+	/**
+	 * Ion enabled status of device
+	 */
 	private static final int[] ionStatus = {0, 0, 0};
-	/** Timer on status of device */
+	/**
+	 * Timer on status of device
+	 */
 	private static final int[] timerStatus = {0, 0, 0};
 
 	private static final String CMD_ON_OFF = "00";
@@ -490,48 +777,77 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final String CMD_AUTO_ON = "98";
 	private static final String CMD_AUTO_OFF = "99";
 
-	/** Debug device view */
+	/**
+	 * Debug device view
+	 */
 	private LinearLayout debugView = null;
-	/** String with received debug messages */
+	/**
+	 * String with received debug messages
+	 */
 	private String debugMsgs = "";
-	/** String of highlighted text */
+	/**
+	 * String of highlighted text
+	 */
 	private String highlightText = "";
-	/** List of devices to send debug message to */
+	/**
+	 * List of devices to send debug message to
+	 */
 	private static final boolean[] cmdDeviceList = {false, false, false, false, false, false, false, false, false, false, false};
-	/** List of devices that have debug enables */
+	/**
+	 * List of devices that have debug enables
+	 */
 	private static final boolean[] debugDeviceList = {false, false, false, false, false, false, false, false, false, false, false};
 
-	/** Text of snackbar view */
+	/**
+	 * Text of snackbar view
+	 */
 	private String snackBarText = "";
 
-	/** Debug device view */
+	/**
+	 * Debug device view
+	 */
 	private RelativeLayout seccamView = null;
-	/** Zoomable image view attacher */
+	/**
+	 * Zoomable image view attacher
+	 */
 	private PhotoViewAttacher snapShotAttacher = null;
-	/** List with available images on image server */
+	/**
+	 * List with available images on image server
+	 */
 	private List<String> availImages;
 
-	/** List with available CCTV footage */
+	/**
+	 * List with available CCTV footage
+	 */
 	public static CCTVfootages lists;
 
-	/** Lights device view */
+	/**
+	 * Lights device view
+	 */
 	private RelativeLayout lightsView = null;
-	/** Current value of bed room lights */
+	/**
+	 * Current value of bed room lights
+	 */
 	private int lightsBedRoomVal = 0;
-	/** Light control seek bar */
+	/**
+	 * Light control seek bar
+	 */
 	private SeekBar bedRoomValSB;
-	/** Textview for current brightness level */
+	/**
+	 * Textview for current brightness level
+	 */
 	private TextView bedRoomVal;
 
-	/** Bonjour service, active as long as this app is active */
+	/**
+	 * Bonjour service, active as long as this app is active
+	 */
 	private DNSSDService registeredService = null;
 
 	@Override
-	protected void onNewIntent(Intent intent)
-	{
+	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
 
-		intent.putExtra("view", getSharedPreferences(sharedPrefName,0).getInt(prefsLastView,0));
+		intent.putExtra("view", getSharedPreferences(sharedPrefName, 0).getInt(prefsLastView, 0));
 		// set the intent passed from the service to the original intent
 		setIntent(intent);
 	}
@@ -541,14 +857,46 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_my_home_control);
-		/** Instance of the tool bar */
+		/* Instance of the tool bar */
 		Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
 		if (toolBar != null) {
 			setSupportActionBar(toolBar);
 		}
 
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+			// Ask for permissions if necessary
+			ArrayList<String> arrPerm = new ArrayList<>();
+
+			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+				arrPerm.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+			}
+
+			if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+				arrPerm.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+			}
+
+			if(ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+				arrPerm.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+			}
+
+			if(ActivityCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_BOOT_COMPLETED) != PackageManager.PERMISSION_GRANTED) {
+				arrPerm.add(Manifest.permission.RECEIVE_BOOT_COMPLETED);
+			}
+
+			if(ActivityCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+				arrPerm.add(Manifest.permission.INTERNET);
+			}
+			if(!arrPerm.isEmpty())
+
+			{
+				String[] permissions = new String[arrPerm.size()];
+				permissions = arrPerm.toArray(permissions);
+				ActivityCompat.requestPermissions(this, permissions, 0);
+			}
+		}
+
 		// Enable access to internet
-		/** ThreadPolicy to get permission to access internet */
+		/* ThreadPolicy to get permission to access internet */
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 
@@ -622,20 +970,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				myTxtRecord.set("service","MHC");
 				myTxtRecord.set("loc",android.os.Build.MODEL);
 				registeredService = dnssd.register(NO_AUTO_RENAME, 0, "mobi", "_arduino._tcp"
-								, null, null, 8266, myTxtRecord,
-								new RegisterListener() {
+						, null, null, 8266, myTxtRecord,
+						new RegisterListener() {
 
-									@Override
-									public void serviceRegistered(DNSSDRegistration registration, int flags,
-																								String serviceName, String regType, String domain) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Register successfully ");
-									}
+							@Override
+							public void serviceRegistered(DNSSDRegistration registration, int flags,
+														  String serviceName, String regType, String domain) {
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Register successfully ");
+							}
 
-									@Override
-									public void operationFailed(DNSSDService service, int errorCode) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "error " + errorCode);
-									}
-								});
+							@Override
+							public void operationFailed(DNSSDService service, int errorCode) {
+								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "error " + errorCode);
+							}
+						});
 			} catch (DNSSDException e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "error", e);
 			}
@@ -684,7 +1032,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (thisBundle != null) {
 			if  (thisBundle.getInt("vID", 99) != 99){
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Restart with view: "
-								+ thisBundle.getInt("vID", 99));
+						+ thisBundle.getInt("vID", 99));
 				// Get the requested view of call
 				visibleView = thisBundle.getInt("vID", view_security_id);
 			}
@@ -846,16 +1194,16 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				notifUri.add("");
 				notifNames.add(getString(R.string.snd_alarm));
 				notifUri.add("android.resource://"
-								+ this.getPackageName() + "/"
-								+ R.raw.alarm);
+						+ this.getPackageName() + "/"
+						+ R.raw.alarm);
 				notifNames.add(getString(R.string.snd_alert));
 				notifUri.add("android.resource://"
-								+ this.getPackageName() + "/"
-								+ R.raw.alert);
+						+ this.getPackageName() + "/"
+						+ R.raw.alert);
 				notifNames.add(getString(R.string.snd_dog));
 				notifUri.add("android.resource://"
-								+ this.getPackageName() + "/"
-								+ R.raw.dog);
+						+ this.getPackageName() + "/"
+						+ R.raw.dog);
 				/** Index of last user selected alarm tone */
 				int uriIndex = Utilities.getNotifSounds(this, notifNames, notifUri, isSelAlarm) + 2;
 
@@ -873,21 +1221,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 				// set dialog message
 				alarmDialogBuilder
-								.setTitle(getResources().getString(R.string.action_selAlarm))
-								.setCancelable(false)
-								.setNegativeButton("OK",
-												new DialogInterface.OnClickListener() {
-													public void onClick(DialogInterface dialog, int id) {
-														if (!notifNameSel.equalsIgnoreCase("")) {
-															if (isSelAlarm) {
-																mPrefs.edit().putString(prefsSecurityAlarm, notifUriSel).apply();
-															} else {
-																mPrefs.edit().putString(prefsSolarWarning, notifUriSel).apply();
-															}
-														}
-														dialog.cancel();
-													}
-												});
+						.setTitle(getResources().getString(R.string.action_selAlarm))
+						.setCancelable(false)
+						.setNegativeButton("OK",
+								new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int id) {
+										if (!notifNameSel.equalsIgnoreCase("")) {
+											if (isSelAlarm) {
+												mPrefs.edit().putString(prefsSecurityAlarm, notifUriSel).apply();
+											} else {
+												mPrefs.edit().putString(prefsSolarWarning, notifUriSel).apply();
+											}
+										}
+										dialog.cancel();
+									}
+								});
 
 				// create alert dialog
 				/** Alert dialog  for device selection */
@@ -900,21 +1248,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				ListView lvAlarmList = (ListView) alarmSettingsView.findViewById(R.id.lv_AlarmList);
 				/** Array adapter for the ListView */
 				final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
-								appContext,
-								R.layout.cu_list_item,
-								notifNames );
+						appContext,
+						R.layout.cu_list_item,
+						notifNames );
 				lvAlarmList.setAdapter(arrayAdapter);
 				// Use long click listener to play the alarm sound
 				lvAlarmList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-																				 int pos, long id) {
+												   int pos, long id) {
 						/** Instance of media player */
 						MediaPlayer mMediaPlayer = new MediaPlayer();
 						try {
 							mMediaPlayer.setDataSource(appContext, Uri.parse(notifUri.get(pos)));
 							/** Audio manager to play the sound */
 							final AudioManager audioManager = (AudioManager) appContext
-											.getSystemService(Context.AUDIO_SERVICE);
+									.getSystemService(Context.AUDIO_SERVICE);
 							if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
 								mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
 								mMediaPlayer.prepare();
@@ -1005,22 +1353,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 				// set dialog message
 				locationDialogBuilder
-								.setTitle(getResources().getString(R.string.dialog_selector_title))
-								.setCancelable(false)
-								.setNegativeButton("OK",
-												new DialogInterface.OnClickListener() {
-													public void onClick(DialogInterface dialog, int id) {
-														for (int i = -aircon1Index; i < -aircon1Index+3; i++) {
-															mPrefs.edit().putString(
-																			prefsLocationName + Integer.toString(i),
-																			locationName[i-aircon1Index]).apply();
-															mPrefs.edit().putInt(
-																			prefsDeviceIcon + Integer.toString(i),
-																			deviceIcon[i-aircon1Index]).apply();
-														}
-														dialog.cancel();
-													}
-												});
+						.setTitle(getResources().getString(R.string.dialog_selector_title))
+						.setCancelable(false)
+						.setNegativeButton("OK",
+								new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int id) {
+										for (int i = -aircon1Index; i < -aircon1Index+3; i++) {
+											mPrefs.edit().putString(
+													prefsLocationName + Integer.toString(i),
+													locationName[i-aircon1Index]).apply();
+											mPrefs.edit().putInt(
+													prefsDeviceIcon + Integer.toString(i),
+													deviceIcon[i-aircon1Index]).apply();
+										}
+										dialog.cancel();
+									}
+								});
 
 				// create alert dialog
 				/** Alert dialog  for device selection */
@@ -1118,53 +1466,53 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 									// set dialog message
 									airconDialogBuilder
-													.setTitle(getResources().getString(R.string.dialog_change_title))
-													.setCancelable(false)
-													.setPositiveButton("OK",
-																	new DialogInterface.OnClickListener() {
-																		@SuppressWarnings({"deprecation", "ConstantConditions"})
-																		public void onClick(DialogInterface dialog, int id) {
-																			locationName[dlgDeviceIndex] = userInput.getText().toString();
-																			deviceIcon[dlgDeviceIndex] = dlgIconIndex;
-																			// Update underlying dialog box with new device name
-																			/** Button of selection dialog that we are processing */
-																			Button btToChangeName = (Button) locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
-																			btToChangeName.setText(locationName[dlgDeviceIndex]);
-																			locationSettingsView.invalidate();
-																			// Update UI
-																			/** Text view to show location name */
-																			TextView locationText;
-																			/** Image view to show location icon */
-																			ImageView locationIcon;
-																			switch (dlgDeviceIndex) {
-																				case FUJIDENZO:
-																					locationText = (TextView) findViewById(R.id.txt_device_fd);
-																					locationText.setText(locationName[dlgDeviceIndex]);
-																					locationIcon = (ImageView) findViewById(R.id.im_icon_fd);
-																					locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
-																					break;
-																				case CARRIER:
-																					locationText = (TextView) findViewById(R.id.txt_device_ca);
-																					locationText.setText(locationName[dlgDeviceIndex]);
-																					locationIcon = (ImageView) findViewById(R.id.im_icon_ca);
-																					locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
-																					break;
-																				case AMERICANHOME:
-																					locationText = (TextView) findViewById(R.id.txt_device_am);
-																					locationText.setText(locationName[dlgDeviceIndex]);
-																					locationIcon = (ImageView) findViewById(R.id.im_icon_am);
-																					locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
-																					break;
-																			}
-																			// TODO add other aircon control layouts here
-																		}
-																	})
-													.setNegativeButton("Cancel",
-																	new DialogInterface.OnClickListener() {
-																		public void onClick(DialogInterface dialog, int id) {
-																			dialog.cancel();
-																		}
-																	});
+											.setTitle(getResources().getString(R.string.dialog_change_title))
+											.setCancelable(false)
+											.setPositiveButton("OK",
+													new DialogInterface.OnClickListener() {
+														@SuppressWarnings({"deprecation", "ConstantConditions"})
+														public void onClick(DialogInterface dialog, int id) {
+															locationName[dlgDeviceIndex] = userInput.getText().toString();
+															deviceIcon[dlgDeviceIndex] = dlgIconIndex;
+															// Update underlying dialog box with new device name
+															/** Button of selection dialog that we are processing */
+															Button btToChangeName = (Button) locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
+															btToChangeName.setText(locationName[dlgDeviceIndex]);
+															locationSettingsView.invalidate();
+															// Update UI
+															/** Text view to show location name */
+															TextView locationText;
+															/** Image view to show location icon */
+															ImageView locationIcon;
+															switch (dlgDeviceIndex) {
+																case FUJIDENZO:
+																	locationText = (TextView) findViewById(R.id.txt_device_fd);
+																	locationText.setText(locationName[dlgDeviceIndex]);
+																	locationIcon = (ImageView) findViewById(R.id.im_icon_fd);
+																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
+																	break;
+																case CARRIER:
+																	locationText = (TextView) findViewById(R.id.txt_device_ca);
+																	locationText.setText(locationName[dlgDeviceIndex]);
+																	locationIcon = (ImageView) findViewById(R.id.im_icon_ca);
+																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
+																	break;
+																case AMERICANHOME:
+																	locationText = (TextView) findViewById(R.id.txt_device_am);
+																	locationText.setText(locationName[dlgDeviceIndex]);
+																	locationIcon = (ImageView) findViewById(R.id.im_icon_am);
+																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
+																	break;
+															}
+															// TODO add other aircon control layouts here
+														}
+													})
+											.setNegativeButton("Cancel",
+													new DialogInterface.OnClickListener() {
+														public void onClick(DialogInterface dialog, int id) {
+															dialog.cancel();
+														}
+													});
 
 									// create alert dialog
 									AlertDialog alertDialog = airconDialogBuilder.create();
@@ -1787,10 +2135,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			/** A HTTP client to access the YUN device */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
-							.connectTimeout(300, TimeUnit.SECONDS)
-							.writeTimeout(10, TimeUnit.SECONDS)
-							.readTimeout(300, TimeUnit.SECONDS)
-							.build();
+					.connectTimeout(300, TimeUnit.SECONDS)
+					.writeTimeout(10, TimeUnit.SECONDS)
+					.readTimeout(300, TimeUnit.SECONDS)
+					.build();
 
 			if (!Utilities.isHomeWiFi(getApplicationContext())) {
 				// For solar panel monitor get data from web site if we are not home
@@ -1805,8 +2153,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			/** Request to ESP device */
 			Request request = new Request.Builder()
-							.url(urlString)
-							.build();
+					.url(urlString)
+					.build();
 
 			if (request != null) {
 				try {
@@ -1866,8 +2214,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						snackBarText = result.comResult;
 					}
 					Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-									snackBarText,
-									Snackbar.LENGTH_INDEFINITE);
+							snackBarText,
+							Snackbar.LENGTH_INDEFINITE);
 					mySnackbar.setAction("OK", mOnClickListener);
 					mySnackbar.show();
 					View snackbarView = mySnackbar.getView();
@@ -1954,15 +2302,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 				tcpSocket.setSoTimeout(10000);
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Sending " + targetMessage
-								+ " to " + targetAddress);
+						+ " to " + targetAddress);
 				PrintWriter out = new PrintWriter(new BufferedWriter(
-								new OutputStreamWriter(tcpSocket.getOutputStream())), true);
+						new OutputStreamWriter(tcpSocket.getOutputStream())), true);
 				out.println(targetMessage);
 				sleep(100); // Give server time to read the data
 				tcpSocket.close();
 			} catch (Exception e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "TCP connection failed: " + e.getMessage()
-								+ " " + targetAddress);
+						+ " " + targetAddress);
 			}
 			return null;
 		}
@@ -2034,10 +2382,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			/** A HTTP client to access the gallery server */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
-							.connectTimeout(300, TimeUnit.SECONDS)
-							.writeTimeout(10, TimeUnit.SECONDS)
-							.readTimeout(300, TimeUnit.SECONDS)
-							.build();
+					.connectTimeout(300, TimeUnit.SECONDS)
+					.writeTimeout(10, TimeUnit.SECONDS)
+					.readTimeout(300, TimeUnit.SECONDS)
+					.build();
 
 			/** URL to be called */
 //			String urlString = "https://" + result.httpURL + result.comCmd; // URL to call
@@ -2047,8 +2395,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			/** Request to gallery server */
 			Request request = new Request.Builder()
-							.url(urlString)
-							.build();
+					.url(urlString)
+					.build();
 
 			if (request != null) {
 				try {
@@ -2098,8 +2446,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						snackBarText = result.comResult;
 					}
 					Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-									snackBarText,
-									Snackbar.LENGTH_INDEFINITE);
+							snackBarText,
+							Snackbar.LENGTH_INDEFINITE);
 					mySnackbar.setAction("OK", mOnClickListener);
 					mySnackbar.show();
 					View snackbarView = mySnackbar.getView();
@@ -2126,8 +2474,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					snackBarText = availImages.get(0);
 				}
 				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-								snackBarText,
-								Snackbar.LENGTH_INDEFINITE);
+						snackBarText,
+						Snackbar.LENGTH_INDEFINITE);
 				mySnackbar.setAction("OK", mOnClickListener);
 				mySnackbar.show();
 				View snackbarView = mySnackbar.getView();
@@ -2154,10 +2502,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		public void run() {
 			// If we are not on home WiFi, show error
 			if (!Utilities.isHomeWiFi(getApplicationContext())
-							|| dsURL == null) {
+					|| dsURL == null) {
 				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-								getApplicationContext().getString(R.string.cctv_impossible),
-								Snackbar.LENGTH_INDEFINITE);
+						getApplicationContext().getString(R.string.cctv_impossible),
+						Snackbar.LENGTH_INDEFINITE);
 				mySnackbar.setAction("OK", mOnClickListener);
 				mySnackbar.show();
 				// Start discovery of mDNS/NSD services available if not running already
@@ -2204,18 +2552,18 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			/** A HTTP client to access the cctv footage server */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
-							.connectTimeout(300, TimeUnit.SECONDS)
-							.writeTimeout(10, TimeUnit.SECONDS)
-							.readTimeout(300, TimeUnit.SECONDS)
-							.build();
+					.connectTimeout(300, TimeUnit.SECONDS)
+					.writeTimeout(10, TimeUnit.SECONDS)
+					.readTimeout(300, TimeUnit.SECONDS)
+					.build();
 
 			/** First get list of directories */
 			String urlString = "http://" + dsURL + ":8080/getdir.php";
 
 			/** Request to cctv footage server */
 			Request request = new Request.Builder()
-							.url(urlString)
-							.build();
+					.url(urlString)
+					.build();
 
 			/** String builder for communication error */
 			StringBuilder commError = new StringBuilder();
@@ -2257,8 +2605,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			/** Request to cctv footage server */
 			request = new Request.Builder()
-							.url(urlString)
-							.build();
+					.url(urlString)
+					.build();
 
 			if (request != null) {
 				try {
@@ -2301,8 +2649,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 				/** Request to cctv footage server */
 				request = new Request.Builder()
-								.url(urlString)
-								.build();
+						.url(urlString)
+						.build();
 
 				if (request != null) {
 					try {
@@ -2370,8 +2718,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			}
 //
 			Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-							snackBarText,
-							Snackbar.LENGTH_LONG);
+					snackBarText,
+					Snackbar.LENGTH_LONG);
 //				mySnackbar.setAction("OK", mOnClickListener);
 			mySnackbar.show();
 //				View snackbarView = mySnackbar.getView();
@@ -2417,13 +2765,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						// Get device status and light status and add it to viewable status
 						if (deviceIDString.equalsIgnoreCase("sf1")) {
 							message = Utilities.getDeviceStatus(jsonResult, appContext,
-											ivAlarmStatus, ivLightStatus,
-											secBackView, secAutoAlarmFront, secChangeAlarm);
+									ivAlarmStatus, ivLightStatus,
+									secBackView, secAutoAlarmFront, secChangeAlarm);
 							message += Utilities.getLightStatus(jsonResult);
 						} else if (deviceIDString.equalsIgnoreCase("sb1")) {
 							message = Utilities.getDeviceStatus(jsonResult, appContext,
-											ivAlarmStatusBack, ivLightStatusBack,
-											secBackView, secAutoAlarmBack, secChangeAlarm);
+									ivAlarmStatusBack, ivLightStatusBack,
+									secBackView, secAutoAlarmBack, secChangeAlarm);
 							message += Utilities.getLightStatus(jsonResult);
 						} else {
 							message = "Camera snapshot ";
@@ -2583,7 +2931,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		switch (deviceType[deviceIndex]) {
 			case FUJIDENZO:
 				btOnOffLightFD.setBackgroundColor(
-								(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				switch (modeStatus[deviceIndex]) {
 					case 0: // Fan mode
 						btCoolLightFD.setBackgroundColor(colorGrey);
@@ -2621,8 +2969,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerFD.setBackgroundColor(colorGreen);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
-									" " +
-									thisAppContext.getResources().getString(R.string.bt_txt_hour);
+							" " +
+							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
 					btTimerFD.setBackgroundColor(colorOrange);
 //					timerTime = thisAppContext.getResources().getString(R.string.timer_on);
@@ -2634,11 +2982,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				txtTempValFD.setText(tempText);
 				txtAutoStatusValFD.setText(statusText);
 				btAutoLightFD.setBackgroundColor(
-								(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				break;
 			case CARRIER:
 				btOnOffLightCA.setBackgroundColor(
-								(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				switch (modeStatus[deviceIndex]) {
 					case 0: // Fan mode
 						btAutomLightCA.setBackgroundColor(colorGrey);
@@ -2679,8 +3027,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerCA.setBackgroundColor(colorGreen);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
-									" " +
-									thisAppContext.getResources().getString(R.string.bt_txt_hour);
+							" " +
+							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
 					btTimerCA.setBackgroundColor(colorOrange);
 //					timerTime = thisAppContext.getResources().getString(R.string.timer_on);
@@ -2688,22 +3036,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				btTimerCA.setText(timerTime);
 				btSweepLightCA.setBackgroundColor(
-								(sweepStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(sweepStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				btTurboLightCA.setBackgroundColor(
-								(turboStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(turboStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				btIonLightCA.setBackgroundColor(
-								(ionStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(ionStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 
 				txtConsValCA.setText(consText);
 				txtTempValCA.setText(tempText);
 				txtAutoStatusValCA.setText(statusText);
 				btAutoLightCA.setBackgroundColor(
-								(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 
 				break;
 			case AMERICANHOME:
 				btOnOffLightAM.setBackgroundColor(
-								(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(powerStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				switch (modeStatus[deviceIndex]) {
 					case 0: // Fan mode
 						btAutomLightAM.setBackgroundColor(colorGrey);
@@ -2747,8 +3095,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerAM.setBackgroundColor(colorGreen);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
-									" " +
-									thisAppContext.getResources().getString(R.string.bt_txt_hour);
+							" " +
+							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
 					btTimerAM.setBackgroundColor(colorOrange);
 //					timerTime = thisAppContext.getResources().getString(R.string.timer_on);
@@ -2756,15 +3104,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				btTimerAM.setText(timerTime);
 				btSweepLightAM.setBackgroundColor(
-								(sweepStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(sweepStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 				btSleepLightAM.setBackgroundColor(
-								(turboStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(turboStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 
 				txtConsValAM.setText(consText);
 				txtTempValAM.setText(tempText);
 				txtAutoStatusValAM.setText(statusText);
 				btAutoLightAM.setBackgroundColor(
-								(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
+						(autoOnStatus[deviceIndex] == 1) ? colorRed : colorGrey);
 
 				break;
 			// TODO here is the place to add more layouts for other air cons
@@ -2823,16 +3171,16 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 							try {
 								ChartHelper.solarPowerMin = isFromLocal?
-												Float.parseFloat(jsonValues.getString("S")):
-												Float.parseFloat(jsonValues.getString("s"));
+										Float.parseFloat(jsonValues.getString("S")):
+										Float.parseFloat(jsonValues.getString("s"));
 								ChartHelper.lastSolarPowerMin = ChartHelper.solarPowerMin;
 							} catch (Exception excError) {
 								ChartHelper.solarPowerMin = ChartHelper.lastSolarPowerMin;
 							}
 							try {
 								ChartHelper.consPowerMin = isFromLocal?
-												Float.parseFloat(jsonValues.getString("C")):
-												Float.parseFloat(jsonValues.getString("c"));
+										Float.parseFloat(jsonValues.getString("C")):
+										Float.parseFloat(jsonValues.getString("c"));
 								ChartHelper.lastConsPowerMin = ChartHelper.consPowerMin;
 							} catch (Exception excError) {
 								ChartHelper.consPowerMin = ChartHelper.lastConsPowerMin;
@@ -2937,12 +3285,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								valueFields.setText(getString(R.string.tv_result_txt_im));
 								valueFields = (TextView) findViewById(R.id.tv_result_val);
 								valueFields.setTextColor(getResources()
-												.getColor(android.R.color.holo_red_light));
+										.getColor(android.R.color.holo_red_light));
 							} else {
 								valueFields.setText(getString(R.string.tv_result_txt_ex));
 								valueFields = (TextView) findViewById(R.id.tv_result_val);
 								valueFields.setTextColor(getResources()
-												.getColor(android.R.color.holo_green_light));
+										.getColor(android.R.color.holo_green_light));
 							}
 							displayTxt = String.format("%.0f", Math.abs(ChartHelper.consPowerMin)) + "W";
 							valueFields.setText(displayTxt);
@@ -2954,17 +3302,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									ChartHelper.plotData.addXValue(nowTime);
 									ChartHelper.timeStampsCont.add(nowTime);
 									ChartHelper.solarSeries.add
-													(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
+											(new Entry(ChartHelper.solarPowerMin, ChartHelper.solarSeries.size()));
 									ChartHelper.solarPowerCont.add(ChartHelper.solarPowerMin);
 									if (ChartHelper.consPowerMin < 0.0) {
 										ChartHelper.consPSeries.add
-														(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
+												(new Entry(ChartHelper.consPowerMin, ChartHelper.consPSeries.size()));
 										ChartHelper.consumPPowerCont.add(ChartHelper.consPowerMin);
 										ChartHelper.consMSeries.add(new Entry(0, ChartHelper.consMSeries.size()));
 										ChartHelper.consumMPowerCont.add(0.0f);
 									} else {
 										ChartHelper.consMSeries.add
-														(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
+												(new Entry(ChartHelper.consPowerMin, ChartHelper.consMSeries.size()));
 										ChartHelper.consumMPowerCont.add(ChartHelper.consPowerMin);
 										ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
 										ChartHelper.consumPPowerCont.add(0.0f);
@@ -2972,11 +3320,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									/** Text view to show min and max poser values */
 									TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
 									displayTxt = "(" + String.format("%.0f",
-													Collections.max(ChartHelper.consumMPowerCont)) + "W)";
+											Collections.max(ChartHelper.consumMPowerCont)) + "W)";
 									maxPowerText.setText(displayTxt);
 									maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
 									displayTxt = "(" + String.format("%.0f",
-													Collections.max(ChartHelper.solarPowerCont)) + "W)";
+											Collections.max(ChartHelper.solarPowerCont)) + "W)";
 									maxPowerText.setText(displayTxt);
 
 									// let the chart know it's data has changed
@@ -3006,11 +3354,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		Locale locale = Locale.getDefault();
 		TextView viewToChange = (TextView) findViewById(R.id.tv_mqtt_bytes_avg);
 		String tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadRcvd)
-						+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadSend);
+				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadSend);
 		viewToChange.setText(tvText);
 		viewToChange = (TextView) findViewById(R.id.tv_mqtt_msg_avg);
 		tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsRcvd)
-						+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsSend);
+				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsSend);
 		viewToChange.setText(tvText);
 
 		viewToChange = (TextView) findViewById(R.id.tv_mqtt_client_conn);
@@ -3108,7 +3456,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 								/** Cursor with new data from the database */
 								Cursor newDataSet = DataBaseHelper.getDay(dataBase, todayDate[2],
-												todayDate[1], todayDate[0] - 2000);
+										todayDate[1], todayDate[0] - 2000);
 								if (newDataSet != null) {
 									ChartHelper.fillSeries(newDataSet, appView);
 									newDataSet.close();
@@ -3119,19 +3467,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								for (int year = 0; year < yearsAvail.size(); year++) {
 									/** List with months of year in the database */
 									ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
-													0, yearsAvail.get(year));
+											0, yearsAvail.get(year));
 									for (int month = 0; month < monthsAvail.size(); month++) {
 										/** List with days of month of year in the database */
 										ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
-														monthsAvail.get(month),
-														yearsAvail.get(year));
+												monthsAvail.get(month),
+												yearsAvail.get(year));
 										for (int day = 0; day < daysAvail.size(); day++) {
 											thisLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
-															.substring(String.valueOf(yearsAvail.get(year)).length()) +
-															"-" + ("00" + String.valueOf(monthsAvail.get(month)))
-															.substring(String.valueOf(monthsAvail.get(month)).length()) +
-															"-" + ("00" + String.valueOf(daysAvail.get(day)))
-															.substring(String.valueOf(daysAvail.get(day)).length()));
+													.substring(String.valueOf(yearsAvail.get(year)).length()) +
+													"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+													.substring(String.valueOf(monthsAvail.get(month)).length()) +
+													"-" + ("00" + String.valueOf(daysAvail.get(day)))
+													.substring(String.valueOf(daysAvail.get(day)).length()));
 										}
 									}
 								}
@@ -3337,8 +3685,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			}
 
 			if (foundDevice.equalsIgnoreCase("fd1")
-							|| foundDevice.equalsIgnoreCase("ca1")
-							|| foundDevice.equalsIgnoreCase("am1")) {
+					|| foundDevice.equalsIgnoreCase("ca1")
+					|| foundDevice.equalsIgnoreCase("am1")) {
 				initAircons(foundDevice);
 				return null;
 			}
@@ -3376,8 +3724,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// Update aircon 1 icon
 			//noinspection deprecation
 			initHandler(7, "1", "", "", "",
-							(ImageView) findViewById(R.id.im_icon_fd),
-							getResources().getDrawable(iconIDs[deviceIcon[0]]));
+					(ImageView) findViewById(R.id.im_icon_fd),
+					getResources().getDrawable(iconIDs[deviceIcon[0]]));
 		}
 		if (foundDevice.equalsIgnoreCase("ca1")) { // Aircon 2 - Living room
 			// Get initial status from Aircon 2
@@ -3395,8 +3743,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// Update aircon 2 icon
 			//noinspection deprecation
 			initHandler(7, "", "", "", "",
-							(ImageView) findViewById(R.id.im_icon_ca),
-							getResources().getDrawable(iconIDs[deviceIcon[1]]));
+					(ImageView) findViewById(R.id.im_icon_ca),
+					getResources().getDrawable(iconIDs[deviceIcon[1]]));
 		}
 		// TODO add third aircon if ever available
 		if (foundDevice.equalsIgnoreCase("am1")) { // Aircon 3 - Office
@@ -3414,8 +3762,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			// Update aircon 3 icon
 			//noinspection deprecation
 			initHandler(7, "", "", "", "",
-							(ImageView) findViewById(R.id.im_icon_am),
-							getResources().getDrawable(iconIDs[deviceIcon[2]]));
+					(ImageView) findViewById(R.id.im_icon_am),
+					getResources().getDrawable(iconIDs[deviceIcon[2]]));
 		}
 		if (!deviceIsOn[aircon1Index] && !deviceIsOn[aircon2Index] && !deviceIsOn[aircon3Index]) {
 			// Show message no aircons found
@@ -3498,19 +3846,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							for (int year = 0; year < yearsAvail.size(); year++) {
 								/** List with months of year in the database */
 								ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
-												0, yearsAvail.get(year));
+										0, yearsAvail.get(year));
 								for (int month = 0; month < monthsAvail.size(); month++) {
 									/** List with days of month of year in the database */
 									ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
-													monthsAvail.get(month),
-													yearsAvail.get(year));
+											monthsAvail.get(month),
+											yearsAvail.get(year));
 									for (int day = 0; day < daysAvail.size(); day++) {
 										lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
-														.substring(String.valueOf(yearsAvail.get(year)).length()) +
-														"-" + ("00" + String.valueOf(monthsAvail.get(month)))
-														.substring(String.valueOf(monthsAvail.get(month)).length()) +
-														"-" + ("00" + String.valueOf(daysAvail.get(day)))
-														.substring(String.valueOf(daysAvail.get(day)).length()));
+												.substring(String.valueOf(yearsAvail.get(year)).length()) +
+												"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+												.substring(String.valueOf(monthsAvail.get(month)).length()) +
+												"-" + ("00" + String.valueOf(daysAvail.get(day)))
+												.substring(String.valueOf(daysAvail.get(day)).length()));
 									}
 								}
 							}
@@ -3590,12 +3938,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 *      Drawable of icon for task 7
 	 */
 	private void initHandler(final int task,
-													 final String message,
-													 final String url,
-													 final String deviceID,
-													 final String airconID,
-													 final ImageView iconImage,
-													 final Drawable iconDrawable) {
+							 final String message,
+							 final String url,
+							 final String deviceID,
+							 final String airconID,
+							 final ImageView iconImage,
+							 final Drawable iconDrawable) {
 		runOnUiThread(new Runnable() {
 			@SuppressWarnings({"deprecation", "ConstantConditions"})
 			@Override
@@ -3632,8 +3980,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						locationText.setText(message);
 						btTimer = (Button) findViewById(R.id.bt_timer_fd);
 						timerTime = Integer.toString(deviceTimer[0]) +
-										" " +
-										getString(R.string.bt_txt_hour);
+								" " +
+								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
 						break;
 					case 5: // Aircon 2 location & timer button text
@@ -3641,8 +3989,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						locationText.setText(message);
 						btTimer = (Button) findViewById(R.id.bt_timer_ca);
 						timerTime = Integer.toString(deviceTimer[1]) +
-										" " +
-										getString(R.string.bt_txt_hour);
+								" " +
+								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
 						break;
 					case 6: // Aircon 3 location & timer button text
@@ -3650,8 +3998,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						locationText.setText(message);
 						btTimer = (Button) findViewById(R.id.bt_timer_am);
 						timerTime = Integer.toString(deviceTimer[2]) +
-										" " +
-										getString(R.string.bt_txt_hour);
+								" " +
+								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
 						break;
 					case 7: // Aircon location icon
@@ -3660,7 +4008,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					case 8: // start communication with ESP8266
 						if (url.equalsIgnoreCase("")) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Empty address request on device " + deviceID
-											+ " msg= " + message);
+									+ " msg= " + message);
 						}
 						new ESPbyTCP(url, message, deviceID);
 						break;
@@ -4003,9 +4351,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							offTime = "0" + offTime;
 						}
 						new ESPbyTCP(deviceIPs[secFrontIndex],
-										"a=2," + onTime + "," + offTime, "sf1");
+								"a=2," + onTime + "," + offTime, "sf1");
 						new ESPbyTCP(deviceIPs[secBackIndex],
-										"a=2," + onTime + "," + offTime, "sb1");
+								"a=2," + onTime + "," + offTime, "sb1");
 
 						alarmDlg.dismiss();
 					}
@@ -4036,19 +4384,25 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (launchIntent != null) {
 					startActivity(launchIntent);//null pointer check in case package name was not found
 				} else {
-					Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-									getString((R.string.sec_missing_app)),
-									Snackbar.LENGTH_INDEFINITE);
-					mySnackbar.setAction("OK", mOnClickListener);
-					mySnackbar.show();
+					// Try VLC version
+					launchIntent = getPackageManager().getLaunchIntentForPackage("tk.giesecke.cctvviewvlc");
+					if (launchIntent != null) {
+						startActivity(launchIntent);//null pointer check in case package name was not found
+					} else {
+						Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
+								getString((R.string.sec_missing_app)),
+								Snackbar.LENGTH_INDEFINITE);
+						mySnackbar.setAction("OK", mOnClickListener);
+						mySnackbar.show();
+					}
 				}
 				break;
 			case R.id.ib_cctv:
 				/** Prepare lists for CCTV footage */
 				lists = new CCTVfootages();
 				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-								getString(R.string.cctv_footage_wait),
-								Snackbar.LENGTH_LONG);
+						getString(R.string.cctv_footage_wait),
+						Snackbar.LENGTH_LONG);
 				mySnackbar.show();
 				new cctvCommunication();
 				break;
@@ -4109,7 +4463,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-										Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
 						ChartHelper.fillSeries(newDataSet, appView);
 						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
@@ -4134,7 +4488,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-										Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
 						ChartHelper.fillSeries(newDataSet, appView);
 						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
@@ -4175,7 +4529,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-										Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
 						ChartHelper.fillSeries(newDataSet, appView);
 						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
@@ -4205,7 +4559,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 						/** Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
-										Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
+								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
 						ChartHelper.fillSeries(newDataSet, appView);
 						ChartHelper.initChart(false, thisAppContext, chartTitle);
 						newDataSet.close();
@@ -4423,8 +4777,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					}
 					btTimer = (Button) findViewById(R.id.bt_timer_fd);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
-									" " +
-									getString(R.string.bt_txt_hour);
+							" " +
+							getString(R.string.bt_txt_hour);
 					btTimer.setText(timerTime);
 				}
 				break;
@@ -4438,8 +4792,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					}
 					btTimer = (Button) findViewById(R.id.bt_timer_fd);
 					timerTime = Integer.toString(deviceTimer[selDevice]) +
-									" " +
-									getString(R.string.bt_txt_hour);
+							" " +
+							getString(R.string.bt_txt_hour);
 					btTimer.setText(timerTime);
 				}
 				break;
@@ -4770,11 +5124,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			}
 			try {
 				BufferedReader reader = new BufferedReader(
-								new StringReader(debugMsgs));
+						new StringReader(debugMsgs));
 				while ((line = reader.readLine()) != null) {
 
 					if ((line.length() > 0)
-									&& (line.toUpperCase().contains(highlightText.toUpperCase()))) {
+							&& (line.toUpperCase().contains(highlightText.toUpperCase()))) {
 						output.append(line).append("\n");
 					}
 				}

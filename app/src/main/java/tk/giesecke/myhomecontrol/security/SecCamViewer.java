@@ -71,10 +71,9 @@ public class SecCamViewer extends AppCompatActivity {
 
 		// Initialize variables
 		seccamContext = this;
-		/** Error text view */
 		/* Error text view */
 		TextView errorMsg = (TextView) findViewById(R.id.et_cctv_error);
-		/** VideoView for CCTV footage */
+		/* VideoView for CCTV footage */
 		footageVV = (VideoView) findViewById(R.id.vv_cctv_footage);
 		footageVV.setVisibility(View.INVISIBLE);
 
@@ -121,7 +120,8 @@ public class SecCamViewer extends AppCompatActivity {
 				// If playback is running, stop it first
 				stopVideoStream();
 				// Show list with todays CCTV footage
-				CharSequence[] todaysListAlert = lists.todaysList.toArray(new CharSequence[lists.todaysList.size()]);
+//				CharSequence[] todaysListAlert = lists.todaysList.toArray(new CharSequence[lists.todaysList.size()]);
+				CharSequence[] todaysListAlert = lists.todaysList.toArray(new CharSequence[0]);
 				AlertDialog.Builder todaysListBuilder = new AlertDialog.Builder(this);
 				todaysListBuilder.setTitle("Select footage");
 				todaysListBuilder.setItems(todaysListAlert, new DialogInterface.OnClickListener() {
@@ -142,7 +142,8 @@ public class SecCamViewer extends AppCompatActivity {
 				// If playback is running, stop it first
 				stopVideoStream();
 				// Show list with days available
-				CharSequence[] availDaysListAlert = lists.availDaysList.toArray(new CharSequence[lists.availDaysList.size()]);
+//				CharSequence[] availDaysListAlert = lists.availDaysList.toArray(new CharSequence[lists.availDaysList.size()]);
+				CharSequence[] availDaysListAlert = lists.availDaysList.toArray(new CharSequence[0]);
 				AlertDialog.Builder availDaysBuilder = new AlertDialog.Builder(this);
 				availDaysBuilder.setTitle("Select day");
 				availDaysBuilder.setItems(availDaysListAlert, new DialogInterface.OnClickListener() {
@@ -151,7 +152,8 @@ public class SecCamViewer extends AppCompatActivity {
 
 						// Show list with selected days CCTV footage
 						final int daySelected = which;
-						CharSequence[] thisDayListAlert = lists.daysList.get(which).toArray(new CharSequence[lists.daysList.get(which).size()]);
+//						CharSequence[] thisDayListAlert = lists.daysList.get(which).toArray(new CharSequence[lists.daysList.get(which).size()]);
+						CharSequence[] thisDayListAlert = lists.daysList.get(which).toArray(new CharSequence[0]);
 						AlertDialog.Builder thisDayListBuilder = new AlertDialog.Builder(seccamContext);
 						thisDayListBuilder.setTitle("Select command");
 						thisDayListBuilder.setItems(thisDayListAlert, new DialogInterface.OnClickListener() {
