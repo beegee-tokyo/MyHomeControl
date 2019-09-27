@@ -44,19 +44,19 @@ public class Utilities extends MyHomeControl {
 	 */
 	@SuppressWarnings("deprecation")
 	public static Boolean isHomeWiFi(Context thisAppContext) {
-		/** Access to connectivity manager */
+		/* Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-		/** WiFi connection information  */
+		/* WiFi connection information  */
 		NetworkInfo wifiOn;
 		if (cm != null) {
 			wifiOn = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 			if (!wifiOn.isConnected()) {
 				return false;
 			} else {
-				/** WiFi manager to check current connection */
+				/* WiFi manager to check current connection */
 				@SuppressLint("WifiManagerPotentialLeak")
 				final WifiManager wifiManager = (WifiManager) thisAppContext.getSystemService(Context.WIFI_SERVICE);
-				/** Info of current connection */
+				/* Info of current connection */
 				final WifiInfo connectionInfo;
 				if (wifiManager != null) {
 					connectionInfo = wifiManager.getConnectionInfo();
@@ -98,12 +98,11 @@ public class Utilities extends MyHomeControl {
 	 * [2] True if we have Home WiFi connection
 	 * [3] False if we do not have connection
 	 */
-	@SuppressWarnings("deprecation")
 	public static boolean[] connectionAvailable(Context thisAppContext) {
-		/** Flags for connections */
+		/* Flags for connections */
 		boolean[] bConnFlags = {false, false, false, false};
 
-		/** Access to connectivity manager */
+		/* Access to connectivity manager */
 		ConnectivityManager cm = (ConnectivityManager) thisAppContext.getSystemService(Context.CONNECTIVITY_SERVICE);
 
 		// Check if there is any network connected
@@ -128,13 +127,10 @@ public class Utilities extends MyHomeControl {
 						break;
 					default:
 						// No Active network found
-						bConnFlags[3] = false;
 						break;
 				}
-			} else {
-				// No Active network found
-				bConnFlags[3] = false;
-			}
+			}  // No Active network found
+
 		}
 		return bConnFlags;
 	}
@@ -148,7 +144,6 @@ public class Utilities extends MyHomeControl {
 	 * String with the status in viewable format
 	 */
 	@SuppressLint("CommitPrefEdits")
-	@SuppressWarnings("deprecation")
 	public static String getDeviceStatus(JSONObject jsonResult,
 	                                     Context thisAppContext,
 	                                     ImageView ivAlarmStatusThis,
@@ -156,9 +151,9 @@ public class Utilities extends MyHomeControl {
 	                                     TableLayout secBackViewThis,
 	                                     CheckBox secAutoAlarmThis,
 	                                     TextView secChangeAlarmThis) {
-		/** Device ID */
+		/* Device ID */
 		String deviceIDString;
-		/** String with the device related status */
+		/* String with the device related status */
 		String message = "";
 
 		try {
@@ -167,7 +162,7 @@ public class Utilities extends MyHomeControl {
 			deviceIDString = "unknown";
 		}
 
-		/** Flag for front or back sensor */
+		/* Flag for front or back sensor */
 		boolean isFrontSensor = true;
 
 		if (deviceIDString.equalsIgnoreCase("sb1")) {
@@ -259,12 +254,12 @@ public class Utilities extends MyHomeControl {
 			if (jsonResult.has("an")) {
 				secAutoOnStored = jsonResult.getInt("an");
 				if (secAutoOnStored < 12) {
-					secAutoOn = Integer.toString(secAutoOnStored) + "am";
+					secAutoOn = secAutoOnStored + "am";
 				} else {
 					if (secAutoOnStored == 12) {
-						secAutoOn = Integer.toString(secAutoOnStored) + "pm";
+						secAutoOn = secAutoOnStored + "pm";
 					} else {
-						secAutoOn = Integer.toString(secAutoOnStored - 12) + "pm";
+						secAutoOn = (secAutoOnStored - 12) + "pm";
 					}
 				}
 			} else {
@@ -277,12 +272,12 @@ public class Utilities extends MyHomeControl {
 			if (jsonResult.has("af")) {
 				secAutoOffStored = jsonResult.getInt("af");
 				if (secAutoOffStored < 12) {
-					secAutoOff = Integer.toString(secAutoOffStored) + "am";
+					secAutoOff = secAutoOffStored + "am";
 				} else {
 					if (secAutoOffStored == 12) {
-						secAutoOff = Integer.toString(secAutoOffStored) + "pm";
+						secAutoOff = secAutoOffStored + "pm";
 					} else {
-						secAutoOff = Integer.toString(secAutoOffStored - 12) + "pm";
+						secAutoOff = (secAutoOffStored - 12) + "pm";
 					}
 				}
 			} else {
@@ -328,9 +323,9 @@ public class Utilities extends MyHomeControl {
 	 * String with the status in viewable format
 	 */
 	public static String getLightStatus(JSONObject jsonResult) {
-		/** Light value measured by TSL2561 connected to the ESP8266 */
+		/* Light value measured by TSL2561 connected to the ESP8266 */
 		long lightValueLong;
-		/** Light value measured by the LDR connected to the ESP8266 */
+		/* Light value measured by the LDR connected to the ESP8266 */
 		int ldrValueInt;
 		try {
 			lightValueLong = jsonResult.getLong("lv");
@@ -342,7 +337,7 @@ public class Utilities extends MyHomeControl {
 		} catch (JSONException ignore) {
 			ldrValueInt = 0;
 		}
-		/** String with the light related status */
+		/* String with the light related status */
 		String message = "";
 		if (lightValueLong != 0) {
 			message += "Light = " + lightValueLong + " lux\n";
@@ -366,21 +361,21 @@ public class Utilities extends MyHomeControl {
 	 * URI of user selected alarm sound
 	 */
 	public static int getNotifSounds(Context thisAppContext, ArrayList<String> notifNames, ArrayList<String> notifUri, boolean isSelAlarm) {
-		/** Instance of the ringtone manager */
+		/* Instance of the ringtone manager */
 		RingtoneManager manager = new RingtoneManager(thisAppContext);
 		manager.setType(RingtoneManager.TYPE_NOTIFICATION);
-		/** Cursor with the notification tones */
+		/* Cursor with the notification tones */
 		Cursor cursor = manager.getCursor();
-		/** Access to shared preferences of application*/
+		/* Access to shared preferences of application*/
 		SharedPreferences mPrefs = thisAppContext.getSharedPreferences(sharedPrefName, 0);
-		/** Last user selected alarm tone */
+		/* Last user selected alarm tone */
 		String lastUri;
 		if (isSelAlarm) {
 			lastUri = mPrefs.getString(MyHomeControl.prefsSecurityAlarm, "");
 		} else {
 			lastUri = mPrefs.getString(MyHomeControl.prefsSolarWarning, "");
 		}
-		/** Index of lastUri in the list */
+		/* Index of lastUri in the list */
 		int uriIndex = -1;
 
 		while (cursor.moveToNext()) {
@@ -402,9 +397,9 @@ public class Utilities extends MyHomeControl {
 	 * Time as string HH:mm
 	 */
 	public static String getCurrentTime() {
-		/** Calendar to get current time and date */
+		/* Calendar to get current time and date */
 		Calendar cal = Calendar.getInstance();
-		/** Time format */
+		/* Time format */
 		@SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 		return df.format(cal.getTime());
 	}
@@ -419,18 +414,18 @@ public class Utilities extends MyHomeControl {
 	 * int[2] = day
 	 */
 	public static int[] getCurrentDate() {
-		/** Integer array for return values */
+		/* Integer array for return values */
 		int[] currTime = new int[3];
-		/** Calendar to get current time and date */
+		/* Calendar to get current time and date */
 		Calendar cal = Calendar.getInstance();
 
-		/** Today's month */
+		/* Today's month */
 		currTime[1] = cal.get(Calendar.MONTH) + 1;
 
-		/** Today's year */
+		/* Today's year */
 		currTime[0] = cal.get(Calendar.YEAR);
 
-		/** Today's day */
+		/* Today's day */
 		currTime[2] = cal.get(Calendar.DATE);
 
 		return currTime;
@@ -444,11 +439,11 @@ public class Utilities extends MyHomeControl {
 	 * [1] last month as string yy-mm
 	 */
 	public static String[] getDateStrings() {
-		/** Array with strings for this and last month date */
+		/* Array with strings for this and last month date */
 		String[] dateStrings = new String[2];
-		/** Calendar to get current time and date */
+		/* Calendar to get current time and date */
 		Calendar cal = Calendar.getInstance();
-		/** Time format */
+		/* Time format */
 		@SuppressLint("SimpleDateFormat") SimpleDateFormat df = new SimpleDateFormat("yy-MM");
 		dateStrings[0] = df.format(cal.getTime());
 		cal.add(Calendar.MONTH, -1);
@@ -488,14 +483,6 @@ public class Utilities extends MyHomeControl {
 	 * ID of matching icon
 	 */
 	public static int getNotifIcon(float currPower) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-			if (currPower > 0.0d) {
-				return R.drawable.tb_arrow_red_down_small;
-			} else {
-				return R.drawable.tb_arrow_green_up_small;
-			}
-		}
-
 		if (currPower < -400) {
 			return R.drawable.tb_m400;
 		} else if (currPower < -350) {
@@ -542,58 +529,57 @@ public class Utilities extends MyHomeControl {
 	 * @param selIconID
 	 * 		index of icon that will be highlighted
 	 */
-	@SuppressWarnings("deprecation")
 	public static void highlightDlgIcon(int selIconID, View locationsView, Context thisAppContext) {
 
 		// deselect all buttons
-		/** Image button in device change dialog used to deselect and highlight */
-		ImageButton changeButton = (ImageButton) locationsView.findViewById(R.id.im_bath);
+		/* Image button in device change dialog used to deselect and highlight */
+		ImageButton changeButton = locationsView.findViewById(R.id.im_bath);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_bed);
+		changeButton = locationsView.findViewById(R.id.im_bed);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_dining);
+		changeButton = locationsView.findViewById(R.id.im_dining);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_entertain);
+		changeButton = locationsView.findViewById(R.id.im_entertain);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_kids);
+		changeButton = locationsView.findViewById(R.id.im_kids);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_kitchen);
+		changeButton = locationsView.findViewById(R.id.im_kitchen);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_living);
+		changeButton = locationsView.findViewById(R.id.im_living);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
-		changeButton = (ImageButton) locationsView.findViewById(R.id.im_office);
+		changeButton = locationsView.findViewById(R.id.im_office);
 		changeButton.setBackgroundColor(thisAppContext.getResources().getColor(R.color.colorPrimary));
 		switch (selIconID) {
 			case R.id.im_bath:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_bath);
+				changeButton = locationsView.findViewById(R.id.im_bath);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_bed:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_bed);
+				changeButton = locationsView.findViewById(R.id.im_bed);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_dining:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_dining);
+				changeButton = locationsView.findViewById(R.id.im_dining);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_entertain:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_entertain);
+				changeButton = locationsView.findViewById(R.id.im_entertain);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_kids:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_kids);
+				changeButton = locationsView.findViewById(R.id.im_kids);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_kitchen:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_kitchen);
+				changeButton = locationsView.findViewById(R.id.im_kitchen);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_living:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_living);
+				changeButton = locationsView.findViewById(R.id.im_living);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 			case R.id.im_office:
-				changeButton = (ImageButton) locationsView.findViewById(R.id.im_office);
+				changeButton = locationsView.findViewById(R.id.im_office);
 				changeButton.setBackgroundColor(thisAppContext.getResources().getColor(android.R.color.holo_green_light));
 				break;
 		}

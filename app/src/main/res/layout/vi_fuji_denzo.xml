@@ -3,7 +3,7 @@
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
 				xmlns:tools="http://schemas.android.com/tools"
-				tools:ignore="ButtonStyle">
+				tools:ignore="ButtonStyle, Autofill">
 
 	<ImageButton
 		android:id="@+id/im_icon_fd"
@@ -20,7 +20,6 @@
 		android:layout_height="wrap_content"
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
-		android:layout_toRightOf="@+id/im_icon_fd"
 		android:layout_toEndOf="@+id/im_icon_fd"
 		android:text="@string/bt_txt_device_location"
 		android:textAppearance="?android:attr/textAppearanceLarge"/>
@@ -30,7 +29,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		android:layout_alignParentTop="true"
 		android:checked="true"
 		android:onClick="onClick"
@@ -41,8 +39,6 @@
 		android:id="@+id/bt_auto_hl_fd"
 		android:layout_width="match_parent"
 		android:layout_height="5dp"
-		android:layout_alignLeft="@+id/bt_auto_fd"
-		android:layout_alignRight="@+id/bt_auto_fd"
 		android:layout_alignStart="@+id/bt_auto_fd"
 		android:layout_alignEnd="@+id/bt_auto_fd"
 		android:layout_below="@+id/bt_auto_fd"
@@ -378,7 +374,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		android:layout_alignTop="@+id/txt_cons_fd"
 		android:gravity="center_horizontal"
 		android:text="@string/txt_cool_temp"
@@ -400,7 +395,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		android:layout_below="@+id/txt_cons_fd"
 		android:gravity="center_horizontal"
 		android:text="@string/bt_next_txt"

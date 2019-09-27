@@ -32,10 +32,10 @@ public class StartBackgroundServices extends Service {
 		// Start discovery of mDNS/NSD services available if not running already
 		startService(new Intent(this, CheckAvailDevices.class));
 
-		/** Pending intent for sync every 2 hours */
+		/* Pending intent for sync every 2 hours */
 		PendingIntent pi = PendingIntent.getService(this, 5002,
 				new Intent(this, SolarSyncDataBase.class), PendingIntent.FLAG_UPDATE_CURRENT);
-		/** Alarm manager for sync every 2 hours */
+		/* Alarm manager for sync every 2 hours */
 		AlarmManager am = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
 		if (am != null) {
 			am.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 3600000,

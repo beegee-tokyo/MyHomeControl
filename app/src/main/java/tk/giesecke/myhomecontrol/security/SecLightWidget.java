@@ -18,7 +18,7 @@ public class SecLightWidget extends AppWidgetProvider {
 								int appWidgetId, boolean lightIsOn) {
 
 		// Construct the RemoteViews object
-		/** Instance of the widget view */
+		/* Instance of the widget view */
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_sec_light);
 
 		if (lightIsOn) {
@@ -27,10 +27,10 @@ public class SecLightWidget extends AppWidgetProvider {
 			views.setImageViewResource(R.id.iv_light_widget, R.mipmap.ic_light_autooff);
 		}
 
-		/** Intent to start method to switch on light when widget is clicked */
+		/* Intent to start method to switch on light when widget is clicked */
 		Intent serviceIntent = new Intent(context, SecLightWidgetHelper.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-		/** Pending intent to start method when widget is clicked */
+		/* Pending intent to start method when widget is clicked */
 		PendingIntent pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

@@ -3,7 +3,8 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 			  android:layout_height="match_parent"
-			  android:orientation="vertical">
+			  android:orientation="vertical"
+	tools:ignore="Autofill,LabelFor">
 
 	<EditText
 		android:id="@+id/dia_et_location"
@@ -12,8 +13,7 @@
 		android:layout_gravity="center_horizontal"
 		android:inputType="text"
 		android:text="@string/action_location"
-		android:textAppearance="?android:attr/textAppearanceMedium"
-		tools:ignore="LabelFor" />
+		android:textAppearance="?android:attr/textAppearanceMedium" />
 
 	<TextView
 		android:layout_width="wrap_content"

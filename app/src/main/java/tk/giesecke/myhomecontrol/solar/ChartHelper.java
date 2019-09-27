@@ -117,11 +117,11 @@ public class ChartHelper extends MyHomeControl {
 				}
 			}
 		}
-		/** Line data set for solar data */
+		/* Line data set for solar data */
 		LineDataSet solar = new LineDataSet(solarSeries, "Solar");
-		/** Line data set for consumption data */
+		/* Line data set for consumption data */
 		LineDataSet consP = new LineDataSet(consPSeries, "Export");
-		/** Line data set for consumption data */
+		/* Line data set for consumption data */
 		LineDataSet consM = new LineDataSet(consMSeries, "Import");
 
 		solar.setLineWidth(1.75f);
@@ -174,7 +174,7 @@ public class ChartHelper extends MyHomeControl {
 		consM.setAxisDependency(YAxis.AxisDependency.LEFT);
 
 
-		/** Data object with the data set and the y values */
+		/* Data object with the data set and the y values */
 		plotData = new LineData(timeSeries);
 		plotData.addDataSet(solar);
 		plotData.addDataSet(consP);
@@ -188,11 +188,11 @@ public class ChartHelper extends MyHomeControl {
 		lineChart.setData(plotData);
 
 		if (dayToShow != null) {
-			/** Calendar instance */
+			/* Calendar instance */
 			Calendar c = Calendar.getInstance();
 			@SuppressLint("SimpleDateFormat") DateFormat df = new SimpleDateFormat("yy-MM-dd");
 			try {
-				/** Date for formatting output */
+				/* Date for formatting output */
 				Date myDate = df.parse(dayToShow.trim());
 				c.setTime(myDate);
 				df = new SimpleDateFormat("yyyy-MMM-dd");
@@ -203,7 +203,7 @@ public class ChartHelper extends MyHomeControl {
 			chartTitleThis.setText(dayToShow);
 		}
 
-		/** Instance of left y axis */
+		/* Instance of left y axis */
 		YAxis lYAx = lineChart.getAxisLeft();
 		lYAx.setEnabled(true);
 		lYAx.setTextColor(Color.WHITE);
@@ -211,18 +211,18 @@ public class ChartHelper extends MyHomeControl {
 		lYAx.setSpaceTop(1);
 		lYAx.setSpaceBottom(1);
 
-		/** Instance of right y axis */
+		/* Instance of right y axis */
 		YAxis rYAx = lineChart.getAxisRight();
 		rYAx.setEnabled(true);
 		rYAx.setTextColor(Color.WHITE);
 		rYAx.setStartAtZero(false);
 		rYAx.setSpaceTop(1);
 		rYAx.setSpaceBottom(1);
-		/** Hide right axis */
+		/* Hide right axis */
 		rYAx.setDrawLabels(false);
 		rYAx.setEnabled(false);
 
-		/** Instance of x axis */
+		/* Instance of x axis */
 		XAxis xAx = lineChart.getXAxis();
 		xAx.setEnabled(true);
 		xAx.setTextColor(Color.WHITE);
@@ -232,7 +232,7 @@ public class ChartHelper extends MyHomeControl {
 
 		// create a custom MarkerView (extend MarkerView) and specify the layout
 		// to use for it
-		/** Instance of custom marker view handler */
+		/* Instance of custom marker view handler */
 		ChartCustomMarkerView mv = new ChartCustomMarkerView(thisAppContext);
 
 		// set the marker to the chart
@@ -267,13 +267,13 @@ public class ChartHelper extends MyHomeControl {
 		/* Consumed energy generated up to now on the displayed day */
 		float consEnergy = 0f;
 
-		/** Array list to hold time stamps */
+		/* Array list to hold time stamps */
 		ArrayList<String> tempTimeStamps;
-		/** Array list to hold solar power values */
+		/* Array list to hold solar power values */
 		ArrayList<Float> tempSolarStamps;
-		/** Array list to hold consumption values */
+		/* Array list to hold consumption values */
 		ArrayList<Float> tempConsPStamps;
-		/** Array list to hold consumption values */
+		/* Array list to hold consumption values */
 		ArrayList<Float> tempConsMStamps;
 		if (showingLog) {
 			tempTimeStamps = timeStamps;
@@ -295,9 +295,9 @@ public class ChartHelper extends MyHomeControl {
 					data.getString(3)).substring(data.getString(3).length())
 					+ ":" + ("00" +
 					data.getString(4)).substring(data.getString(4).length()));
-			dayToShow = String.valueOf(data.getInt(0)) + "-" +
-					String.valueOf(data.getInt(1)) + "-" +
-					String.valueOf(data.getInt(2));
+			dayToShow = data.getInt(0) + "-" +
+					data.getInt(1) + "-" +
+					data.getInt(2);
 			tempSolarStamps.add(data.getFloat(5));
 			if (data.getFloat(6) < 0.0f) {
 				tempConsPStamps.add(data.getFloat(6));
@@ -311,26 +311,26 @@ public class ChartHelper extends MyHomeControl {
 			data.moveToNext();
 		}
 
-		/** Text for update of text view */
+		/* Text for update of text view */
 		String updateTxt;
 		if (showingLog) {
-			/** Text view to show consumed / produced energy */
-			TextView energyText = (TextView) appView.findViewById(R.id.tv_cons_energy);
+			/* Text view to show consumed / produced energy */
+			TextView energyText = appView.findViewById(R.id.tv_cons_energy);
 			energyText.setVisibility(View.VISIBLE);
 			updateTxt = "Consumed: " + String.format("%.3f", consEnergy) + "kWh";
 			energyText.setText(updateTxt);
-			energyText = (TextView) appView.findViewById(R.id.tv_solar_energy);
+			energyText = appView.findViewById(R.id.tv_solar_energy);
 			energyText.setVisibility(View.VISIBLE);
 			updateTxt = "Produced: " + String.format("%.3f", solarEnergy) + "kWh";
 			energyText.setText(updateTxt);
 		}
-		/** Text view to show max consumed / produced power */
+		/* Text view to show max consumed / produced power */
 		if (tempConsMStamps.size() != 0 && tempSolarStamps.size() != 0) {
-			/** Text view to show max consumed / produced energy */
-			TextView maxPowerText = (TextView) appView.findViewById(R.id.tv_cons_max);
+			/* Text view to show max consumed / produced energy */
+			TextView maxPowerText = appView.findViewById(R.id.tv_cons_max);
 			updateTxt = "(" + String.format("%.0f", Collections.max(tempConsMStamps)) + "W)";
 			maxPowerText.setText(updateTxt);
-			maxPowerText = (TextView) appView.findViewById(R.id.tv_solar_max);
+			maxPowerText = appView.findViewById(R.id.tv_solar_max);
 			updateTxt = "(" + String.format("%.0f", Collections.max(tempSolarStamps)) + "W)";
 			maxPowerText.setText(updateTxt);
 		}

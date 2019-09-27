@@ -20,9 +20,9 @@ public class SecCamWidget extends AppWidgetProvider {
 		// Construct the RemoteViews object
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_sec_cam);
 
-		/** Intent to start app if widget is pushed */
+		/* Intent to start app if widget is pushed */
 		Intent secCamIntent = new Intent(context, SecCamViewer.class);
-		/** Pending intent to start app if widget is pushed */
+		/* Pending intent to start app if widget is pushed */
 		PendingIntent pendingIntent1 = PendingIntent.getActivity(context, 0,
 				secCamIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		//  Attach an on-click listener to the icon

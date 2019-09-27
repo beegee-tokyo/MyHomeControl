@@ -2,6 +2,7 @@ package tk.giesecke.myhomecontrol.security;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -16,8 +17,6 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import io.vov.vitamio.MediaPlayer;
-import io.vov.vitamio.widget.MediaController;
 import io.vov.vitamio.widget.VideoView;
 
 import tk.giesecke.myhomecontrol.BuildConfig;
@@ -34,26 +33,17 @@ public class SecCamViewer extends AppCompatActivity {
 	/** This activities context */
 	private Context seccamContext;
 
-	/** VideoView for CCTV footage */
-	private VideoView footageVV;
 	/** Menu item for status message */
 	private MenuItem statusMenuItem;
-	/** Layout for status message */
-	private RelativeLayout statusMenuLayout;
-	/** Text view for status message */
-	private TextView statusMenuText;
 
-	/** Media controller for CCTV footage */
-	private MediaController footageMC;
 	/** URL of footage to be played */
 	private String urlFootage = "";
 
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_sec_video);
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		Toolbar toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		int statusBarColor = getResources().getColor(android.R.color.holo_orange_dark);
@@ -64,17 +54,16 @@ public class SecCamViewer extends AppCompatActivity {
 		if (android.os.Build.VERSION.SDK_INT >= 21) {
 			getWindow().setStatusBarColor(statusBarColor);
 		}
-		if (android.os.Build.VERSION.SDK_INT >= 16) {
-			toolBarDrawable = new ColorDrawable(actionBarColor);
-			toolbar.setBackground(toolBarDrawable);
-		}
+		toolBarDrawable = new ColorDrawable(actionBarColor);
+		toolbar.setBackground(toolBarDrawable);
 
 		// Initialize variables
 		seccamContext = this;
 		/* Error text view */
-		TextView errorMsg = (TextView) findViewById(R.id.et_cctv_error);
+		TextView errorMsg = findViewById(R.id.et_cctv_error);
 		/* VideoView for CCTV footage */
-		footageVV = (VideoView) findViewById(R.id.vv_cctv_footage);
+		/* VideoView for CCTV footage */
+		VideoView footageVV = findViewById(R.id.vv_cctv_footage);
 		footageVV.setVisibility(View.INVISIBLE);
 
 		// Check if there are any stored CCTV footage
@@ -89,17 +78,17 @@ public class SecCamViewer extends AppCompatActivity {
 
 	@Override
 	public void onResume() {
-		if (!urlFootage.equalsIgnoreCase("")) {
-			startVideoStream();
-		}
+//		if (!urlFootage.equalsIgnoreCase("")) {
+//			startVideoStream();
+//		}
 		super.onResume();
 	}
 
 	@Override
 	public void onPause() {
-		if (footageVV.isPlaying()) {
-			stopVideoStream();
-		}
+//		if (footageVV.isPlaying()) {
+//			stopVideoStream();
+//		}
 		super.onPause();
 	}
 
@@ -187,64 +176,74 @@ public class SecCamViewer extends AppCompatActivity {
 	}
 
 	private void startVideoStream() {
-		Uri vidUri = Uri.parse(urlFootage);
-		footageVV.setVisibility(View.VISIBLE);
-		// Start the video stream
-		footageVV.setVideoURI(vidUri);
-		footageVV.setHardwareDecoder(true);
-		footageVV.start();
-		statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
-		statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
-		statusMenuText.setText(getString(R.string.buffer_msg));
 
-		footageVV.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-			@Override
-			public void onPrepared(MediaPlayer mediaPlayer) {
-				footageMC = new MediaController(seccamContext) {
-					@Override
-					public void hide() {
-						//Do not hide.
-					}
-				};
-				footageVV.setMediaController(footageMC);
-				footageMC.setAnchorView(footageVV);
-				footageMC.show();
-				footageMC.requestFocus();
-				mediaPlayer.setVideoQuality(MediaPlayer.VIDEOQUALITY_LOW);
-				mediaPlayer.setPlaybackSpeed(1.0f);
-				mediaPlayer.setBufferSize(2000);
-				mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
-					@Override
-					public boolean onInfo(MediaPlayer mp, int what, int extra) {
-						switch (what) {
-							case MediaPlayer.MEDIA_INFO_BUFFERING_START:
-								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
-								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
-								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
-								statusMenuText.setText(getString(R.string.buffer_msg));
-								break;
-							case MediaPlayer.MEDIA_INFO_BUFFERING_END:
-								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
-								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
-								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
-								statusMenuText.setText("");
-								break;
-						}
-						return false;
-					}
-				});
-			}
-		});
+		// Start VLC with the preconfigured camera credentials
+		Uri vidUri = Uri.parse(urlFootage);
+
+
+        Intent i = new Intent(Intent.ACTION_VIEW);
+        i.setPackage("org.videolan.vlc");
+        i.setDataAndType(vidUri, "video/");
+        startActivity(i);
+//		footageVV.setVisibility(View.VISIBLE);
+//		// Start the video stream
+//		footageVV.setVideoURI(vidUri);
+//		footageVV.setHardwareDecoder(true);
+//		footageVV.start();
+//		statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+//		statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+//		statusMenuText.setText(getString(R.string.buffer_msg));
+//
+//		footageVV.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//			@Override
+//			public void onPrepared(MediaPlayer mediaPlayer) {
+//				footageMC = new MediaController(seccamContext) {
+//					@Override
+//					public void hide() {
+//						//Do not hide.
+//					}
+//				};
+//				footageVV.setMediaController(footageMC);
+//				footageMC.setAnchorView(footageVV);
+//				footageMC.show();
+//				footageMC.requestFocus();
+//				mediaPlayer.setVideoQuality(MediaPlayer.VIDEOQUALITY_LOW);
+//				mediaPlayer.setPlaybackSpeed(1.0f);
+//				mediaPlayer.setBufferSize(2000);
+//				mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+//					@Override
+//					public boolean onInfo(MediaPlayer mp, int what, int extra) {
+//						switch (what) {
+//							case MediaPlayer.MEDIA_INFO_BUFFERING_START:
+//								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
+//								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+//								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+//								statusMenuText.setText(getString(R.string.buffer_msg));
+//								break;
+//							case MediaPlayer.MEDIA_INFO_BUFFERING_END:
+//								statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
+//								statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+//								statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+//								statusMenuText.setText("");
+//								break;
+//						}
+//						return false;
+//					}
+//				});
+//			}
+//		});
 	}
 
 	private void stopVideoStream() {
-		if (footageVV.isPlaying()) {
-			footageVV.stopPlayback();
-		}
-		footageVV.setVisibility(View.INVISIBLE);
+//		if (footageVV.isPlaying()) {
+//			footageVV.stopPlayback();
+//		}
+//		footageVV.setVisibility(View.INVISIBLE);
 		statusMenuItem.setActionView(R.layout.vi_seccam_buffer);
-		statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
-		statusMenuText = (TextView) statusMenuLayout.findViewById(R.id.tv_status);
+		/* Layout for status message */
+		RelativeLayout statusMenuLayout = (RelativeLayout) statusMenuItem.getActionView();
+		/* Text view for status message */
+		TextView statusMenuText = statusMenuLayout.findViewById(R.id.tv_status);
 		statusMenuText.setText(getString(R.string.cctv_footage_info));
 	}
 }

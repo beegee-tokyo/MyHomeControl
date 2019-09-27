@@ -31,7 +31,7 @@ public class DeviceStatus extends IntentService {
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Update device status widget");
 			MessageListener.deviceStatusWidgetUpdate(intentContext, true);
 
-			if (serviceIsRunning(MessageListener.class, intentContext)) {
+			if (serviceIsRunning(intentContext)) {
 				if (BuildConfig.DEBUG)
 					Log.d(DEBUG_LOG_TAG, "MessageListener still running");
 				// Sockets are closed or MQTT connection is closed ???
@@ -54,18 +54,16 @@ public class DeviceStatus extends IntentService {
 	/**
 	 * Check if a service is running
 	 *
-	 * @param serviceClass
-	 *              Service class we want to check if it is running
 	 * @return <code>boolean</code>
 	 *              True if service is running
 	 *              False if service is not running
 	 */
-	private static boolean serviceIsRunning(Class<?> serviceClass, Context context) {
-		/** Activity manager for services */
+	private static boolean serviceIsRunning(Context context) {
+		/* Activity manager for services */
 		ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 		if (manager != null) {
 			for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-				if (serviceClass.getName().equals(service.service.getClassName())) {
+				if (MessageListener.class.getName().equals(service.service.getClassName())) {
 					return true;
 				}
 			}

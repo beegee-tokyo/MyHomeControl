@@ -32,16 +32,16 @@ public class ChartCustomMarkerView extends MarkerView {
 
 	public ChartCustomMarkerView(Context context) {
 		super(context, R.layout.cu_plot_marker);
-		/** Text view for time in marker */
-		tvMarkerTime = (TextView) findViewById(R.id.tv_marker_time);
-		/** Text view for consumption in marker */
-		tvMarkerCons = (TextView) findViewById(R.id.tv_marker_cons);
-		/** Text view for consumption in marker */
-		tvMarkerConsAll = (TextView) findViewById(R.id.tv_marker_cons_all);
-		/** Text view for solar power in marker */
-		tvMarkerSolar = (TextView) findViewById(R.id.tv_marker_solar);
-		/** Text view for solar power in marker */
-		tvMarkerSolarAll = (TextView) findViewById(R.id.tv_marker_solar_all);
+		/* Text view for time in marker */
+		tvMarkerTime = findViewById(R.id.tv_marker_time);
+		/* Text view for consumption in marker */
+		tvMarkerCons = findViewById(R.id.tv_marker_cons);
+		/* Text view for consumption in marker */
+		tvMarkerConsAll = findViewById(R.id.tv_marker_cons_all);
+		/* Text view for solar power in marker */
+		tvMarkerSolar = findViewById(R.id.tv_marker_solar);
+		/* Text view for solar power in marker */
+		tvMarkerSolarAll = findViewById(R.id.tv_marker_solar_all);
 	}
 
 	// callbacks every time the MarkerView is redrawn, can be used to update the
@@ -49,25 +49,25 @@ public class ChartCustomMarkerView extends MarkerView {
 	@SuppressLint("DefaultLocale")
 	@Override
 	public void refreshContent(Entry e, Highlight highlight) {
-		/** Index for the series at the touched data point */
+		/* Index for the series at the touched data point */
 
 		int dataIndex = highlight.getXIndex();
-		/** Entry with data of solar power at given index */
+		/* Entry with data of solar power at given index */
 		Entry touchSolar = ChartHelper.solarSeries.get(dataIndex);
-		/** Entry with data of consumption at given index */
+		/* Entry with data of consumption at given index */
 		Entry touchCons = ChartHelper.consMSeries.get(dataIndex);
 		if (touchCons.getVal() == 0) {
 			touchCons = ChartHelper.consPSeries.get(dataIndex);
 		}
 
 		tvMarkerTime.setText(ChartHelper.timeSeries.get(dataIndex));
-		/** Float value with consumption until touched data point */
+		/* Float value with consumption until touched data point */
 		float consAll = 0;
-		/** Entry for accumulate power consumption / production */
+		/* Entry for accumulate power consumption / production */
 		Entry consAllEntry;
-		/** Float value with production until touched data point */
+		/* Float value with production until touched data point */
 		float solAll = 0;
-		/** Entry for accumulate power production / production */
+		/* Entry for accumulate power production / production */
 		Entry solAllEntry;
 		for (int i=0; i<=dataIndex; i++) {
 			consAllEntry = ChartHelper.consMSeries.get(i);
@@ -78,12 +78,12 @@ public class ChartCustomMarkerView extends MarkerView {
 			solAllEntry = ChartHelper.solarSeries.get(i);
 			solAll += solAllEntry.getVal()/60/1000;
 		}
-		/** Text for update text view */
-		String updateTxt = (Float.toString(touchCons.getVal()) + "W");
+		/* Text for update text view */
+		String updateTxt = (touchCons.getVal() + "W");
 		tvMarkerCons.setText(updateTxt);
 		updateTxt = (String.format("%.3f", consAll) + "kWh");
 		tvMarkerConsAll.setText(updateTxt);
-		updateTxt = (Float.toString(touchSolar.getVal())+"W");
+		updateTxt = (touchSolar.getVal() +"W");
 		tvMarkerSolar.setText(updateTxt);
 		updateTxt = (String.format("%.3f", solAll) + "kWh");
 		tvMarkerSolarAll.setText(updateTxt);
@@ -122,7 +122,7 @@ public class ChartCustomMarkerView extends MarkerView {
 	{
 		// take offsets into consideration
 //		posx = getDeviceWidth(MyHomeControl.appContext)/2;
-		posx = getDeviceWidth(getContext())/2;
+		posx = getDeviceWidth(getContext()) >> 1;
 		posy = 30;
 
 		// translate to the correct position and draw
@@ -141,10 +141,10 @@ public class ChartCustomMarkerView extends MarkerView {
 	 */
 	@SuppressWarnings("deprecation")
 	private static int getDeviceWidth(Context context){
-		/** Window manager instance */
+		/* Window manager instance */
 		WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
 		if (wm != null) {
-			/** Display instance */
+			/* Display instance */
 			Display display = wm.getDefaultDisplay();
 			return display.getWidth();
 		}

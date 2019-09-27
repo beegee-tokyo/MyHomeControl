@@ -14,9 +14,7 @@
 		android:layout_alignParentTop="true"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_alignBottom="@+id/ib_snapshot_front2"
-		android:layout_alignParentLeft="true"
 		android:layout_alignParentStart="true"
-		android:layout_alignRight="@+id/ib_snapshot_gallery2"
 		android:layout_alignEnd="@+id/ib_snapshot_gallery2"/>
 
 	<ImageButton
@@ -32,7 +30,6 @@
 		android:layout_height="match_parent"
 		android:src="@android:drawable/picture_frame"
 		android:contentDescription="@string/sec_auto_alarm_off"
-		android:layout_marginLeft="14dp"
 		android:layout_marginStart="14dp"
 		android:layout_marginTop="14dp"
 		android:id="@+id/iv_snapshot"
@@ -59,7 +56,6 @@
 		android:src="@android:drawable/ic_menu_gallery"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_alignParentTop="true"
-		android:layout_toRightOf="@+id/ib_snapshot_front2"
 		android:layout_toEndOf="@+id/ib_snapshot_front2"/>
 
 	<ImageButton
@@ -70,7 +66,6 @@
 		android:src="@android:drawable/ic_menu_mapmode"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_alignParentTop="true"
-		android:layout_toRightOf="@+id/ib_snapshot_last2"
 		android:layout_toEndOf="@+id/ib_snapshot_last2"/>
 
 </RelativeLayout>

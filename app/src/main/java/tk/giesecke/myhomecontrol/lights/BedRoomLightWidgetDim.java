@@ -36,7 +36,7 @@ public class BedRoomLightWidgetDim extends IntentService {
 			/* Access to shared preferences of app widget */
 			SharedPreferences mPrefs = this.getSharedPreferences(sharedPrefName, 0);
 			int dimBrightness = mPrefs.getInt(prefsLightBedDim, 200);
-			String cmd = "b=" + Integer.toString(dimBrightness); // DIM
+			String cmd = "b=" + dimBrightness; // DIM
 			lightCtrlSend(cmd);
 		}
 	}

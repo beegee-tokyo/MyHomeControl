@@ -12,11 +12,9 @@
 		android:layout_height="wrap_content"
 		android:background="@color/colorAccent"
 		android:layout_alignParentTop="true"
-		android:layout_alignRight="@+id/iv_snapshot"
 		android:layout_alignEnd="@+id/ib_snapshot_front2"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_alignStart="@+id/ib_snapshot_gallery2"
-		android:layout_alignLeft="@+id/ib_snapshot_gallery2"
 		android:layout_alignBottom="@+id/ib_snapshot_front2"/>
 
 	<ImageButton
@@ -26,8 +24,7 @@
 		android:onClick="onClick"
 		android:src="@android:drawable/ic_menu_camera"
 		android:contentDescription="@string/sec_auto_alarm_off"
-		android:layout_toEndOf="@+id/ib_snapshot_last2"
-		android:layout_toRightOf="@+id/ib_snapshot_last2"/>
+		android:layout_toEndOf="@+id/ib_snapshot_last2"/>
 
 	<ImageButton
 		android:layout_width="wrap_content"
@@ -45,7 +42,6 @@
 		android:onClick="onClick"
 		android:src="@android:drawable/ic_menu_mapmode"
 		android:contentDescription="@string/sec_auto_alarm_off"
-		android:layout_toLeftOf="@+id/ib_snapshot_last2"
 		android:layout_toStartOf="@+id/ib_snapshot_last2"/>
 
 	<ImageView
@@ -53,7 +49,6 @@
 		android:layout_height="wrap_content"
 		android:src="@android:drawable/picture_frame"
 		android:contentDescription="@string/sec_auto_alarm_off"
-		android:layout_marginLeft="14dp"
 		android:layout_marginStart="14dp"
 		android:layout_marginTop="14dp"
 		android:id="@+id/iv_snapshot"

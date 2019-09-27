@@ -16,11 +16,10 @@
 		android:layout_height="wrap_content"
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/tv_alarm_txt"
-		android:layout_toRightOf="@+id/v_sep"
 		android:layout_toEndOf="@+id/v_sep"/>
 
-	<RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-				android:orientation="vertical"
+	<RadioGroup
+		android:orientation="vertical"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:id="@+id/rg_size"
@@ -32,7 +31,6 @@
 			android:text="@string/rb_large_txt"
 			android:id="@+id/rb_large"
 			android:button="@null"
-			android:drawableRight="@android:drawable/btn_radio"
 			android:drawableEnd="@android:drawable/btn_radio"
 			android:textAppearance="?android:attr/textAppearanceMedium"
 			android:paddingLeft="10dp"
@@ -45,7 +43,6 @@
 			android:text="@string/rb_small_txt"
 			android:id="@+id/rb_small"
 			android:button="@null"
-			android:drawableRight="@android:drawable/btn_radio"
 			android:drawableEnd="@android:drawable/btn_radio"
 			android:textAppearance="?android:attr/textAppearanceMedium"
 			android:paddingLeft="10dp"
@@ -61,7 +58,6 @@
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
 		android:layout_alignTop="@+id/tv_widget_conf"
-		android:layout_toRightOf="@+id/tv_widget_conf"
 		android:layout_toEndOf="@+id/tv_widget_conf"
 		android:background="@android:color/darker_gray"
 		android:layout_above="@+id/bt_cancel"/>
@@ -72,7 +68,6 @@
 		android:text="@android:string/cancel"
 		android:id="@+id/bt_cancel"
 		android:layout_below="@+id/lv_alarms"
-		android:layout_alignParentLeft="true"
 		android:layout_alignParentStart="true"/>
 
 	<Button
@@ -81,15 +76,13 @@
 		android:text="@string/bt_place_txt"
 		android:id="@+id/bt_ok"
 		android:layout_below="@+id/lv_alarms"
-		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"/>
+		android:layout_alignParentEnd="true"/>
 
 	<ListView
 		android:layout_width="wrap_content"
 		android:layout_height="250dp"
 		android:id="@+id/lv_alarms"
 		android:layout_alignTop="@+id/rg_size"
-		android:layout_toRightOf="@+id/v_sep"
 		android:layout_toEndOf="@+id/v_sep"
 		android:choiceMode="singleChoice"
 		android:longClickable="true"

@@ -12,7 +12,7 @@
 	android:paddingTop="@dimen/activity_vertical_margin"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior"
 	tools:context="tk.giesecke.myhomecontrol.MyHomeControl"
-	tools:ignore="ButtonStyle, KeyboardInaccessibleWidget, LabelFor"
+	tools:ignore="ButtonStyle, KeyboardInaccessibleWidget, LabelFor, Autofill"
 	android:id="@+id/view_devdebug"
 	android:visibility="visible">
 	<!--tools:showIn="@layout/activity_my_home_control"-->
@@ -62,7 +62,6 @@
 			android:layout_height="wrap_content"
 			android:id="@+id/et_highlight"
 			android:inputType="textNoSuggestions"
-			android:editable="true"
 			android:imeOptions="actionSearch" />
 
 	</LinearLayout>
@@ -118,7 +117,6 @@
 				android:id="@+id/tv_mqtt_bytes_avg"
 				android:layout_below="@+id/tv_mqtt_status"
 				android:layout_alignParentEnd="true"
-				android:layout_alignParentRight="true"
 				android:textAppearance="@android:style/TextAppearance.Medium"
 				android:layout_marginTop="5dp"/>
 
@@ -137,7 +135,6 @@
 				android:id="@+id/tv_mqtt_msg_avg"
 				android:layout_below="@+id/tv_mqtt_bytes_avg"
 				android:layout_alignParentEnd="true"
-				android:layout_alignParentRight="true"
 				android:textAppearance="@android:style/TextAppearance.Medium"
 				android:layout_marginTop="5dp"/>
 
@@ -156,7 +153,6 @@
 				android:id="@+id/tv_mqtt_client_conn"
 				android:layout_below="@+id/tv_mqtt_msg_avg"
 				android:layout_alignParentEnd="true"
-				android:layout_alignParentRight="true"
 				android:textAppearance="@android:style/TextAppearance.Medium"
 				android:layout_marginTop="5dp"/>
 
@@ -177,10 +173,8 @@
 				android:layout_below="@+id/tv_mqtt_client_conn"
 				android:textAppearance="@android:style/TextAppearance.Medium"
 				android:layout_marginTop="5dp"
-				android:layout_toRightOf="@+id/tv_mqtt_client_list_hdr"
 				android:layout_toEndOf="@+id/tv_mqtt_client_list_hdr"
-				android:layout_marginStart="5dp"
-				android:layout_marginLeft="5dp"/>
+				android:layout_marginStart="5dp"/>
 
 			<TextView
 				android:text="@string/tv_mqtt_unknown_txt"
@@ -189,7 +183,6 @@
 				android:id="@+id/tv_mqtt_client_list2"
 				android:layout_below="@+id/tv_mqtt_client_conn"
 				android:textAppearance="@android:style/TextAppearance.Medium"
-				android:layout_alignParentRight="true"
 				android:layout_alignParentEnd="true"
 				android:layout_marginTop="5dp"
 				android:textAlignment="viewEnd"
@@ -221,7 +214,6 @@
 				android:id="@+id/tv_device_ip_list"
 				android:textAppearance="@android:style/TextAppearance.Medium"
 				android:layout_below="@+id/tv_device_status"
-				android:layout_alignParentRight="true"
 				android:layout_alignParentEnd="true"
 				android:layout_marginTop="5dp"/>
 

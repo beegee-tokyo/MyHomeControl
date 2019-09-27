@@ -54,7 +54,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 *            format: yy,mm,dd,hh:mm,light,solar,consumption
 	 *            e.g.: "15,08,13,13:54,35000,613.456,-120.22"
 	 */
-	public static void addDay(SQLiteDatabase db, String recordLine) {
+	static void addDay(SQLiteDatabase db, String recordLine) {
 
 		/* Parse the string into its single values */
 		String[] valuesPerLine = recordLine.split(",");
@@ -62,10 +62,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		if (valuesPerLine.length == 1) {
 			return;
 		}
-		/** String list with hour & minute values */
+		/* String list with hour & minute values */
 		String[] hourSplit = valuesPerLine[3].split(":");
 
-		/** ContentValues to hold the measured and calculated values to be added to the database */
+		/* ContentValues to hold the measured and calculated values to be added to the database */
 		ContentValues values = new ContentValues(14);
 		values.put("year", Integer.parseInt(valuesPerLine[0]));
 		values.put("month", Integer.parseInt(valuesPerLine[1]));
@@ -104,8 +104,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 */
 	public static Cursor getDay(SQLiteDatabase db, int dayNumber, int monthSelected, int yearSelected) {
 		try {
-			return db.rawQuery("select * from " + TABLE_NAME + " where day= " + String.valueOf(dayNumber) + " and month= "
-					+ String.valueOf(monthSelected) + " and year= " + String.valueOf(yearSelected), null);
+			return db.rawQuery("select * from " + TABLE_NAME + " where day= " + dayNumber + " and month= "
+					+ monthSelected + " and year= " + yearSelected, null);
 		} catch (IllegalStateException e) {
 			return null;
 		}
@@ -142,20 +142,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	public static ArrayList<Integer> getEntries(SQLiteDatabase db,
 	                                            String requestField, int requestLimiterMonth, int requestLimiterYear) {
 
-		/** Array list holding the found values */
+		/* Array list holding the found values */
 		ArrayList<Integer> returnArray = new ArrayList<>();
 
 		try {
-			/** Limiter for row search */
+			/* Limiter for row search */
 			String queryRequest = "select distinct " + requestField + " from " + TABLE_NAME;
 			if (requestField.equalsIgnoreCase("day")) {
-				queryRequest += " where month = " + String.valueOf(requestLimiterMonth) +
-						" and year = " + String.valueOf(requestLimiterYear);
+				queryRequest += " where month = " + requestLimiterMonth +
+						" and year = " + requestLimiterYear;
 			} else if (requestField.equalsIgnoreCase("month")) {
-				queryRequest += " where year = " + String.valueOf(requestLimiterYear);
+				queryRequest += " where year = " + requestLimiterYear;
 			}
 
-			/** Cursor holding the records of a day */
+			/* Cursor holding the records of a day */
 			Cursor allRows = db.rawQuery(queryRequest, null);
 
 			allRows.moveToFirst();

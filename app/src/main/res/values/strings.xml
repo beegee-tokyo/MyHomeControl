@@ -1,4 +1,5 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools"
+	tools:ignore="UnusedResources">
 	<string name="app_name">MHC</string>
 	<string name="action_close">Close</string>
 	<string name="action_security">Security</string>

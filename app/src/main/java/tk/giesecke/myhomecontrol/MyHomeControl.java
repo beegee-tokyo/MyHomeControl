@@ -61,7 +61,6 @@ import com.github.druk.dnssd.DNSSDRegistration;
 import com.github.druk.dnssd.DNSSDService;
 import com.github.druk.dnssd.RegisterListener;
 import com.github.druk.dnssd.TXTRecord;
-import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -77,9 +76,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,27 +110,27 @@ import static tk.giesecke.myhomecontrol.devices.CheckAvailDevices.dsURL;
 public class MyHomeControl extends AppCompatActivity implements View.OnClickListener
 		, AdapterView.OnItemClickListener , LoadImage.Listener , SeekBar.OnSeekBarChangeListener {
 
-	/**
+	/*
 	 * Debug tag
 	 */
 	static final String DEBUG_LOG_TAG = "MHC-MAIN";
 
-	/**
+	/*
 	 * Access to activities shared preferences
 	 */
 	private static SharedPreferences mPrefs;
 	/* Name of shared preferences */
 	public static final String sharedPrefName = "MyHomeControl";
-	/**
+	/*
 	 * Context of this application
 	 */
 	@SuppressLint("StaticFieldLeak")
 	private Context appContext;
-	/**
+	/*
 	 * Id of menu, needed to set user selected icons and device names
 	 */
 	private Menu abMenu;
-	/**
+	/*
 	 * Id's of menu items
 	 */
 //	int action_lightControl_id = 0;
@@ -146,103 +145,101 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@SuppressWarnings("FieldCanBeLocal")
 	private final int action_locations_id = 7;
 	//	int action_refresh_id = 8;
-	@SuppressWarnings("FieldCanBeLocal")
 	private final int action_debug_id = 9;
 	@SuppressWarnings("FieldCanBeLocal")
 	private final int action_devDebug_id = 10;
-	/**
+	/*
 	 * Id's of views
 	 */
 	private final int view_security_id = 0;
 	public final static int view_solar_id = 1;
 	public final static int view_aircon_id = 2;
 	public final static int view_devDebug_id = 3;
-	@SuppressWarnings("FieldCanBeLocal")
 	private final int view_seccam_id = 4;
 	private final int view_lights_id = 5;
 	private final static int view_secVideo_id = 6;
-	/**
+	/*
 	 * Visible view 0 = security, 1 = solar panel, 2 = aircon
 	 */
 	private int visibleView = 1;
-	/**
+	/*
 	 * Flag for debug output
 	 */
 	private boolean showDebug = false;
-	/**
+	/*
 	 * The view of the main UI
 	 */
 	private View appView;
-	/**
+	/*
 	 * Text view for the date
 	 */
 	private TextView chartTitle;
 
-	/**
+	/*
 	 * Shared preferences value for last shown view
 	 */
 	private final String prefsLastView = "lastView";
-	/**
+	/*
 	 * Shared preferences value for show debug messages flag
 	 */
 	public static final String prefsShowDebug = "showDebug";
 
-	/**
+	/*
 	 * Shared preferences value security alarm sound
 	 */
 	public static final String prefsSecurityAlarm = "secAlarm";
 
-	/**
+	/*
 	 * Shared preferences value for solar alarm sound
 	 */
 	public static final String prefsSolarWarning = "solarAlarm";
-	/**
+	/*
 	 * Shared preferences value for last synced month
 	 */
 	public static final String prefsSolarSynced = "solarLastSynced";
-	/**
+	/*
 	 * Shared preferences value for number solar widgets placed
 	 */
 	public static final String prefsSolarWidgetNum = "solarWidgetNum";
-	/**
+	/*
 	 * Shared preferences value for large widget
 	 */
 	public static final String prefsSolarWidgetSize = "solarWidgetSizeLarge";
 
-	/**
+	/*
 	 * Shared preferences value for last selected device
 	 */
 	private final String prefsSelDevice = "airconSelDevice";
-	/**
+	/*
 	 * Shared preferences value for show debug messages flag
 	 */
 	private final String prefsLocationName = "airconLocation";
-	/**
+	/*
 	 * Shared preferences value for show debug messages flag
 	 */
 	private final String prefsDeviceIcon = "airconIcon";
 
-	/**
+	/*
 	 * Shared preferences value for dimmed brightness values
 	 */
 	public static final String prefsLightBedDim = "lightBedDimVal";
 
-	/**
+	/*
 	 * View for selecting device to change icon and device name
 	 */
 	private View locationSettingsView;
-	/**
+	/*
 	 * View of aircon device name and icon change dialog
 	 */
 	private View airconDialogView;
-	/**
+	/*
 	 * Button ids from location selection dialog
 	 */
 	private final int[] buttonIds = {
 			R.id.dia_sel_device0,
 			R.id.dia_sel_device1,
 			R.id.dia_sel_device2};
-	/**
+	/*
 	 * Resource ids of drawables for the icons
 	 */
 	private final int[] iconIDs = {R.drawable.ic_bathroom,
@@ -262,494 +259,493 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			R.id.im_kitchen,
 			R.id.im_living,
 			R.id.im_office};
-	/**
+	/*
 	 * Index of device handled in dialog box
 	 */
 	private int dlgDeviceIndex;
-	/**
+	/*
 	 * R.id of selected icon for a device
 	 */
 	private int dlgIconIndex;
 
-	/**
+	/*
 	 * Flag for sound selector (true = security alarm, false = solar panel warning)
 	 */
 	private boolean isSelAlarm = true;
 
 	// SPmonitor, Security front, Security back, Aircon 1, Aircon 2, Aircon 3, Monitor, Camera front
-	/**
+	/*
 	 * List of device names
 	 */
 	public static final String[] deviceNames = {"spm", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "mhc", "MHControl"};
 //	public static final String[] deviceNames = {"spMonitor", "sf1", "sb1", "fd1", "ca1", "am1", "moni", "cm1", "lb1", "ly1", "mhc", "MHControl"};
-	/**
+	/*
 	 * List of potential control device availability
 	 */
 	public static final boolean[] deviceIsOn = {false, false, false, false, false, false, false, false, false, false, false, false};
-	/**
+	/*
 	 * List of IP addresses of found devices
 	 */
 	public static final String[] deviceIPs = {"", "", "", "", "", "", "", "", "", "", "", ""};
-	/**
+	/*
 	 * deviceIsOn index for SPmonitor
 	 */
 	public static final int spMonitorIndex = 0;
-	/**
+	/*
 	 * deviceIsOn index for Security front
 	 */
 	public static final int secFrontIndex = 1;
-	/**
+	/*
 	 * deviceIsOn index for Security back
 	 */
 	public static final int secBackIndex = 2;
-	/**
+	/*
 	 * deviceIsOn index for Aircon 1
 	 */
 	public static final int aircon1Index = 3;
-	/**
+	/*
 	 * deviceIsOn index for Aircon 2
 	 */
 	public static final int aircon2Index = 4;
-	/**
+	/*
 	 * deviceIsOn index for Aircon 3
 	 */
 	public static final int aircon3Index = 5;
-	/**
+	/*
 	 * deviceIsOn index for Monitoring display
 	 */
-	@SuppressWarnings("WeakerAccess")
-	public static final int moniIndex = 6;
-	/**
+	private static final int moniIndex = 6;
+	/*
 	 * deviceIsOn index for front yard camera
 	 */
 	public static final int cam1Index = 7;
-	/**
+	/*
 	 * deviceIsOn index for bedroom lights
 	 */
 	public static final int lb1Index = 8;
-	/**
+	/*
 	 * deviceIsOn index for backyard lights
 	 */
 	public static final int ly1Index = 9;
-	/**
+	/*
 	 * deviceIsOn index for gateway
 	 */
 	public static final int mhcIndex = 10;
 
 	// Security view related
-	/**
+	/*
 	 * Security view
 	 */
 	private RelativeLayout secView = null;
-	/**
+	/*
 	 * TextView for status message display in security view
 	 */
 	private TextView secStatus;
-	/**
+	/*
 	 * ImageView to show status of alarm enabled front sensor
 	 */
 	private ImageView ivAlarmStatus;
-	/**
+	/*
 	 * ImageView to show status of light enabled front sensor
 	 */
 	private ImageView ivLightStatus;
-	/**
+	/*
 	 * TableLayout to show status of back alarm system
 	 */
 	private TableLayout secBackView;
-	/**
+	/*
 	 * ImageView to show status of alarm enabled back sensor
 	 */
 	private ImageView ivAlarmStatusBack;
-	/**
+	/*
 	 * ImageView to show status of light enabled back sensor
 	 */
 	private ImageView ivLightStatusBack;
-	/**
+	/*
 	 * Check box for auto activation of alarm
 	 */
 	private CheckBox secAutoAlarmFront;
-	/**
+	/*
 	 * Check box for auto activation of alarm
 	 */
 	private CheckBox secAutoAlarmBack;
-	/**
+	/*
 	 * Clickable text view to change activation times
 	 */
 	private TextView secChangeAlarm;
 
-	/**
+	/*
 	 * Status flag for alarm front sensor
 	 */
 	static boolean hasAlarmOnFront = true;
-	/**
+	/*
 	 * Status flag for alarm back sensor
 	 */
 	static boolean hasAlarmOnBack = true;
-	/**
+	/*
 	 * Status flag for auto alarm front sensor
 	 */
 	static boolean hasAutoOnFront = true;
-	/**
+	/*
 	 * Status flag for auto alarm back sensor
 	 */
 	static boolean hasAutoOnBack = true;
 
-	/**
+	/*
 	 * Auto activation on time as string
 	 */
 	static String secAutoOn;
-	/**
+	/*
 	 * Auto activation off time as string
 	 */
 	static String secAutoOff;
-	/**
+	/*
 	 * Auto activation on time as integer
 	 */
 	static int secAutoOnStored;
-	/**
+	/*
 	 * Auto activation off time as integer
 	 */
 	static int secAutoOffStored;
 
-	/**
+	/*
 	 * Array list with available alarm names
 	 */
 	private ArrayList<String> notifNames = new ArrayList<>();
-	/**
+	/*
 	 * Array list with available alarm uri's
 	 */
 	private ArrayList<String> notifUri = new ArrayList<>();
-	/**
+	/*
 	 * Selected alarm name
 	 */
 	private String notifNameSel = "";
-	/**
+	/*
 	 * Selected alarm uri
 	 */
 	private String notifUriSel = "";
 
 	// Solar monitor view related
-	/**
+	/*
 	 * Solar panel view
 	 */
 	private RelativeLayout solView = null;
-	/**
+	/*
 	 * TextView for status message display in solar panel view
 	 */
 	private TextView solStatus;
-	/**
+	/*
 	 * Array with existing log dates on the Arduino
 	 */
 	private static final List<String> logDates = new ArrayList<>();
-	/**
+	/*
 	 * Pointer to current displayed log in logDates array
 	 */
 	private static int logDatesIndex = 0;
-	/**
+	/*
 	 * Array with existing log dates on the Arduino
 	 */
 	private static final List<String> lastLogDates = new ArrayList<>();
-	/**
+	/*
 	 * Pointer to current displayed log in logDates array
 	 */
 	private static int lastLogDatesIndex = 0;
-	/**
+	/*
 	 * Flag for showing last month
 	 */
 	private static boolean showingLast = false;
-	/**
+	/*
 	 * Flag for showing a log
 	 */
 	protected static boolean showingLog = false;
 	// Flag for database empty */
 	private static boolean dataBaseIsEmpty = true;
 
-	/**
+	/*
 	 * Instance of DataBaseHelper for this month
 	 */
 	private DataBaseHelper dbHelperNow;
-	/**
+	/*
 	 * Instance of DataBaseHelper for last month
 	 */
 	private DataBaseHelper dbHelperLast;
 
-	/**
+	/*
 	 * Today's year-month database name
 	 */
 	private static String[] dbNamesList = new String[2];
 
 	// Aircon view related
-	/**
+	/*
 	 * Aircon control view
 	 */
 	private RelativeLayout airView = null;
-	/**
+	/*
 	 * FujiDenzo control view
 	 */
 	private RelativeLayout airFDView = null;
-	/**
+	/*
 	 * Carrier control view
 	 */
 	private RelativeLayout airCAView = null;
-	/**
+	/*
 	 * American Home control view
 	 */
 	private RelativeLayout airAMView = null;
-	/**
+	/*
 	 * TextView for status message display in aircon view
 	 */
 	private TextView airStatus;
-	/**
+	/*
 	 * Light of button to switch consumption control for FujiDenzo layout
 	 */
 	private View btAutoLightFD;
-	/**
+	/*
 	 * Light of button to switch consumption control for Carrier layout
 	 */
 	private View btAutoLightCA;
-	/**
+	/*
 	 * Light of button to switch consumption control for American Home layout
 	 */
 	private View btAutoLightAM;
-	/**
+	/*
 	 * Light of button to switch on/off for FujiDenzo layout
 	 */
 	private View btOnOffLightFD;
-	/**
+	/*
 	 * Light of button to switch on/off for Carrier layout
 	 */
 	private View btOnOffLightCA;
-	/**
+	/*
 	 * Light of button to switch on/off for American Home layout
 	 */
 	private View btOnOffLightAM;
-	/**
+	/*
 	 * Light of button to switch fan to high speed for FujiDenzo layout
 	 */
 	private View btFanHighLightFD;
-	/**
+	/*
 	 * Light of button to switch fan to medium speed for FujiDenzo layout
 	 */
 	private View btFanMedLightFD;
-	/**
+	/*
 	 * Light of button to switch fan to low speed for FujiDenzo layout
 	 */
 	private View btFanLowLightFD;
-	/**
+	/*
 	 * Light of button to switch to cool mode for FujiDenzo layout
 	 */
 	private View btCoolLightFD;
-	/**
+	/*
 	 * Light of button to switch to cool mode for Carrier layout
 	 */
 	private View btCoolLightCA;
-	/**
+	/*
 	 * Light of button to switch to cool mode for American Home layout
 	 */
 	private View btCoolLightAM;
-	/**
+	/*
 	 * Light of button to switch to dry mode for FujiDenzo layout
 	 */
 	private View btDryLightFD;
-	/**
+	/*
 	 * Light of button to switch to dry mode for Carrier layout
 	 */
 	private View btDryLightCA;
-	/**
+	/*
 	 * Light of button to switch to dry mode for American Home layout
 	 */
 	private View btDryLightAM;
-	/**
+	/*
 	 * Light of button to switch to fan mode for FujiDenzo layout
 	 */
 	private View btFanLightFD;
-	/**
+	/*
 	 * Light of button to switch to fan mode for Carrier layout
 	 */
 	private View btFanLightCA;
-	/**
+	/*
 	 * Light of button to switch to fan mode for American Home layout
 	 */
 	private View btFanLightAM;
-	/**
+	/*
 	 * Light of button to switch on sweep for Carrier layout
 	 */
 	private View btSweepLightCA;
-	/**
+	/*
 	 * Light of button to switch on sweep for American Home layout
 	 */
 	private View btSweepLightAM;
-	/**
+	/*
 	 * Light of button to switch on turbo mode for Carrier layout
 	 */
 	private View btTurboLightCA;
-	/**
+	/*
 	 * Light of button to switch on turbo mode for American Home layout
 	 */
 	private View btSleepLightAM;
-	/**
+	/*
 	 * Light of button to switch on ion mode for Carrier layout
 	 */
 	private View btIonLightCA;
-	/**
+	/*
 	 * Light of button to switch on auto temp function for Carrier layout
 	 */
 	private View btAutomLightCA;
-	/**
+	/*
 	 * Light of button to switch on auto temp function for American Home layout
 	 */
 	private View btAutomLightAM;
-	/**
+	/*
 	 * Button to switch fan speed for Carrier layout
 	 */
 	private Button btFanCA;
-	/**
+	/*
 	 * Button to switch fan speed for American Home layout
 	 */
 	private Button btFanAM;
-	/**
+	/*
 	 * Consumption value display for FujiDenzo layout
 	 */
 	private TextView txtConsValFD;
-	/**
+	/*
 	 * Temperature value display for FujiDenzo layout
 	 */
 	private TextView txtTempValFD;
-	/**
+	/*
 	 * Status value display for FujiDenzo layout
 	 */
 	private TextView txtAutoStatusValFD;
-	/**
+	/*
 	 * Consumption value display for Carrier layout
 	 */
 	private TextView txtConsValCA;
-	/**
+	/*
 	 * Temperature value display for Carrier layout
 	 */
 	private TextView txtTempValCA;
-	/**
+	/*
 	 * Status value display for Carrier layout
 	 */
 	private TextView txtAutoStatusValCA;
-	/**
+	/*
 	 * Consumption value display for American Home layout
 	 */
 	private TextView txtConsValAM;
-	/**
+	/*
 	 * Temperature value display for American Home layout
 	 */
 	private TextView txtTempValAM;
-	/**
+	/*
 	 * Status value display for American Home layout
 	 */
 	private TextView txtAutoStatusValAM;
 
-	/**
+	/*
 	 * Timer button for FujiDenzo layout
 	 */
 	private Button btTimerFD;
-	/**
+	/*
 	 * Timer button for Carrier layout
 	 */
 	private Button btTimerCA;
-	/**
+	/*
 	 * Timer button for American Home layout
 	 */
 	private Button btTimerAM;
 
-	/**
+	/*
 	 * Color for activated button
 	 */
 	private static int colorRed;
-	/**
+	/*
 	 * Color for deactivated button
 	 */
 	private static int colorGrey;
-	/**
+	/*
 	 * Color for deactivated timer button
 	 */
 	private static int colorGreen;
-	/**
+	/*
 	 * Color for activated timer button
 	 */
 	private static int colorOrange;
 
-	/**
+	/*
 	 * ID of the selected device
 	 */
 	private static int selDevice = 0;
-	/**
+	/*
 	 * Name of the device
 	 */
 	private static final String[] deviceName = {"", "", ""};
-	/**
+	/*
 	 * Layout version for the device
 	 */
 	private static final int[] deviceType = {99, 99, 99};
-	/**
+	/*
 	 * Valid device type ids
 	 */
 	private static final int FUJIDENZO = 0;
 	private static final int CARRIER = 1;
 	private static final int AMERICANHOME = 2;
-	/**
+	/*
 	 * Location of the device
 	 */
 	private final String[] locationName = {"Office", "Living", "Office"};
-	/**
+	/*
 	 * Icon for the device
 	 */
 	private final int[] deviceIcon = {7, 6, 7};
-	/**
+	/*
 	 * Fan speed of device
 	 */
 	private static final int[] fanStatus = {0, 0, 0};
-	/**
+	/*
 	 * Mode status of device
 	 */
 	private static final int[] modeStatus = {0, 0, 0};
-	/**
+	/*
 	 * Power status of device
 	 */
 	private static final int[] powerStatus = {0, 0, 0};
-	/**
+	/*
 	 * Cooling temperature of device
 	 */
 	private static final int[] coolStatus = {0, 0, 0};
-	/**
+	/*
 	 * Timer setting of device
 	 */
 	private static final int[] deviceTimer = {1, 1, 1};
-	/**
+	/*
 	 * Off time of timer of device
 	 */
 	private static final String[] deviceOffTime = {"", "", ""};
-	/**
+	/*
 	 * Consumption status of device (only from master device
 	 */
 	private static double consStatus = 0;
-	/**
+	/*
 	 * Auto power status of device (only from master device
 	 */
 	private static int autoStatus = 0;
-	/**
+	/*
 	 * Auto power enabled status of device
 	 */
 	private static final int[] autoOnStatus = {0, 0, 0};
-	/**
+	/*
 	 * Sweep enabled status of device
 	 */
 	private static final int[] sweepStatus = {0, 0, 0};
-	/**
+	/*
 	 * Turbo enabled status of device
 	 */
 	private static final int[] turboStatus = {0, 0, 0};
-	/**
+	/*
 	 * Ion enabled status of device
 	 */
 	private static final int[] ionStatus = {0, 0, 0};
-	/**
+	/*
 	 * Timer on status of device
 	 */
 	private static final int[] timerStatus = {0, 0, 0};
@@ -777,68 +773,64 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private static final String CMD_AUTO_ON = "98";
 	private static final String CMD_AUTO_OFF = "99";
 
-	/**
+	/*
 	 * Debug device view
 	 */
 	private LinearLayout debugView = null;
-	/**
+	/*
 	 * String with received debug messages
 	 */
 	private String debugMsgs = "";
-	/**
+	/*
 	 * String of highlighted text
 	 */
 	private String highlightText = "";
-	/**
+	/*
 	 * List of devices to send debug message to
 	 */
 	private static final boolean[] cmdDeviceList = {false, false, false, false, false, false, false, false, false, false, false};
-	/**
-	 * List of devices that have debug enables
-	 */
-	private static final boolean[] debugDeviceList = {false, false, false, false, false, false, false, false, false, false, false};
 
-	/**
+	/*
 	 * Text of snackbar view
 	 */
 	private String snackBarText = "";
 
-	/**
+	/*
 	 * Debug device view
 	 */
 	private RelativeLayout seccamView = null;
-	/**
+	/*
 	 * Zoomable image view attacher
 	 */
 	private PhotoViewAttacher snapShotAttacher = null;
-	/**
+	/*
 	 * List with available images on image server
 	 */
 	private List<String> availImages;
 
-	/**
+	/*
 	 * List with available CCTV footage
 	 */
 	public static CCTVfootages lists;
 
-	/**
+	/*
 	 * Lights device view
 	 */
 	private RelativeLayout lightsView = null;
-	/**
+	/*
 	 * Current value of bed room lights
 	 */
 	private int lightsBedRoomVal = 0;
-	/**
+	/*
 	 * Light control seek bar
 	 */
 	private SeekBar bedRoomValSB;
-	/**
+	/*
 	 * Textview for current brightness level
 	 */
 	private TextView bedRoomVal;
 
-	/**
+	/*
 	 * Bonjour service, active as long as this app is active
 	 */
 	private DNSSDService registeredService = null;
@@ -853,12 +845,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_my_home_control);
 		/* Instance of the tool bar */
-		Toolbar toolBar = (Toolbar) findViewById(R.id.toolbar);
+		Toolbar toolBar = findViewById(R.id.toolbar);
 		if (toolBar != null) {
 			setSupportActionBar(toolBar);
 		}
@@ -926,14 +917,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperLast = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME_LAST);
 
 		// Initiate databases (in case they are not existing yet)
-		/** Instance of database */
+		/* Instance of database */
 		SQLiteDatabase dataBase;
 		try {
 			dataBase = dbHelperNow.getReadableDatabase();
 			dataBase.beginTransaction();
 			dataBase.endTransaction();
 			dataBase.close();
-			/** Instance of data base */
+			/* Instance of data base */
 			dataBase = dbHelperLast.getReadableDatabase();
 			dataBase.beginTransaction();
 			dataBase.endTransaction();
@@ -990,15 +981,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Called when activity is getting visible
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		if (myServiceIsStopped(MessageListener.class)) {
+		if (myServiceIsStopped()) {
 			// Start service to listen to TCP, UDP & MQTT broadcast messages
 			startService(new Intent(this, MessageListener.class));
 		}
@@ -1008,7 +998,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 		// Register the receiver for messages from UDP & MQTT listener
 		// Create an intent filter to listen to the broadcast sent with the action "BROADCAST_RECEIVED"
-		/** Intent filter for app internal broadcast receiver */
+		/* Intent filter for app internal broadcast receiver */
 		IntentFilter intentFilter = new IntentFilter(MessageListener.BROADCAST_RECEIVED);
 		//Map the intent filter to the receiver
 		registerReceiver(activityReceiver, intentFilter);
@@ -1043,12 +1033,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 
 		// Get the layouts of all possible views
-		secView = (RelativeLayout) findViewById(R.id.view_security);
-		solView = (RelativeLayout) findViewById(R.id.view_solar);
-		airView = (RelativeLayout) findViewById(R.id.view_aircon);
-		debugView = (LinearLayout) findViewById(R.id.view_devdebug);
-		seccamView = (RelativeLayout) findViewById(R.id.view_seccam);
-		lightsView = (RelativeLayout) findViewById(R.id.view_lights);
+		secView = findViewById(R.id.view_security);
+		solView = findViewById(R.id.view_solar);
+		airView = findViewById(R.id.view_aircon);
+		debugView = findViewById(R.id.view_devdebug);
+		seccamView = findViewById(R.id.view_seccam);
+		lightsView = findViewById(R.id.view_lights);
 
 		// Setup views
 		switch (visibleView) {
@@ -1101,16 +1091,16 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		dbHelperNow = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME);
 		dbHelperLast = new DataBaseHelper(appContext, DataBaseHelper.DATABASE_NAME_LAST);
 
-		ImageButton ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_on);
+		ImageButton ibButtonToChange = findViewById(R.id.ib_light_bed_on);
 		ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_unavail));
-		ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_off);
+		ibButtonToChange = findViewById(R.id.ib_light_bed_off);
 		ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_unavail));
-		ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_dim);
+		ibButtonToChange = findViewById(R.id.ib_light_bed_dim);
 		ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_unavail));
 
 	}
 
-	/**
+	/*
 	 * Called when activity is getting invisible
 	 */
 	@Override
@@ -1126,7 +1116,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 	}
 
-	/**
+	/*
 	 * Called when activity is getting destroyed
 	 * Handles security fragment specific tasks
 	 */
@@ -1175,10 +1165,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	}
 
 	@SuppressLint({"InflateParams", "ApplySharedPref"})
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		/** Menu item pointer */
+		/* Menu item pointer */
 		MenuItem menuItem;
 
 		switch (item.getItemId()) {
@@ -1204,16 +1193,16 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				notifUri.add("android.resource://"
 						+ this.getPackageName() + "/"
 						+ R.raw.dog);
-				/** Index of last user selected alarm tone */
+				/* Index of last user selected alarm tone */
 				int uriIndex = Utilities.getNotifSounds(this, notifNames, notifUri, isSelAlarm) + 2;
 
 				// get sound_selector.xml view
-				/** Layout inflater for sound selection dialog */
+				/* Layout inflater for sound selection dialog */
 				LayoutInflater alarmDialogInflater = LayoutInflater.from(this);
-				/** View for sound selection dialog */
+				/* View for sound selection dialog */
 				@SuppressLint("InflateParams")
 				View alarmSettingsView = alarmDialogInflater.inflate(R.layout.se_sound, null);
-				/** Alert dialog builder for device selection dialog */
+				/* Alert dialog builder for device selection dialog */
 				AlertDialog.Builder alarmDialogBuilder = new AlertDialog.Builder(this);
 
 				// set sound_selector.xml to alert dialog builder
@@ -1238,15 +1227,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								});
 
 				// create alert dialog
-				/** Alert dialog  for device selection */
+				/* Alert dialog  for device selection */
 				AlertDialog alarmDialog = alarmDialogBuilder.create();
 
 				// show it
 				alarmDialog.show();
 
-				/** Pointer to list view with the alarms */
-				ListView lvAlarmList = (ListView) alarmSettingsView.findViewById(R.id.lv_AlarmList);
-				/** Array adapter for the ListView */
+				/* Pointer to list view with the alarms */
+				ListView lvAlarmList = alarmSettingsView.findViewById(R.id.lv_AlarmList);
+				/* Array adapter for the ListView */
 				final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
 						appContext,
 						R.layout.cu_list_item,
@@ -1256,11 +1245,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				lvAlarmList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 					public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 												   int pos, long id) {
-						/** Instance of media player */
+						/* Instance of media player */
 						MediaPlayer mMediaPlayer = new MediaPlayer();
 						try {
 							mMediaPlayer.setDataSource(appContext, Uri.parse(notifUri.get(pos)));
-							/** Audio manager to play the sound */
+							/* Audio manager to play the sound */
 							final AudioManager audioManager = (AudioManager) appContext
 									.getSystemService(Context.AUDIO_SERVICE);
 							if (audioManager != null && audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
@@ -1323,23 +1312,23 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.action_locations:
 				// get location_selector.xml view
-				/** Layout inflater for device selection dialog */
+				/* Layout inflater for device selection dialog */
 				LayoutInflater locationDialogInflater = LayoutInflater.from(this);
 				locationSettingsView = locationDialogInflater.inflate(R.layout.se_location, null);
-				/** Alert dialog builder for device selection dialog */
+				/* Alert dialog builder for device selection dialog */
 				AlertDialog.Builder locationDialogBuilder = new AlertDialog.Builder(this);
 
 				// set location_selector.xml to alert dialog builder
 				locationDialogBuilder.setView(locationSettingsView);
 
-				/** Pointer to button, used to set OnClickListener for buttons in the dialog */
+				/* Pointer to button, used to set OnClickListener for buttons in the dialog */
 				Button btToSetOnClickListener;
-				/** Pointer to button text, used to give each button in the dialog a specific name */
+				/* Pointer to button text, used to give each button in the dialog a specific name */
 				String buttonTxt;
 
 				for (int i = aircon1Index; i < aircon1Index+3; i++) {
 					if (deviceIsOn[i]) {
-						btToSetOnClickListener = (Button) locationSettingsView.findViewById(buttonIds[i]);
+						btToSetOnClickListener = locationSettingsView.findViewById(buttonIds[i]);
 						btToSetOnClickListener.setVisibility(View.VISIBLE);
 						if (locationName[i-aircon1Index].equalsIgnoreCase("")) {
 							btToSetOnClickListener.setText(deviceName[i-aircon1Index]);
@@ -1357,13 +1346,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						.setCancelable(false)
 						.setNegativeButton("OK",
 								new DialogInterface.OnClickListener() {
+									@SuppressWarnings("ConstantConditions")
 									public void onClick(DialogInterface dialog, int id) {
 										for (int i = -aircon1Index; i < -aircon1Index+3; i++) {
 											mPrefs.edit().putString(
-													prefsLocationName + Integer.toString(i),
+													prefsLocationName + i,
 													locationName[i-aircon1Index]).apply();
 											mPrefs.edit().putInt(
-													prefsDeviceIcon + Integer.toString(i),
+													prefsDeviceIcon + i,
 													deviceIcon[i-aircon1Index]).apply();
 										}
 										dialog.cancel();
@@ -1371,7 +1361,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								});
 
 				// create alert dialog
-				/** Alert dialog  for device selection */
+				/* Alert dialog  for device selection */
 				AlertDialog alertDialog = locationDialogBuilder.create();
 
 				// show it
@@ -1390,7 +1380,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return super.onOptionsItemSelected(item);
 	}
 
-	/**
+	/*
 	 * Listener for clicks in ListView for alarm sound selection
 	 *
 	 * @param parent
@@ -1408,14 +1398,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		notifUriSel = notifUri.get(position);
 	}
 
-	/**
+	/*
 	 * Called when a view has been clicked.
 	 *
 	 * @param v
 	 * 		The view that was clicked.
 	 */
 	@SuppressLint("InflateParams")
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onClick(View v) {
 
@@ -1440,28 +1429,28 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 											break;
 									}
 									// get location_selector.xml view
-									/** Layout inflater for dialog to change device name and icon */
+									/* Layout inflater for dialog to change device name and icon */
 									LayoutInflater airconDialogInflater = LayoutInflater.from(this);
-									/** View of aircon device name and icon change dialog */
+									/* View of aircon device name and icon change dialog */
 									airconDialogView = airconDialogInflater.inflate(R.layout.se_locations, null);
-									/** Alert dialog builder for dialog to change device name and icon */
+									/* Alert dialog builder for dialog to change device name and icon */
 									AlertDialog.Builder airconDialogBuilder = new AlertDialog.Builder(this);
 									// set location_selector.xml to alert dialog builder
 									airconDialogBuilder.setView(airconDialogView);
 
-									/** Button to set onClickListener for icon buttons in the dialog */
+									/* Button to set onClickListener for icon buttons in the dialog */
 									ImageButton btOnlyClickListener;
 
 									for (int i = 0; i < 8; i++) {
-										btOnlyClickListener = (ImageButton) airconDialogView.findViewById(iconButtons[i]);
+										btOnlyClickListener = airconDialogView.findViewById(iconButtons[i]);
 										btOnlyClickListener.setOnClickListener(this);
 									}
 
 									dlgIconIndex = deviceIcon[dlgDeviceIndex];
 									Utilities.highlightDlgIcon(iconButtons[dlgIconIndex], airconDialogView, appContext);
 
-									/** Edit text field for the user selected device name */
-									final EditText userInput = (EditText) airconDialogView.findViewById(R.id.dia_et_location);
+									/* Edit text field for the user selected device name */
+									final EditText userInput = airconDialogView.findViewById(R.id.dia_et_location);
 									userInput.setText(locationName[dlgDeviceIndex]);
 
 									// set dialog message
@@ -1470,37 +1459,36 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 											.setCancelable(false)
 											.setPositiveButton("OK",
 													new DialogInterface.OnClickListener() {
-														@SuppressWarnings({"deprecation", "ConstantConditions"})
 														public void onClick(DialogInterface dialog, int id) {
 															locationName[dlgDeviceIndex] = userInput.getText().toString();
 															deviceIcon[dlgDeviceIndex] = dlgIconIndex;
 															// Update underlying dialog box with new device name
-															/** Button of selection dialog that we are processing */
-															Button btToChangeName = (Button) locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
+															/* Button of selection dialog that we are processing */
+															Button btToChangeName = locationSettingsView.findViewById(buttonIds[dlgDeviceIndex]);
 															btToChangeName.setText(locationName[dlgDeviceIndex]);
 															locationSettingsView.invalidate();
 															// Update UI
-															/** Text view to show location name */
+															/* Text view to show location name */
 															TextView locationText;
-															/** Image view to show location icon */
+															/* Image view to show location icon */
 															ImageView locationIcon;
 															switch (dlgDeviceIndex) {
 																case FUJIDENZO:
-																	locationText = (TextView) findViewById(R.id.txt_device_fd);
+																	locationText = findViewById(R.id.txt_device_fd);
 																	locationText.setText(locationName[dlgDeviceIndex]);
-																	locationIcon = (ImageView) findViewById(R.id.im_icon_fd);
+																	locationIcon = findViewById(R.id.im_icon_fd);
 																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
 																	break;
 																case CARRIER:
-																	locationText = (TextView) findViewById(R.id.txt_device_ca);
+																	locationText = findViewById(R.id.txt_device_ca);
 																	locationText.setText(locationName[dlgDeviceIndex]);
-																	locationIcon = (ImageView) findViewById(R.id.im_icon_ca);
+																	locationIcon = findViewById(R.id.im_icon_ca);
 																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
 																	break;
 																case AMERICANHOME:
-																	locationText = (TextView) findViewById(R.id.txt_device_am);
+																	locationText = findViewById(R.id.txt_device_am);
 																	locationText.setText(locationName[dlgDeviceIndex]);
-																	locationIcon = (ImageView) findViewById(R.id.im_icon_am);
+																	locationIcon = findViewById(R.id.im_icon_am);
 																	locationIcon.setImageDrawable(getResources().getDrawable(iconIDs[deviceIcon[dlgDeviceIndex]]));
 																	break;
 															}
@@ -1560,7 +1548,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Called when an image has been loaded from the gallery server.
 	 *
 	 * @param bitmap
@@ -1569,20 +1557,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	@Override
 	public void onImageLoaded(Bitmap bitmap) {
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received image");
-		ImageView mImageView = (ImageView) findViewById(R.id.iv_snapshot);
+		ImageView mImageView = findViewById(R.id.iv_snapshot);
 		mImageView.setImageBitmap(bitmap);
 		if (snapShotAttacher == null) {
 			snapShotAttacher = new PhotoViewAttacher(mImageView);
 		} else {
 			snapShotAttacher.update();
 		}
-		TextView imageName = (TextView) findViewById(R.id.tv_image_name);
+		TextView imageName = findViewById(R.id.tv_image_name);
 		imageName.setVisibility(View.VISIBLE);
 		imageName.setText(availImages.get(0));
 		switchUI(view_seccam_id); // Switch to security camera view
 	}
 
-	/**
+	/*
 	 * Called when an error occurred while an image was loaded from the gallery server.
 	 */
 	@Override
@@ -1590,7 +1578,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		Toast.makeText(this, "Error Loading Image !", Toast.LENGTH_SHORT).show();
 	}
 
-	/**
+	/*
 	 * Called when brightness value seekbar changed.
 	 */
 	@Override
@@ -1633,19 +1621,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				lightsBedRoomVal = 222 - progress;
 				break;
 		}
-		String lightValue = "b="+String.valueOf(lightsBedRoomVal);
+		String lightValue = "b="+ lightsBedRoomVal;
 		new MyHomeControl.ESPbyTCP(getString(R.string.LIGHTS_BEDROOM),lightValue,"0");
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Send new brightness to lights: "+lightValue);
 	}
 
-	/**
+	/*
 	 * Broadcast receiver for notifications received over UDP or MQTT or GCM
 	 */
 	private BroadcastReceiver activityReceiver = new BroadcastReceiver() {
 
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			/** Message origin */
+			/* Message origin */
 			String sender = intent.getStringExtra("from");
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Received broadcast from " + sender);
@@ -1673,7 +1661,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	};
 
-	/** Handle broadcast messages about SPM data sync
+	/* Handle broadcast messages about SPM data sync
 	 *
 	 * @param bcIntent
 	 *            Intent of received broadcast
@@ -1682,7 +1670,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		updateSynced(bcIntent.getStringExtra("message"));
 	}
 
-//	/** Handle broadcast messages about device search result
+//	/* Handle broadcast messages about device search result
 //	 *
 //	 * @param bcIntent
 //	 *            Intent of received broadcast
@@ -1768,7 +1756,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 //		}
 //	}
 
-	/** Handle broadcast messages about debug status
+	/* Handle broadcast messages about debug status
 	 *
 	 * @param bcIntent
 	 *            Intent of received broadcast
@@ -1830,7 +1818,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 //		}
 		debugMsgs += message + "\n";
 
-		TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
+		TextView debugTxtView = findViewById(R.id.tv_sv_debug);
 		if (highlightText == null || highlightText.isEmpty()) {
 			debugTxtView.append(message + "\n");
 		} else {
@@ -1838,11 +1826,11 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				debugTxtView.append(message + "\n");
 			}
 		}
-		ScrollView debugTxtScroll = (ScrollView) findViewById(R.id.sv_debugview);
+		ScrollView debugTxtScroll = findViewById(R.id.sv_debugview);
 		debugTxtScroll.fullScroll(View.FOCUS_DOWN);
 	}
 
-	/** Handle broadcast messages about device status
+	/* Handle broadcast messages about device status
 	 *
 	 * @param bcIntent
 	 *            Intent of received broadcast
@@ -1851,7 +1839,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (BuildConfig.DEBUG) {
 			String message = bcIntent.getStringExtra("message");
 			if (showDebug) {
-				TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
+				TextView debugTxtView = findViewById(R.id.tv_sv_debug);
 				if (highlightText == null || highlightText.isEmpty()) {
 					debugTxtView.append(message + "\n");
 				} else {
@@ -1859,23 +1847,23 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						debugTxtView.append(message + "\n");
 					}
 				}
-				ScrollView debugTxtScroll = (ScrollView) findViewById(R.id.sv_debugview);
+				ScrollView debugTxtScroll = findViewById(R.id.sv_debugview);
 				debugTxtScroll.fullScroll(View.FOCUS_DOWN);
 				debugViewUpdate();
 			}
 		}
 	}
 
-	/** Handle broadcast messages about SPM data sync
+	/* Handle broadcast messages about SPM data sync
 	 *
 	 * @param bcIntent
 	 *            Intent of received broadcast
 	 */
 	private void handleDeviceStatusBC(Intent bcIntent) {
-		/** Values for handlers */
+		/* Values for handlers */
 		CommResult result = new CommResult();
 		String message = bcIntent.getStringExtra("message");
-		TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
+		TextView debugTxtView = findViewById(R.id.tv_sv_debug);
 
 		// Check if response is a JSON array
 		if (Utilities.isJSONValid(message)) {
@@ -1888,7 +1876,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				// Get device name
 				if (jsonResult.has("de")) {
 					broadCastDevice = jsonResult.getString("de");
-					Integer dotPos;
+					int dotPos;
 
 					// Check if device is already known
 					switch (broadCastDevice) {
@@ -1898,7 +1886,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[spMonitorIndex] || cmdDeviceList[spMonitorIndex]) {
+							if (cmdDeviceList[spMonitorIndex]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -1910,7 +1898,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[aircon1Index] || cmdDeviceList[aircon1Index]) {
+							if (cmdDeviceList[aircon1Index]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -1923,7 +1911,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[aircon2Index] || cmdDeviceList[aircon2Index]) {
+							if (cmdDeviceList[aircon2Index]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -1936,7 +1924,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[aircon3Index] || cmdDeviceList[aircon3Index]) {
+							if (cmdDeviceList[aircon3Index]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -1949,7 +1937,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[secFrontIndex] || cmdDeviceList[secFrontIndex]) {
+							if (cmdDeviceList[secFrontIndex]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -1961,10 +1949,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found " + broadCastDevice);
 								new Initialize().execute(broadCastDevice);
 							}
-							if (debugDeviceList[secBackIndex] || cmdDeviceList[secBackIndex]) {
+							if (cmdDeviceList[secBackIndex]) {
 								debugMsgs += message + "\n";
 							}
-							TextView outsideWeatherTV = (TextView) findViewById(R.id.tv_weather_out);
+							TextView outsideWeatherTV = findViewById(R.id.tv_weather_out);
 							String outsideWeather = "Outside\n";
 							String leadDigits;
 							if (jsonResult.has("te")) {
@@ -1986,7 +1974,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							securityViewUpdate(result);
 							break;
 						case "wei":
-							TextView insideWeatherTV = (TextView) findViewById(R.id.tv_weather_in);
+							TextView insideWeatherTV = findViewById(R.id.tv_weather_in);
 							String insideWeather = "Inside\n";
 							if (jsonResult.has("te")) {
 								leadDigits = jsonResult.getString("te");
@@ -2005,7 +1993,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							insideWeatherTV.setText(insideWeather);
 							break;
 						case "weo":
-							outsideWeatherTV = (TextView) findViewById(R.id.tv_weather_out);
+							outsideWeatherTV = findViewById(R.id.tv_weather_out);
 							outsideWeather = "Outside\n";
 							if (jsonResult.has("te")) {
 								leadDigits = jsonResult.getString("te");
@@ -2024,7 +2012,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							outsideWeatherTV.setText(outsideWeather);
 							break;
 						case "cm1":
-							if (debugDeviceList[cam1Index] || cmdDeviceList[cam1Index]) {
+							if (cmdDeviceList[cam1Index]) {
 								debugMsgs += message + "\n";
 							}
 							result.comCmd = "/?s";
@@ -2053,19 +2041,16 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									mPrefs.edit().putInt(prefsLightBedDim,newDimLightLevel).apply();
 								}
 							}
-							ImageButton ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_on);
-							//noinspection deprecation
+							ImageButton ibButtonToChange = findViewById(R.id.ib_light_bed_on);
 							ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_on));
-							ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_off);
-							//noinspection deprecation
+							ibButtonToChange = findViewById(R.id.ib_light_bed_off);
 							ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_off));
-							ibButtonToChange = (ImageButton) findViewById(R.id.ib_light_bed_dim);
-							//noinspection deprecation
+							ibButtonToChange = findViewById(R.id.ib_light_bed_dim);
 							ibButtonToChange.setImageDrawable(getResources().getDrawable(R.mipmap.ic_bulb_dim));
 							break;
 						case "ly1":
 							if (jsonResult.has("lo")) {
-								ToggleButton byLightSwitch = (ToggleButton) findViewById(R.id.tb_byard_light);
+								ToggleButton byLightSwitch = findViewById(R.id.tb_byard_light);
 								if (jsonResult.getInt("lo") == 0) {
 									byLightSwitch.setChecked(false);
 								} else {
@@ -2074,7 +2059,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							}
 							break;
 						case "moni":
-							if (debugDeviceList[moniIndex] || cmdDeviceList[moniIndex]) {
+							if (cmdDeviceList[moniIndex]) {
 								debugMsgs += message + "\n";
 							}
 							break;
@@ -2087,7 +2072,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								debugTxtView.append(message + "\n");
 							}
 						}
-						ScrollView debugTxtScroll = (ScrollView) findViewById(R.id.sv_debugview);
+						ScrollView debugTxtScroll = findViewById(R.id.sv_debugview);
 						debugTxtScroll.fullScroll(View.FOCUS_DOWN);
 					}
 					debugViewUpdate();
@@ -2098,13 +2083,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication in Async Task between Android and Arduino Yun
 	 */
 	@SuppressLint("StaticFieldLeak")
 	private class SPMPcommunication extends AsyncTask<String, String, CommResult> {
 
-		/**
+		/*
 		 * Background process of communication
 		 *
 		 * @param params
@@ -2121,7 +2106,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		@Override
 		protected CommResult doInBackground(String... params) {
 
-			/** Return values for onPostExecute */
+			/* Return values for onPostExecute */
 			CommResult result = new CommResult();
 
 			result.httpURL = params[0];
@@ -2132,7 +2117,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			Context thisAppContext = getApplicationContext();
 
-			/** A HTTP client to access the YUN device */
+			/* A HTTP client to access the YUN device */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
 					.connectTimeout(300, TimeUnit.SECONDS)
@@ -2146,19 +2131,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 //				result.httpURL = "www.spmonitor.giesecke.tk";
 				result.comCmd = "/l.php";
 			}
-			/** URL to be called */
+			/* URL to be called */
 			String urlString = "http://" + result.httpURL + result.comCmd; // URL to call
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callSPM = " + urlString);
 
-			/** Request to ESP device */
+			/* Request to ESP device */
 			Request request = new Request.Builder()
 					.url(urlString)
 					.build();
 
 			if (request != null) {
 				try {
-					/** Response from SPM device */
+					/* Response from SPM device */
 					Response response = client.newCall(request).execute();
 					if (response != null) {
 						result.comResult = response.body().string();
@@ -2199,7 +2184,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			return result;
 		}
 
-		/**
+		/*
 		 * Called when AsyncTask background process is finished
 		 *
 		 * @param result
@@ -2219,7 +2204,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					mySnackbar.setAction("OK", mOnClickListener);
 					mySnackbar.show();
 					View snackbarView = mySnackbar.getView();
-					TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+					TextView tv= snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 					tv.setMaxLines(5);
 					tv.setVerticalScrollBarEnabled(true);
 					tv.setMovementMethod(new ScrollingMovementMethod());
@@ -2231,7 +2216,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Send topic to MQTT broker in AsyncTask
 	 */
 	@SuppressLint("StaticFieldLeak")
@@ -2248,13 +2233,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			IMqttToken token;
 			try {
 				byte[] encodedPayload;
-				encodedPayload = payload.getBytes("UTF-8");
+				encodedPayload = payload.getBytes(StandardCharsets.UTF_8);
 				MqttMessage message = new MqttMessage(encodedPayload);
 				message.setQos(0);
 				message.setRetained(true);
 				token = MessageListener.mqttClient.publish("/CMD", message);
 				token.waitForCompletion(5000);
-			} catch (MqttSecurityException | UnsupportedEncodingException e) {
+			} catch (MqttSecurityException e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT publish exception " +e.getMessage());
 			} catch (MqttException e) {
 				switch (e.getReasonCode()) {
@@ -2282,7 +2267,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication in Async Task between Android and ESP8266 over TCP
 	 */
 	@SuppressLint("StaticFieldLeak")
@@ -2316,7 +2301,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication as Runnable between Android and ESP8266 over TCP
 	 */
 	private class ESPbyTCP implements Runnable {
@@ -2346,13 +2331,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication in Async Task between Android and Picture Gallery Server
 	 */
 	@SuppressLint("StaticFieldLeak")
 	private class galleryCommunication extends AsyncTask<String, String, CommResult> {
 
-		/**
+		/*
 		 * Background process of communication
 		 *
 		 * @param params
@@ -2369,7 +2354,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		@Override
 		protected CommResult doInBackground(String... params) {
 
-			/** Return values for onPostExecute */
+			/* Return values for onPostExecute */
 			CommResult result = new CommResult();
 
 			result.httpURL = params[0];
@@ -2379,7 +2364,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			Context thisAppContext = getApplicationContext();
 
-			/** A HTTP client to access the gallery server */
+			/* A HTTP client to access the gallery server */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
 					.connectTimeout(300, TimeUnit.SECONDS)
@@ -2387,20 +2372,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					.readTimeout(300, TimeUnit.SECONDS)
 					.build();
 
-			/** URL to be called */
+			/* URL to be called */
 //			String urlString = "https://" + result.httpURL + result.comCmd; // URL to call
 			String urlString = "http://1s.giesecke.tk" + result.comCmd; // URL to call
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "callGallery = " + urlString);
 
-			/** Request to gallery server */
+			/* Request to gallery server */
 			Request request = new Request.Builder()
 					.url(urlString)
 					.build();
 
 			if (request != null) {
 				try {
-					/** Response from gallery server */
+					/* Response from gallery server */
 					Response response = client.newCall(request).execute();
 					if (response != null) {
 						result.comResult = response.body().string();
@@ -2431,7 +2416,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			return result;
 		}
 
-		/**
+		/*
 		 * Called when AsyncTask background process is finished
 		 *
 		 * @param result
@@ -2451,7 +2436,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					mySnackbar.setAction("OK", mOnClickListener);
 					mySnackbar.show();
 					View snackbarView = mySnackbar.getView();
-					TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+					TextView tv = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 					tv.setMaxLines(5);
 					tv.setVerticalScrollBarEnabled(true);
 					tv.setMovementMethod(new ScrollingMovementMethod());
@@ -2479,7 +2464,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				mySnackbar.setAction("OK", mOnClickListener);
 				mySnackbar.show();
 				View snackbarView = mySnackbar.getView();
-				TextView tv= (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+				TextView tv = snackbarView.findViewById(android.support.design.R.id.snackbar_text);
 				tv.setMaxLines(5);
 				tv.setVerticalScrollBarEnabled(true);
 				tv.setMovementMethod(new ScrollingMovementMethod());
@@ -2490,7 +2475,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication as Runnable between Android and CCTV footage Server
 	 */
 	private class cctvCommunication implements Runnable {
@@ -2516,13 +2501,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Communication in Async Task between Android and CCTV footage Server
 	 */
 	@SuppressLint("StaticFieldLeak")
 	private class cctvCommunicationAsync extends AsyncTask<String, String, CCTVfootages> {
 
-		/**
+		/*
 		 * Background process of communication
 		 *
 		 * @param params
@@ -2539,17 +2524,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		@Override
 		protected CCTVfootages doInBackground(String... params) {
 
-			/** Return values for onPostExecute */
+			/* Return values for onPostExecute */
 
 			// Preset commError
 			lists.commError = "";
 
-			/** Communication result as string */
+			/* Communication result as string */
 			String result;
 
 			Context thisAppContext = getApplicationContext();
 
-			/** A HTTP client to access the cctv footage server */
+			/* A HTTP client to access the cctv footage server */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
 					.connectTimeout(300, TimeUnit.SECONDS)
@@ -2557,20 +2542,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					.readTimeout(300, TimeUnit.SECONDS)
 					.build();
 
-			/** First get list of directories */
+			/* First get list of directories */
 			String urlString = "http://" + dsURL + ":8080/getdir.php";
 
-			/** Request to cctv footage server */
+			/* Request to cctv footage server */
 			Request request = new Request.Builder()
 					.url(urlString)
 					.build();
 
-			/** String builder for communication error */
+			/* String builder for communication error */
 			StringBuilder commError = new StringBuilder();
 
 			if (request != null) {
 				try {
-					/** Response from cctv footage server */
+					/* Response from cctv footage server */
 					Response response = client.newCall(request).execute();
 					if (response != null ) {
 						result = response.body().string();
@@ -2600,17 +2585,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 			}
 
-			/** Second get list of todays cctv footage */
+			/* Second get list of todays cctv footage */
 			urlString = "http://" + dsURL + ":8080/getfiles.php";
 
-			/** Request to cctv footage server */
+			/* Request to cctv footage server */
 			request = new Request.Builder()
 					.url(urlString)
 					.build();
 
 			if (request != null) {
 				try {
-					/** Response from cctv footage server */
+					/* Response from cctv footage server */
 					Response response = client.newCall(request).execute();
 					if (response != null) {
 						result = response.body().string();
@@ -2640,21 +2625,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 			}
 
-			/** Third get all older cctv footage */
+			/* Third get all older cctv footage */
 			for (int index = 0; index < lists.availDaysList.size(); index++) {
-				/** List of todays footage and directories as array */
+				/* List of todays footage and directories as array */
 				ArrayList<String> selDayList = new ArrayList<>();
 
 				urlString = "http://" + dsURL + ":8080/getfiles.php?dir="+lists.availDaysList.get(index);
 
-				/** Request to cctv footage server */
+				/* Request to cctv footage server */
 				request = new Request.Builder()
 						.url(urlString)
 						.build();
 
 				if (request != null) {
 					try {
-						/** Response from cctv footage server */
+						/* Response from cctv footage server */
 						Response response = client.newCall(request).execute();
 						if (response != null) {
 							result = response.body().string();
@@ -2689,7 +2674,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			return lists;
 		}
 
-		/**
+		/*
 		 * Called when AsyncTask background process is finished
 		 *
 		 * @param result
@@ -2734,7 +2719,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Update UI with values received from ESP device
 	 *
 	 * @param result
@@ -2742,19 +2727,18 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	private void securityViewUpdate(final CommResult result) {
 		runOnUiThread(new Runnable() {
-			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
-				/** String used for temporary conversions */
+				/* String used for temporary conversions */
 				String tempString;
 				if (Utilities.isJSONValid(result.comResult)) {
-					/** JSON object to hold the result received from the ESP8266 */
+					/* JSON object to hold the result received from the ESP8266 */
 					JSONObject jsonResult;
 					try {
 						jsonResult = new JSONObject(result.comResult);
-						/** String to hold complete status in viewable form */
+						/* String to hold complete status in viewable form */
 						String message;
-						/** Device ID */
+						/* Device ID */
 						String deviceIDString;
 						try {
 							deviceIDString = jsonResult.getString("de");
@@ -2826,7 +2810,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 	}
 
-	/**
+	/*
 	 * Parse JSON and show received status in UI
 	 *
 	 * @param result
@@ -2840,7 +2824,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 		Context thisAppContext = getApplicationContext();
 		try {
-			/** JSON object with the result from the ESP device */
+			/* JSON object with the result from the ESP device */
 			JSONObject deviceResult = new JSONObject(result.comResult);
 			if (deviceResult.has("de")) {
 				deviceName[result.deviceIndex] = deviceResult.getString("de");
@@ -2912,20 +2896,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Update UI fields with the latest status of a device
 	 *
 	 * @param deviceIndex
 	 *            Index of the device to be updated
 	 */
 	private void updateAirStatus(int deviceIndex, Context thisAppContext) {
-		/** String for the average consumption value */
+		/* String for the average consumption value */
 		@SuppressLint("DefaultLocale") String consText = String.format("%.0f", consStatus) + "W";
-		/** String for the temperature setting value */
-		String tempText = Integer.toString(coolStatus[deviceIndex]) + "C";
-		/** String for the auto on/off status */
+		/* String for the temperature setting value */
+		String tempText = coolStatus[deviceIndex] + "C";
+		/* String for the auto on/off status */
 		String statusText = Integer.toString(autoStatus);
-		/** String with timer duration */
+		/* String with timer duration */
 		String timerTime;
 
 		switch (deviceType[deviceIndex]) {
@@ -2968,7 +2952,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerFD.setBackgroundColor(colorGreen);
-					timerTime = Integer.toString(deviceTimer[selDevice]) +
+					timerTime = deviceTimer[selDevice] +
 							" " +
 							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
@@ -3026,7 +3010,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerCA.setBackgroundColor(colorGreen);
-					timerTime = Integer.toString(deviceTimer[selDevice]) +
+					timerTime = deviceTimer[selDevice] +
 							" " +
 							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
@@ -3094,7 +3078,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				if (timerStatus[deviceIndex] == 0) {
 					btTimerAM.setBackgroundColor(colorGreen);
-					timerTime = Integer.toString(deviceTimer[selDevice]) +
+					timerTime = deviceTimer[selDevice] +
 							" " +
 							thisAppContext.getResources().getString(R.string.bt_txt_hour);
 				} else {
@@ -3119,7 +3103,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Update UI with values received from spMonitor device (Arduino part)
 	 *
 	 * @param value
@@ -3128,10 +3112,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	private void solarViewUpdate(final String value, final boolean isBroadCast) {
 		runOnUiThread(new Runnable() {
 			@SuppressLint("DefaultLocale")
-			@SuppressWarnings({"deprecation", "ConstantConditions"})
 			@Override
 			public void run() {
-				/** Pointer to text views to be updated */
+				/* Pointer to text views to be updated */
 				TextView valueFields;
 				/* String with results received from spMonitor device */
 				String result;
@@ -3139,9 +3122,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (value.length() != 0) {
 					// decode JSON
 					if (Utilities.isJSONValid(value)) {
-						/** Flag for data from external server */
+						/* Flag for data from external server */
 						boolean isFromLocal;
-						/** JSON object containing the values */
+						/* JSON object containing the values */
 						JSONObject jsonValues = null;
 						try {
 							jsonValues = new JSONObject(value.substring(1,value.length()-1));
@@ -3159,10 +3142,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						}
 						try {
 							if (isFromLocal) {
-								/** JSON object containing result from server */
+								/* JSON object containing result from server */
 								JSONObject jsonResult = new JSONObject(value);
 								if (jsonResult.has("value")) {
-									/** JSON object containing the values */
+									/* JSON object containing the values */
 									jsonValues = jsonResult.getJSONObject("value");
 								} else {
 									return;
@@ -3186,7 +3169,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								ChartHelper.consPowerMin = ChartHelper.lastConsPowerMin;
 							}
 
-							result = "S=" + String.valueOf(ChartHelper.solarPowerMin) + "W ";
+							result = "S=" + ChartHelper.solarPowerMin + "W ";
 							result += "s=";
 							try {
 								result += jsonValues.getString("s");
@@ -3225,7 +3208,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									result += "---";
 								}
 							}
-							result += "\nC=" + String.valueOf(ChartHelper.consPowerMin) + "W c=";
+							result += "\nC=" + ChartHelper.consPowerMin + "W c=";
 							try {
 								result += jsonValues.getString("c");
 							} catch (Exception excError) {
@@ -3267,28 +3250,28 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 								result += " ";
 							}
 
-							/** Double for the result of solar current and consumption used at 1min updates */
+							/* Double for the result of solar current and consumption used at 1min updates */
 							double resultPowerMin = ChartHelper.solarPowerMin + ChartHelper.consPowerMin;
 
-							valueFields = (TextView) findViewById(R.id.tv_solar_val);
-							/** String for display */
+							valueFields = findViewById(R.id.tv_solar_val);
+							/* String for display */
 							String displayTxt;
 							displayTxt = String.format("%.0f", ChartHelper.solarPowerMin) + "W";
 							valueFields.setText(displayTxt);
-							valueFields = (TextView) findViewById(R.id.tv_cons_val);
+							valueFields = findViewById(R.id.tv_cons_val);
 							displayTxt = String.format("%.0f", resultPowerMin) + "W";
 							valueFields.setText(displayTxt);
 							solStatus.setText(result);
 
-							valueFields = (TextView) findViewById(R.id.tv_result_txt);
+							valueFields = findViewById(R.id.tv_result_txt);
 							if (ChartHelper.consPowerMin > 0.0d) {
 								valueFields.setText(getString(R.string.tv_result_txt_im));
-								valueFields = (TextView) findViewById(R.id.tv_result_val);
+								valueFields = findViewById(R.id.tv_result_val);
 								valueFields.setTextColor(getResources()
 										.getColor(android.R.color.holo_red_light));
 							} else {
 								valueFields.setText(getString(R.string.tv_result_txt_ex));
-								valueFields = (TextView) findViewById(R.id.tv_result_val);
+								valueFields = findViewById(R.id.tv_result_val);
 								valueFields.setTextColor(getResources()
 										.getColor(android.R.color.holo_green_light));
 							}
@@ -3297,7 +3280,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 							if (ChartHelper.autoRefreshOn) {
 								if (ChartHelper.plotData != null) {
-									/** Current time as string */
+									/* Current time as string */
 									String nowTime = Utilities.getCurrentTime();
 									ChartHelper.plotData.addXValue(nowTime);
 									ChartHelper.timeStampsCont.add(nowTime);
@@ -3317,12 +3300,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 										ChartHelper.consPSeries.add(new Entry(0, ChartHelper.consPSeries.size()));
 										ChartHelper.consumPPowerCont.add(0.0f);
 									}
-									/** Text view to show min and max poser values */
-									TextView maxPowerText = (TextView) findViewById(R.id.tv_cons_max);
+									/* Text view to show min and max poser values */
+									TextView maxPowerText = findViewById(R.id.tv_cons_max);
 									displayTxt = "(" + String.format("%.0f",
 											Collections.max(ChartHelper.consumMPowerCont)) + "W)";
 									maxPowerText.setText(displayTxt);
-									maxPowerText = (TextView) findViewById(R.id.tv_solar_max);
+									maxPowerText = findViewById(R.id.tv_solar_max);
 									displayTxt = "(" + String.format("%.0f",
 											Collections.max(ChartHelper.solarPowerCont)) + "W)";
 									maxPowerText.setText(displayTxt);
@@ -3347,21 +3330,21 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 	}
 
-	/**
+	/*
 	 * Update Debug UI with status of MQTT broker
 	 */
 	private void debugViewUpdate() {
 		Locale locale = Locale.getDefault();
-		TextView viewToChange = (TextView) findViewById(R.id.tv_mqtt_bytes_avg);
+		TextView viewToChange = findViewById(R.id.tv_mqtt_bytes_avg);
 		String tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadRcvd)
 				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesLoadSend);
 		viewToChange.setText(tvText);
-		viewToChange = (TextView) findViewById(R.id.tv_mqtt_msg_avg);
+		viewToChange = findViewById(R.id.tv_mqtt_msg_avg);
 		tvText = NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsRcvd)
 				+ " / " + NumberFormat.getNumberInstance(locale).format(MessageListener.bytesMsgsSend);
 		viewToChange.setText(tvText);
 
-		viewToChange = (TextView) findViewById(R.id.tv_mqtt_client_conn);
+		viewToChange = findViewById(R.id.tv_mqtt_client_conn);
 		viewToChange.setText(NumberFormat.getNumberInstance(locale).format(MessageListener.clientsConn));
 
 		StringBuilder statusClients1 = new StringBuilder();
@@ -3376,9 +3359,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 			}
 		}
-		viewToChange = (TextView) findViewById(R.id.tv_mqtt_client_list1);
+		viewToChange = findViewById(R.id.tv_mqtt_client_list1);
 		viewToChange.setText(statusClients1.toString());
-		viewToChange = (TextView) findViewById(R.id.tv_mqtt_client_list2);
+		viewToChange = findViewById(R.id.tv_mqtt_client_list2);
 		viewToChange.setText(statusClients2.toString());
 
 		StringBuilder devNamesFound = new StringBuilder();
@@ -3389,13 +3372,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				devIPsFound.append(deviceIPs[i]).append("\n");
 			}
 		}
-		viewToChange = (TextView) findViewById(R.id.tv_device_name_list);
+		viewToChange = findViewById(R.id.tv_device_name_list);
 		viewToChange.setText(devNamesFound.toString());
-		viewToChange = (TextView) findViewById(R.id.tv_device_ip_list);
+		viewToChange = findViewById(R.id.tv_device_ip_list);
 		viewToChange.setText(devIPsFound.toString());
 	}
 
-	/**
+	/*
 	 * Subscribe/Unsubscribe from MQTT broker status topics in AsyncTask
 	 */
 	@SuppressLint("StaticFieldLeak")
@@ -3415,7 +3398,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Update UI with values received from spMonitor device (Linino part)
 	 *
 	 * @param syncMonth
@@ -3427,15 +3410,15 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			public void run() {
 				solStatus.setText(getString(R.string.filesSynced));
 
-				/** The application context */
+				/* The application context */
 				Context thisAppContext = getApplicationContext();
 				if (!showingLog) {
-					/** Today split into 3 integers for the database query */
+					/* Today split into 3 integers for the database query */
 					int[] todayDate = Utilities.getCurrentDate();
-					/** Array with existing log dates on the Arduino */
+					/* Array with existing log dates on the Arduino */
 					List<String> thisLogDates;
 
-					/** Instance of data base */
+					/* Instance of data base */
 					SQLiteDatabase dataBase = null;
 					try {
 						if (syncMonth.equalsIgnoreCase(dbNamesList[0])) {
@@ -3454,7 +3437,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							try {
 								dataBase.beginTransaction();
 
-								/** Cursor with new data from the database */
+								/* Cursor with new data from the database */
 								Cursor newDataSet = DataBaseHelper.getDay(dataBase, todayDate[2],
 										todayDate[1], todayDate[0] - 2000);
 								if (newDataSet != null) {
@@ -3462,23 +3445,23 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 									newDataSet.close();
 								}
 								thisLogDates.clear();
-								/** List with years in the database */
+								/* List with years in the database */
 								ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
 								for (int year = 0; year < yearsAvail.size(); year++) {
-									/** List with months of year in the database */
+									/* List with months of year in the database */
 									ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
 											0, yearsAvail.get(year));
 									for (int month = 0; month < monthsAvail.size(); month++) {
-										/** List with days of month of year in the database */
+										/* List with days of month of year in the database */
 										ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
 												monthsAvail.get(month),
 												yearsAvail.get(year));
 										for (int day = 0; day < daysAvail.size(); day++) {
-											thisLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
+											thisLogDates.add(("00" + yearsAvail.get(year))
 													.substring(String.valueOf(yearsAvail.get(year)).length()) +
-													"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+													"-" + ("00" + monthsAvail.get(month))
 													.substring(String.valueOf(monthsAvail.get(month)).length()) +
-													"-" + ("00" + String.valueOf(daysAvail.get(day)))
+													"-" + ("00" + daysAvail.get(day))
 													.substring(String.valueOf(daysAvail.get(day)).length()));
 										}
 									}
@@ -3502,7 +3485,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 	}
 
-	/**
+	/*
 	 * Check if service is running
 	 *
 	 * @param serviceClass
@@ -3511,12 +3494,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 *              True if service is running
 	 *              False if service is not running
 	 */
-	private boolean myServiceIsStopped(Class<?> serviceClass) {
-		/** Activity manager for services */
+	private boolean myServiceIsStopped() {
+		/* Activity manager for services */
 		ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 		if (manager != null) {
 			for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-				if (serviceClass.getName().equals(service.service.getClassName())) {
+				if (MessageListener.class.getName().equals(service.service.getClassName())) {
 					return false;
 				}
 			}
@@ -3524,34 +3507,33 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return true;
 	}
 
-	/**
+	/*
 	 * Set all global variables used
 	 */
-	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private void setGlobalVar() {
 		// For security view:
-		secStatus = (TextView) findViewById(R.id.security_status);
-		ivAlarmStatus = (ImageView) findViewById(R.id.dot_alarm_status);
-		ivLightStatus = (ImageView) findViewById(R.id.dot_light);
-		secAutoAlarmFront = (CheckBox) findViewById(R.id.cb_sec_auto_alarm);
-		secAutoAlarmBack = (CheckBox) findViewById(R.id.cb_sec_auto_alarm_2);
-		secChangeAlarm = (TextView) findViewById(R.id.tv_change_alarm);
-		secBackView = (TableLayout) findViewById(R.id.tl_alarm_back);
-		ivAlarmStatusBack = (ImageView) findViewById(R.id.dot_alarm_status_back);
-		ivLightStatusBack = (ImageView) findViewById(R.id.dot_light_back);
+		secStatus = findViewById(R.id.security_status);
+		ivAlarmStatus = findViewById(R.id.dot_alarm_status);
+		ivLightStatus = findViewById(R.id.dot_light);
+		secAutoAlarmFront = findViewById(R.id.cb_sec_auto_alarm);
+		secAutoAlarmBack = findViewById(R.id.cb_sec_auto_alarm_2);
+		secChangeAlarm = findViewById(R.id.tv_change_alarm);
+		secBackView = findViewById(R.id.tl_alarm_back);
+		ivAlarmStatusBack = findViewById(R.id.dot_alarm_status_back);
+		ivLightStatusBack = findViewById(R.id.dot_light_back);
 
 		// For solar view:
-		solStatus = (TextView) findViewById(R.id.solar_status);
+		solStatus = findViewById(R.id.solar_status);
 		appView = getWindow().getDecorView().findViewById(android.R.id.content);
-		ChartHelper.lineChart = (LineChart) findViewById(R.id.graph);
-		chartTitle = (TextView) findViewById(R.id.tv_plotTitle);
+		ChartHelper.lineChart = findViewById(R.id.graph);
+		chartTitle = findViewById(R.id.tv_plotTitle);
 
 		// For aircon view:
-		airFDView = (RelativeLayout) findViewById(R.id.fuji_denzo);
-		airCAView = (RelativeLayout) findViewById(R.id.carrier);
-		airAMView = (RelativeLayout) findViewById(R.id.american);
+		airFDView = findViewById(R.id.fuji_denzo);
+		airCAView = findViewById(R.id.carrier);
+		airAMView = findViewById(R.id.american);
 
-		airStatus = (TextView) findViewById(R.id.aircon_status);
+		airStatus = findViewById(R.id.aircon_status);
 		btAutoLightFD = findViewById(R.id.bt_auto_hl_fd);
 		btOnOffLightFD = findViewById(R.id.bt_on_off_hl_fd);
 		btFanHighLightFD = findViewById(R.id.bt_fan_high_hl_fd);
@@ -3580,25 +3562,25 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		btSleepLightAM = findViewById(R.id.bt_sleep_hl_am);
 		btAutomLightAM = findViewById(R.id.bt_autom_hl_am);
 
-		btTimerFD = (Button) findViewById(R.id.bt_timer_fd);
-		btTimerCA = (Button) findViewById(R.id.bt_timer_ca);
-		btTimerAM = (Button) findViewById(R.id.bt_timer_am);
+		btTimerFD = findViewById(R.id.bt_timer_fd);
+		btTimerCA = findViewById(R.id.bt_timer_ca);
+		btTimerAM = findViewById(R.id.bt_timer_am);
 
-		btFanCA = (Button) findViewById(R.id.bt_fanspeed_ca);
-		btFanAM = (Button) findViewById(R.id.bt_fanspeed_am);
+		btFanCA = findViewById(R.id.bt_fanspeed_ca);
+		btFanAM = findViewById(R.id.bt_fanspeed_am);
 
-		txtConsValFD = (TextView) findViewById(R.id.txt_cons_val_fd);
-		txtTempValFD = (TextView) findViewById(R.id.txt_temp_val_fd);
-		txtAutoStatusValFD = (TextView) findViewById(R.id.txt_auto_status_val_fd);
-		txtConsValCA = (TextView) findViewById(R.id.txt_cons_val_ca);
-		txtTempValCA = (TextView) findViewById(R.id.txt_temp_val_ca);
-		txtAutoStatusValCA = (TextView) findViewById(R.id.txt_auto_status_val_ca);
-		txtConsValAM = (TextView) findViewById(R.id.txt_cons_val_am);
-		txtTempValAM = (TextView) findViewById(R.id.txt_temp_val_am);
-		txtAutoStatusValAM = (TextView) findViewById(R.id.txt_auto_status_val_am);
+		txtConsValFD = findViewById(R.id.txt_cons_val_fd);
+		txtTempValFD = findViewById(R.id.txt_temp_val_fd);
+		txtAutoStatusValFD = findViewById(R.id.txt_auto_status_val_fd);
+		txtConsValCA = findViewById(R.id.txt_cons_val_ca);
+		txtTempValCA = findViewById(R.id.txt_temp_val_ca);
+		txtAutoStatusValCA = findViewById(R.id.txt_auto_status_val_ca);
+		txtConsValAM = findViewById(R.id.txt_cons_val_am);
+		txtTempValAM = findViewById(R.id.txt_temp_val_am);
+		txtAutoStatusValAM = findViewById(R.id.txt_auto_status_val_am);
 
 		// For debug view
-		final EditText edittext = (EditText) findViewById(R.id.et_highlight);
+		final EditText edittext = findViewById(R.id.et_highlight);
 		edittext.setOnKeyListener(new View.OnKeyListener() {
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
@@ -3610,17 +3592,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 
 		// For light control view
-		bedRoomValSB = (SeekBar) findViewById(R.id.sb_bedroom);
+		bedRoomValSB = findViewById(R.id.sb_bedroom);
 		bedRoomValSB.setOnSeekBarChangeListener(this);
-		bedRoomVal = (TextView) findViewById(R.id.tv_bedroom_value);
+		bedRoomVal = findViewById(R.id.tv_bedroom_value);
 
-		ImageButton bedRoomDimIB = (ImageButton) findViewById(R.id.ib_light_bed_dim);
+		ImageButton bedRoomDimIB = findViewById(R.id.ib_light_bed_dim);
 		bedRoomDimIB.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View view) {
 				int brightnessVal = 222 - bedRoomValSB.getProgress();
 				mPrefs.edit().putInt(prefsLightBedDim, brightnessVal).apply();
-				/** Command for ESP */
+				/* Command for ESP */
 				String cmd = String.valueOf(brightnessVal);
 				cmd = "d=" + cmd;
 				new ESPbyTCP(getString(R.string.LIGHTS_BEDROOM),cmd,"0");
@@ -3628,25 +3610,20 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			}
 		});
 
-		//noinspection deprecation
 		colorRed = getResources().getColor(android.R.color.holo_red_light);
-		//noinspection deprecation
 		colorGrey = getResources().getColor(android.R.color.darker_gray);
-		//noinspection deprecation
 		colorOrange = getResources().getColor(android.R.color.holo_orange_light);
-		//noinspection deprecation
 		colorGreen = getResources().getColor(android.R.color.holo_green_light);
 
-		/** Pointer to text views showing the consumed / produced energy */
-		TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
+		/* Pointer to text views showing the consumed / produced energy */
+		TextView energyText = findViewById(R.id.tv_cons_energy);
 		energyText.setVisibility(View.INVISIBLE);
-		energyText = (TextView) findViewById(R.id.tv_solar_energy);
+		energyText = findViewById(R.id.tv_solar_energy);
 		energyText.setVisibility(View.INVISIBLE);
 
-		/** Button to stop/start continuous UI refresh */
-		Button btStop = (Button) findViewById(R.id.bt_stop);
+		/* Button to stop/start continuous UI refresh */
+		Button btStop = findViewById(R.id.bt_stop);
 		if (showingLog) {
-			//noinspection deprecation
 			btStop.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 			btStop.setText(getResources().getString(R.string.start));
 		}
@@ -3660,7 +3637,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		showDebug = mPrefs.getBoolean(prefsShowDebug, false);
 	}
 
-	/**
+	/*
 	 * Initializing method
 	 * - Find all available devices
 	 * - Check if Google Cloud Messaging is registered
@@ -3700,7 +3677,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Initializing method for aircon control
 	 * Send status update request
 	 *
@@ -3722,7 +3699,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
 			}
 			// Update aircon 1 icon
-			//noinspection deprecation
 			initHandler(7, "1", "", "", "",
 					(ImageView) findViewById(R.id.im_icon_fd),
 					getResources().getDrawable(iconIDs[deviceIcon[0]]));
@@ -3741,7 +3717,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				deviceIcon[1] = mPrefs.getInt(prefsDeviceIcon + "0", 99);
 			}
 			// Update aircon 2 icon
-			//noinspection deprecation
 			initHandler(7, "", "", "", "",
 					(ImageView) findViewById(R.id.im_icon_ca),
 					getResources().getDrawable(iconIDs[deviceIcon[1]]));
@@ -3760,7 +3735,6 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				deviceIcon[0] = mPrefs.getInt(prefsDeviceIcon + "2", 99);
 			}
 			// Update aircon 3 icon
-			//noinspection deprecation
 			initHandler(7, "", "", "", "",
 					(ImageView) findViewById(R.id.im_icon_am),
 					getResources().getDrawable(iconIDs[deviceIcon[2]]));
@@ -3771,7 +3745,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Initializing method for security control
 	 * Send status update request
 	 *
@@ -3794,7 +3768,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Initializing method for solar panel monitor
 	 * Check local databases and request update if necessary
 	 * Send status update request
@@ -3806,12 +3780,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			dbNamesList = Utilities.getDateStrings();
 
 			// In case the database is not yet existing, open it once
-			/** Instance of data base */
+			/* Instance of data base */
 			SQLiteDatabase dataBase = null;
 			try {
 				dataBase = dbHelperNow.getReadableDatabase();
 				dataBase.beginTransaction();
-				/** Cursor with data from database */
+				/* Cursor with data from database */
 				Cursor chCursor = DataBaseHelper.getLastRow(dataBase);
 				if (chCursor != null) {
 					dataBaseIsEmpty = chCursor.getCount() == 0;
@@ -3819,7 +3793,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				}
 				dataBase.endTransaction();
 				dataBase.close();
-				/** Instance of data base */
+				/* Instance of data base */
 				dataBase = dbHelperLast.getReadableDatabase();
 				dataBase.beginTransaction();
 				dataBase.endTransaction();
@@ -3832,32 +3806,32 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 
 			if (!dataBaseIsEmpty && dataBase != null) { // Sync second database only if first one is not empty
 				// Check if we have already synced the last month
-				/** Instance of data base */
+				/* Instance of data base */
 				dataBase = dbHelperLast.getReadableDatabase();
-				/** Cursor with data from database */
+				/* Cursor with data from database */
 				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
 				if (dbCursor != null) {
 					try {
 						// create logged data array only if database is not empty
 						if (dbCursor.getCount() != 0) {
 							lastLogDates.clear();
-							/** List with years in the database */
+							/* List with years in the database */
 							ArrayList<Integer> yearsAvail = DataBaseHelper.getEntries(dataBase, "year", 0, 0);
 							for (int year = 0; year < yearsAvail.size(); year++) {
-								/** List with months of year in the database */
+								/* List with months of year in the database */
 								ArrayList<Integer> monthsAvail = DataBaseHelper.getEntries(dataBase, "month",
 										0, yearsAvail.get(year));
 								for (int month = 0; month < monthsAvail.size(); month++) {
-									/** List with days of month of year in the database */
+									/* List with days of month of year in the database */
 									ArrayList<Integer> daysAvail = DataBaseHelper.getEntries(dataBase, "day",
 											monthsAvail.get(month),
 											yearsAvail.get(year));
 									for (int day = 0; day < daysAvail.size(); day++) {
-										lastLogDates.add(("00" + String.valueOf(yearsAvail.get(year)))
+										lastLogDates.add(("00" + yearsAvail.get(year))
 												.substring(String.valueOf(yearsAvail.get(year)).length()) +
-												"-" + ("00" + String.valueOf(monthsAvail.get(month)))
+												"-" + ("00" + monthsAvail.get(month))
 												.substring(String.valueOf(monthsAvail.get(month)).length()) +
-												"-" + ("00" + String.valueOf(daysAvail.get(day)))
+												"-" + ("00" + daysAvail.get(day))
 												.substring(String.valueOf(daysAvail.get(day)).length()));
 									}
 								}
@@ -3883,7 +3857,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Initializing method for light control
 	 * Send status update request
 	 *
@@ -3905,7 +3879,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		}
 	}
 
-	/**
+	/*
 	 * Handle UI tasks of async task initialize()
 	 *
 	 * @param task
@@ -3945,14 +3919,13 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							 final ImageView iconImage,
 							 final Drawable iconDrawable) {
 		runOnUiThread(new Runnable() {
-			@SuppressWarnings({"deprecation", "ConstantConditions"})
 			@Override
 			public void run() {
-				/** Text view to show location name */
+				/* Text view to show location name */
 				TextView locationText;
-				/** Timer button */
+				/* Timer button */
 				Button btTimer;
-				/** Text for timer button */
+				/* Text for timer button */
 				String timerTime;
 				switch (task) {
 					case 0: // Security screen status update
@@ -3976,28 +3949,28 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						new SPMPcommunication().execute(url, message, "", deviceID, airconID);
 						break;
 					case 4: // Aircon 1 location & timer button text
-						locationText = (TextView) findViewById(R.id.txt_device_fd);
+						locationText = findViewById(R.id.txt_device_fd);
 						locationText.setText(message);
-						btTimer = (Button) findViewById(R.id.bt_timer_fd);
-						timerTime = Integer.toString(deviceTimer[0]) +
+						btTimer = findViewById(R.id.bt_timer_fd);
+						timerTime = deviceTimer[0] +
 								" " +
 								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
 						break;
 					case 5: // Aircon 2 location & timer button text
-						locationText = (TextView) findViewById(R.id.txt_device_ca);
+						locationText = findViewById(R.id.txt_device_ca);
 						locationText.setText(message);
-						btTimer = (Button) findViewById(R.id.bt_timer_ca);
-						timerTime = Integer.toString(deviceTimer[1]) +
+						btTimer = findViewById(R.id.bt_timer_ca);
+						timerTime = deviceTimer[1] +
 								" " +
 								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
 						break;
 					case 6: // Aircon 3 location & timer button text
-						locationText = (TextView) findViewById(R.id.txt_device_am);
+						locationText = findViewById(R.id.txt_device_am);
 						locationText.setText(message);
-						btTimer = (Button) findViewById(R.id.bt_timer_am);
-						timerTime = Integer.toString(deviceTimer[2]) +
+						btTimer = findViewById(R.id.bt_timer_am);
+						timerTime = deviceTimer[2] +
 								" " +
 								getString(R.string.bt_txt_hour);
 						btTimer.setText(timerTime);
@@ -4016,7 +3989,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						startService(new Intent(getApplicationContext(), SolarSyncDataBase.class));
 						break;
 					case 10:
-						TableLayout backYardDots = (TableLayout) findViewById(R.id.tl_alarm_back);
+						TableLayout backYardDots = findViewById(R.id.tl_alarm_back);
 						backYardDots.setVisibility(View.VISIBLE);
 						break;
 					case 11:
@@ -4025,7 +3998,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		});
 	}
 
-	/**
+	/*
 	 * Switch to requested UI
 	 *
 	 * @param uiSelected
@@ -4033,18 +4006,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 *            1 = Solar panel UI
 	 *            2 = Aircon control UI
 	 */
-	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private void switchUI(int uiSelected) {
 
-		/** Pointer to action bar */
-		Toolbar actionBar = (Toolbar) findViewById(R.id.toolbar);
-		/** Color of toolBar background */
+		/* Pointer to action bar */
+		Toolbar actionBar = findViewById(R.id.toolbar);
+		/* Color of toolBar background */
 		Drawable toolBarDrawable;
-		/** Menu item pointer */
+		/* Menu item pointer */
 		MenuItem menuItem;
-		/** Color for status bar */
+		/* Color for status bar */
 		int statusBarColor;
-		/** Color for action bar */
+		/* Color for action bar */
 		int actionBarColor;
 
 		switch (uiSelected) {
@@ -4199,14 +4171,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		if (android.os.Build.VERSION.SDK_INT >= 21) {
 			getWindow().setStatusBarColor(statusBarColor);
 		}
-		if (android.os.Build.VERSION.SDK_INT >= 16) {
-			toolBarDrawable = new ColorDrawable(actionBarColor);
-			actionBar.setBackground(toolBarDrawable);
-		}
+		toolBarDrawable = new ColorDrawable(actionBarColor);
+		actionBar.setBackground(toolBarDrawable);
 		mPrefs.edit().putInt(prefsLastView,visibleView).apply();
 	}
 
-	/**
+	/*
 	 * Handle Security view buttons
 	 *
 	 * @param v
@@ -4215,15 +4185,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		True if button was handled
 	 * 		False if button was not from security view
 	 */
-	@SuppressWarnings("deprecation")
 	private boolean handleSecurityButtons(View v) {
-		/** Flag if button was handled */
+		/* Flag if button was handled */
 		boolean wasSecButton = true;
-		/** URL for communication with ESP */
+		/* URL for communication with ESP */
 		String url = "";
-		/** Command for ESP */
+		/* Command for ESP */
 		String cmd = "";
-		/** DeviceID used for MQTT */
+		/* DeviceID used for MQTT */
 		String deviceID = "";
 		switch (v.getId()) {
 			case R.id.dot_alarm_status:
@@ -4306,9 +4275,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				final int orgOffTime = secAutoOffStored;
 				alarmDlg.setTitle("NumberPicker");
 				alarmDlg.setContentView(R.layout.se_alarm_settings);
-				Button cancelButton = (Button) alarmDlg.findViewById(R.id.bt_sec_cancel);
-				Button okButton = (Button) alarmDlg.findViewById(R.id.bt_sec_ok);
-				final NumberPicker npOnTime = (NumberPicker) alarmDlg.findViewById(R.id.np_Alarm_on);
+				Button cancelButton = alarmDlg.findViewById(R.id.bt_sec_cancel);
+				Button okButton = alarmDlg.findViewById(R.id.bt_sec_ok);
+				final NumberPicker npOnTime = alarmDlg.findViewById(R.id.np_Alarm_on);
 				npOnTime.setMaxValue(23);
 				npOnTime.setMinValue(0);
 				npOnTime.setValue(secAutoOnStored);
@@ -4319,7 +4288,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 						secAutoOnStored = newVal;
 					}
 				});
-				final NumberPicker npOffTime = (NumberPicker) alarmDlg.findViewById(R.id.np_Alarm_off);
+				final NumberPicker npOffTime = alarmDlg.findViewById(R.id.np_Alarm_off);
 				npOffTime.setMaxValue(23);
 				npOffTime.setMinValue(0);
 				npOffTime.setValue(secAutoOffStored);
@@ -4389,16 +4358,22 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 					if (launchIntent != null) {
 						startActivity(launchIntent);//null pointer check in case package name was not found
 					} else {
-						Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
-								getString((R.string.sec_missing_app)),
-								Snackbar.LENGTH_INDEFINITE);
-						mySnackbar.setAction("OK", mOnClickListener);
-						mySnackbar.show();
+						// Try use external VLC version
+						launchIntent = getPackageManager().getLaunchIntentForPackage("tk.giesecke.cctvusingvlc");
+						if (launchIntent != null) {
+							startActivity(launchIntent);//null pointer check in case package name was not found
+						} else {
+							Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
+									getString((R.string.sec_missing_app)),
+									Snackbar.LENGTH_INDEFINITE);
+							mySnackbar.setAction("OK", mOnClickListener);
+							mySnackbar.show();
+						}
 					}
 				}
 				break;
 			case R.id.ib_cctv:
-				/** Prepare lists for CCTV footage */
+				/* Prepare lists for CCTV footage */
 				lists = new CCTVfootages();
 				Snackbar mySnackbar = Snackbar.make(findViewById(android.R.id.content),
 						getString(R.string.cctv_footage_wait),
@@ -4416,7 +4391,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return wasSecButton;
 	}
 
-	/**
+	/*
 	 * Handle Solar panel view buttons
 	 *
 	 * @param v
@@ -4425,15 +4400,14 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		True if button was handled
 	 * 		False if button was not from solar panel view
 	 */
-	@SuppressWarnings({"deprecation", "ConstantConditions"})
 	private boolean handleSPMbuttons(View v) {
-		/** Flag if button was handled */
+		/* Flag if button was handled */
 		boolean wasSPMbutton = true;
-		/** Button to go to previous  log */
-		Button prevButton  = (Button) findViewById(R.id.bt_prevLog);
-		/** Button to go to next log */
-		Button nextButton  = (Button) findViewById(R.id.bt_nextLog);
-		/** The application context */
+		/* Button to go to previous  log */
+		Button prevButton  = findViewById(R.id.bt_prevLog);
+		/* Button to go to next log */
+		Button nextButton  = findViewById(R.id.bt_nextLog);
+		/* The application context */
 		Context thisAppContext = getApplicationContext();
 
 		switch (v.getId()) {
@@ -4449,24 +4423,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (!showingLast) { // use this months database
 					if (logDatesIndex > 0) {
 						logDatesIndex--;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = findViewById(R.id.bt_stop);
 						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 						stopButton.setText(getResources().getString(R.string.start));
 						ChartHelper.autoRefreshOn = false;
 						showingLog = true;
 						// Get data from data base
-						/** String list with requested date info */
+						/* String list with requested date info */
 						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
+						/* Instance of data base */
 						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
 
-						/** Cursor with new data from the database */
+						/* Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet, appView);
-						ChartHelper.initChart(false, thisAppContext, chartTitle);
-						newDataSet.close();
+						if (newDataSet != null) {
+							ChartHelper.fillSeries(newDataSet, appView);
+							ChartHelper.initChart(false, thisAppContext, chartTitle);
+							newDataSet.close();
+						}
 						dataBase.close();
 
 						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
@@ -4474,24 +4450,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				} else { // use last months database
 					if (lastLogDatesIndex > 0) {
 						lastLogDatesIndex--;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = findViewById(R.id.bt_stop);
 						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 						stopButton.setText(getResources().getString(R.string.start));
 						ChartHelper.autoRefreshOn = false;
 						showingLog = true;
 						// Get data from data base
-						/** String list with requested date info */
+						/* String list with requested date info */
 						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
+						/* Instance of data base */
 						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
 
-						/** Cursor with new data from the database */
+						/* Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet, appView);
-						ChartHelper.initChart(false, thisAppContext, chartTitle);
-						newDataSet.close();
+						if (newDataSet != null) {
+							ChartHelper.fillSeries(newDataSet, appView);
+							ChartHelper.initChart(false, thisAppContext, chartTitle);
+							newDataSet.close();
+						}
 						dataBase.close();
 
 						if (lastLogDatesIndex == 0) {
@@ -4515,24 +4493,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (!showingLast) { // use this months database
 					if (logDatesIndex < logDates.size() - 1) {
 						logDatesIndex++;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = findViewById(R.id.bt_stop);
 						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 						stopButton.setText(getResources().getString(R.string.start));
 						ChartHelper.autoRefreshOn = false;
 						showingLog = true;
 						// Get data from data base
-						/** String list with requested date info */
+						/* String list with requested date info */
 						String[] requestedDate = logDates.get(logDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
+						/* Instance of data base */
 						SQLiteDatabase dataBase = dbHelperNow.getReadableDatabase();
 
-						/** Cursor with new data from the database */
+						/* Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet, appView);
-						ChartHelper.initChart(false, thisAppContext, chartTitle);
-						newDataSet.close();
+						if (newDataSet != null) {
+							ChartHelper.fillSeries(newDataSet, appView);
+							ChartHelper.initChart(false, thisAppContext, chartTitle);
+							newDataSet.close();
+						}
 						dataBase.close();
 
 						if (logDatesIndex == logDates.size() - 1) {
@@ -4545,24 +4525,26 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				} else { // use last months database
 					if (lastLogDatesIndex < lastLogDates.size() - 1) {
 						lastLogDatesIndex++;
-						/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-						Button stopButton = (Button) findViewById(R.id.bt_stop);
+						/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+						Button stopButton = findViewById(R.id.bt_stop);
 						stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 						stopButton.setText(getResources().getString(R.string.start));
 						ChartHelper.autoRefreshOn = false;
 						showingLog = true;
 						// Get data from data base
-						/** String list with requested date info */
+						/* String list with requested date info */
 						String[] requestedDate = lastLogDates.get(lastLogDatesIndex).substring(0, 8).split("-");
-						/** Instance of data base */
+						/* Instance of data base */
 						SQLiteDatabase dataBase = dbHelperLast.getReadableDatabase();
 
-						/** Cursor with new data from the database */
+						/* Cursor with new data from the database */
 						Cursor newDataSet = DataBaseHelper.getDay(dataBase, Integer.parseInt(requestedDate[2]),
 								Integer.parseInt(requestedDate[1]), Integer.parseInt(requestedDate[0]));
-						ChartHelper.fillSeries(newDataSet, appView);
-						ChartHelper.initChart(false, thisAppContext, chartTitle);
-						newDataSet.close();
+						if (newDataSet != null) {
+							ChartHelper.fillSeries(newDataSet, appView);
+							ChartHelper.initChart(false, thisAppContext, chartTitle);
+							newDataSet.close();
+						}
 						dataBase.close();
 
 						nextButton.setTextColor(getResources().getColor(android.R.color.holo_blue_dark));
@@ -4571,8 +4553,8 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.bt_stop:
 				if (ChartHelper.autoRefreshOn) {
-					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-					Button stopButton = (Button) findViewById(R.id.bt_stop);
+					/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+					Button stopButton = findViewById(R.id.bt_stop);
 					stopButton.setTextColor(getResources().getColor(android.R.color.holo_green_light));
 					stopButton.setText(getResources().getString(R.string.start));
 					ChartHelper.autoRefreshOn = false;
@@ -4583,17 +4565,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 							startService(new Intent(this, SolarSyncDataBase.class));
 						}
 
-						/** Pointer to text views showing the consumed / produced energy */
-						TextView energyText = (TextView) findViewById(R.id.tv_cons_energy);
+						/* Pointer to text views showing the consumed / produced energy */
+						TextView energyText = findViewById(R.id.tv_cons_energy);
 						energyText.setVisibility(View.INVISIBLE);
-						energyText = (TextView) findViewById(R.id.tv_solar_energy);
+						energyText = findViewById(R.id.tv_solar_energy);
 						energyText.setVisibility(View.INVISIBLE);
 
 						logDatesIndex = logDates.size() - 1;
 						nextButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 					}
-					/** Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
-					Button stopButton = (Button) findViewById(R.id.bt_stop);
+					/* Button to stop/start continuous UI refresh and switch between 5s and 60s refresh rate */
+					Button stopButton = findViewById(R.id.bt_stop);
 					stopButton.setTextColor(getResources().getColor(android.R.color.holo_red_light));
 					stopButton.setText(getResources().getString(R.string.stop));
 					ChartHelper.autoRefreshOn = true;
@@ -4606,7 +4588,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return wasSPMbutton;
 	}
 
-	/**
+	/*
 	 * Handle Aircon view buttons
 	 *
 	 * @param v
@@ -4615,20 +4597,19 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		True if button was handled
 	 * 		False if button was not from aircon view
 	 */
-	@SuppressWarnings("ConstantConditions")
 	private boolean handleAirconButtons(View v) {
-		/** Flag if button was handled */
+		/* Flag if button was handled */
 		boolean wasAirconButton = true;
-		/** URL for communication with ESP */
+		/* URL for communication with ESP */
 //		String url = espIP[selDevice];
 		String url = deviceIPs[selDevice + aircon1Index];
-		/** DeviceID used for MQTT */
+		/* DeviceID used for MQTT */
 		String deviceID = deviceName[selDevice];
-		/** Command for ESP */
+		/* Command for ESP */
 		String cmd = "";
-		/** Timer button */
+		/* Timer button */
 		Button btTimer;
-		/** Text for timer button */
+		/* Text for timer button */
 		String timerTime;
 
 		switch (v.getId()) {
@@ -4762,9 +4743,9 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 			case R.id.bt_timer_ca:
 			case R.id.bt_timer_am:
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Setting timer to " + deviceTimer[selDevice]);
-				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(deviceTimer[selDevice]));
+				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + deviceTimer[selDevice]);
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Second command = " + "c="  + CMD_OTHER_TIMER);
-				new ESPbyTCP(url, "t=" + Integer.toString(deviceTimer[selDevice]), deviceID);
+				new ESPbyTCP(url, "t=" + deviceTimer[selDevice], deviceID);
 				cmd = "c=" + CMD_OTHER_TIMER;
 				break;
 			case R.id.bt_timer_minus_fd:
@@ -4773,10 +4754,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[selDevice] == 0) {
 					if (deviceTimer[selDevice] > 1) {
 						deviceTimer[selDevice]--;
-						cmd = "t=" + Integer.toString(deviceTimer[selDevice]);
+						cmd = "t=" + deviceTimer[selDevice];
 					}
-					btTimer = (Button) findViewById(R.id.bt_timer_fd);
-					timerTime = Integer.toString(deviceTimer[selDevice]) +
+					btTimer = findViewById(R.id.bt_timer_fd);
+					timerTime = deviceTimer[selDevice] +
 							" " +
 							getString(R.string.bt_txt_hour);
 					btTimer.setText(timerTime);
@@ -4788,10 +4769,10 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				if (timerStatus[selDevice] == 0) {
 					if (deviceTimer[selDevice] < 9) {
 						deviceTimer[selDevice]++;
-						cmd = "t=" + Integer.toString(deviceTimer[selDevice]);
+						cmd = "t=" + deviceTimer[selDevice];
 					}
-					btTimer = (Button) findViewById(R.id.bt_timer_fd);
-					timerTime = Integer.toString(deviceTimer[selDevice]) +
+					btTimer = findViewById(R.id.bt_timer_fd);
+					timerTime = deviceTimer[selDevice] +
 							" " +
 							getString(R.string.bt_txt_hour);
 					btTimer.setText(timerTime);
@@ -4806,7 +4787,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return wasAirconButton;
 	}
 
-	/**
+	/*
 	 * Handle Debug view buttons
 	 *
 	 * @param v
@@ -4817,17 +4798,17 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	@SuppressWarnings("ConstantConditions")
 	private boolean handleDebugButtons(View v) {
-		/** Flag if button was handled */
+		/* Flag if button was handled */
 		boolean wasDebugButton = true;
-		/** URL for communication with ESP */
+		/* URL for communication with ESP */
 //		String url = espIP[selDevice];
 		String url = deviceIPs[selDevice + aircon1Index];
-		/** DeviceID used for MQTT */
+		/* DeviceID used for MQTT */
 		String deviceID = "chk";
-		/** Command for ESP */
+		/* Command for ESP */
 		String cmd = "";
-		/** Textview to show the incoming debug messages */
-		TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
+		/* Textview to show the incoming debug messages */
+		TextView debugTxtView = findViewById(R.id.tv_sv_debug);
 
 		switch (v.getId()) {
 			case R.id.bt_clear:
@@ -4902,7 +4883,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return wasDebugButton;
 	}
 
-	/**
+	/*
 	 * Handle Debug command buttons
 	 *
 	 * @param v
@@ -4913,122 +4894,124 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 */
 	@SuppressWarnings("ConstantConditions")
 	private boolean handleDebugCmdButtons(View v) {
-		/** Toggle button that was pressed */
+		/* Toggle button that was pressed */
 		ToggleButton tbPushed = null;
-		/** Index for list of enabled devices to send command to */
+		/* Index for list of enabled devices to send command to */
 		int listIndex = -1;
-		switch (v.getId()) {
-			case R.id.bt_cmd_send:
-				String[] availDevices = getResources().getStringArray(R.array.mhc_devices);
-				AlertDialog.Builder devListbuilder = new AlertDialog.Builder(this);
-				devListbuilder.setTitle("Select device");
-				devListbuilder.setItems(availDevices, new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected device num = " + which);
-						String[] availCmds = null;
-						final int selDeviceNum = which;
-						String cmdAsText;
-						switch (which) {
-							case 0:
-							case 1:
-								availCmds = getResources().getStringArray(R.array.sec_cmds_txt);
-								break;
-							case 2:
-								availCmds = getResources().getStringArray(R.array.cam_cmds_txt);
-								break;
-							case 3:
-								availCmds = getResources().getStringArray(R.array.byard_light_cmds_txt);
-								break;
-							case 4:
-								availCmds = getResources().getStringArray(R.array.bed_light_cmds_txt);
-								break;
-							case 5:
-							case 6:
-								availCmds = getResources().getStringArray(R.array.ac_cmds_txt);
-								break;
-							case 7:
-								availCmds = getResources().getStringArray(R.array.mhc_cmds_txt);
-								break;
-							case 8:
-								cmdAsText = "d";
-								for (int i=0; i<deviceNames.length; i++) {
-									if (!deviceIPs[i].equalsIgnoreCase("")) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
-										new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
-									}
+		if (v.getId() == R.id.bt_cmd_send) {
+			String[] availDevices = getResources().getStringArray(R.array.mhc_devices);
+			AlertDialog.Builder devListbuilder = new AlertDialog.Builder(this);
+			devListbuilder.setTitle("Select device");
+			devListbuilder.setItems(availDevices, new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected device num = " + which);
+					String[] availCmds = null;
+					final int selDeviceNum = which;
+					String cmdAsText;
+					switch (which) {
+						case 0:
+						case 1:
+							availCmds = getResources().getStringArray(R.array.sec_cmds_txt);
+							break;
+						case 2:
+							availCmds = getResources().getStringArray(R.array.cam_cmds_txt);
+							break;
+						case 3:
+							availCmds = getResources().getStringArray(R.array.byard_light_cmds_txt);
+							break;
+						case 4:
+							availCmds = getResources().getStringArray(R.array.bed_light_cmds_txt);
+							break;
+						case 5:
+						case 6:
+							availCmds = getResources().getStringArray(R.array.ac_cmds_txt);
+							break;
+						case 7:
+							availCmds = getResources().getStringArray(R.array.mhc_cmds_txt);
+							break;
+						case 8:
+							cmdAsText = "d";
+							for (int i = 0; i < deviceNames.length; i++) {
+								if (!deviceIPs[i].equalsIgnoreCase("")) {
+									if (BuildConfig.DEBUG)
+										Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
+									new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
 								}
-								break;
-							case 9:
-								cmdAsText = "s";
-								for (int i=0; i<deviceNames.length; i++) {
-									if (!deviceIPs[i].equalsIgnoreCase("")) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
-										new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
-									}
+							}
+							break;
+						case 9:
+							cmdAsText = "s";
+							for (int i = 0; i < deviceNames.length; i++) {
+								if (!deviceIPs[i].equalsIgnoreCase("")) {
+									if (BuildConfig.DEBUG)
+										Log.d(DEBUG_LOG_TAG, "Request status from : " + deviceIPs[i]);
+									new ESPbyTCP(deviceIPs[i], cmdAsText, "0");
 								}
-								break;
-						}
-						dialog.dismiss();
-						if (availCmds != null) {
-							AlertDialog.Builder cmdListBuilder = new AlertDialog.Builder(appContext);
-							cmdListBuilder.setTitle("Select command");
-							cmdListBuilder.setItems(availCmds, new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog, int which) {
-									if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected cmd num = " + which);
-									String selURL = "";
-									String[] cmdList = null;
-									switch (selDeviceNum) {
-										case 0:
-											selURL = deviceIPs[secFrontIndex];
-											cmdList = getResources().getStringArray(R.array.sec_cmds);
-											break;
-										case 1:
-											selURL = deviceIPs[secBackIndex];
-											cmdList = getResources().getStringArray(R.array.sec_cmds);
-											break;
-										case 2:
-											selURL = deviceIPs[cam1Index];
-											cmdList = getResources().getStringArray(R.array.cam_cmds);
-											break;
-										case 3:
-											selURL = deviceIPs[ly1Index];
-											cmdList = getResources().getStringArray(R.array.byard_light_cmds);
-											break;
-										case 4:
-											selURL = deviceIPs[lb1Index];
-											cmdList = getResources().getStringArray(R.array.bed_light_cmds);
-											break;
-										case 5:
-											selURL = deviceIPs[aircon1Index];
-											cmdList = getResources().getStringArray(R.array.ac_cmds);
-											break;
-										case 6:
-											selURL = deviceIPs[aircon2Index];
-											cmdList = getResources().getStringArray(R.array.ac_cmds);
-											break;
-										case 7:
-											selURL = deviceIPs[11];
-											cmdList = getResources().getStringArray(R.array.mhc_cmds);
-											break;
-									}
-									dialog.dismiss();
-									if (cmdList != null) {
-										if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Selected cmd = " + cmdList[which]);
-										new ESPbyTCP(selURL, cmdList[which], "0");
-									}
-								}
-							});
-							cmdListBuilder.create();
-							cmdListBuilder.show();
-						}
+							}
+							break;
 					}
-				});
-				devListbuilder.show();
-				break;
-			default:
-				return false;
+					dialog.dismiss();
+					if (availCmds != null) {
+						AlertDialog.Builder cmdListBuilder = new AlertDialog.Builder(appContext);
+						cmdListBuilder.setTitle("Select command");
+						cmdListBuilder.setItems(availCmds, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								if (BuildConfig.DEBUG)
+									Log.d(DEBUG_LOG_TAG, "Selected cmd num = " + which);
+								String selURL = "";
+								String[] cmdList = null;
+								switch (selDeviceNum) {
+									case 0:
+										selURL = deviceIPs[secFrontIndex];
+										cmdList = getResources().getStringArray(R.array.sec_cmds);
+										break;
+									case 1:
+										selURL = deviceIPs[secBackIndex];
+										cmdList = getResources().getStringArray(R.array.sec_cmds);
+										break;
+									case 2:
+										selURL = deviceIPs[cam1Index];
+										cmdList = getResources().getStringArray(R.array.cam_cmds);
+										break;
+									case 3:
+										selURL = deviceIPs[ly1Index];
+										cmdList = getResources().getStringArray(R.array.byard_light_cmds);
+										break;
+									case 4:
+										selURL = deviceIPs[lb1Index];
+										cmdList = getResources().getStringArray(R.array.bed_light_cmds);
+										break;
+									case 5:
+										selURL = deviceIPs[aircon1Index];
+										cmdList = getResources().getStringArray(R.array.ac_cmds);
+										break;
+									case 6:
+										selURL = deviceIPs[aircon2Index];
+										cmdList = getResources().getStringArray(R.array.ac_cmds);
+										break;
+									case 7:
+										selURL = deviceIPs[11];
+										cmdList = getResources().getStringArray(R.array.mhc_cmds);
+										break;
+								}
+								dialog.dismiss();
+								if (cmdList != null) {
+									if (BuildConfig.DEBUG)
+										Log.d(DEBUG_LOG_TAG, "Selected cmd = " + cmdList[which]);
+									new ESPbyTCP(selURL, cmdList[which], "0");
+								}
+							}
+						});
+						cmdListBuilder.create();
+						cmdListBuilder.show();
+					}
+				}
+			});
+			devListbuilder.show();
+		} else {
+			return false;
 		}
 
 		if ((listIndex != -1) && tbPushed != null) {
@@ -5043,7 +5026,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return true;
 	}
 
-	/**
+	/*
 	 * Handle Light control view buttons
 	 *
 	 * @param v
@@ -5053,13 +5036,12 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 	 * 		False if button was not from light control view
 	 */
 	@SuppressLint("SetTextI18n")
-	@SuppressWarnings("ConstantConditions")
 	private boolean handleLightButtons(View v) {
-		/** Flag if button was handled */
+		/* Flag if button was handled */
 		boolean wasLightButton = true;
-		/** DeviceID used for MQTT */
+		/* DeviceID used for MQTT */
 		String deviceID = getString(R.string.LIGHTS_BEDROOM);
-		/** Command for ESP */
+		/* Command for ESP */
 		String cmd = "";
 
 		switch (v.getId()) {
@@ -5085,7 +5067,7 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 				break;
 			case R.id.tb_byard_light:
 				deviceID = getString(R.string.LIGHTS_BACKYARD);
-				ToggleButton byLightSwitch = (ToggleButton) findViewById(R.id.tb_byard_light);
+				ToggleButton byLightSwitch = findViewById(R.id.tb_byard_light);
 				if (byLightSwitch.isChecked()) {
 					cmd = "l=1";
 				} else {
@@ -5100,18 +5082,18 @@ public class MyHomeControl extends AppCompatActivity implements View.OnClickList
 		return wasLightButton;
 	}
 
-	/**
+	/*
 	 * Filter debug message with new search phrase
 	 * or reset to full text if search phrase is empty
 	 */
 	private void filterDbgMsg() {
-		/** Textview to show the incoming debug messages */
-		TextView debugTxtView = (TextView) findViewById(R.id.tv_sv_debug);
-		/** Edittext to highlight search word in the incoming debug messages */
-		EditText debugTxtHighlight = (EditText) findViewById(R.id.et_highlight);
+		/* Textview to show the incoming debug messages */
+		TextView debugTxtView = findViewById(R.id.tv_sv_debug);
+		/* Edittext to highlight search word in the incoming debug messages */
+		EditText debugTxtHighlight = findViewById(R.id.et_highlight);
 
 		highlightText = debugTxtHighlight.getText().toString();
-		ScrollView debugTxtScroll = (ScrollView) findViewById(R.id.sv_debugview);
+		ScrollView debugTxtScroll = findViewById(R.id.sv_debugview);
 
 		if (highlightText == null || highlightText.isEmpty()) { //if no search text is entered
 			debugTxtView.setText(debugMsgs);

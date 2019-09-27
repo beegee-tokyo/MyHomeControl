@@ -18,7 +18,7 @@ public class BackYardLightWidget extends AppWidgetProvider {
 	                                   int appWidgetId, int lightStatus) {
 
 		// Construct the RemoteViews object
-		/** Instance of the widget view */
+		/* Instance of the widget view */
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_by_light_ctrl);
 
 		if (lightStatus == 1) { // Light is on
@@ -27,7 +27,7 @@ public class BackYardLightWidget extends AppWidgetProvider {
 			views.setImageViewResource(R.id.iv_by_light_widget, R.mipmap.ic_by_light_off);
 		}
 
-		/** Intent to start method to switch on light when widget is clicked */
+		/* Intent to start method to switch on light when widget is clicked */
 		Intent serviceIntent = new Intent(context, BackYardLightWidgetHelper.class);
 		serviceIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
 		if (lightStatus == 1) {
@@ -35,7 +35,7 @@ public class BackYardLightWidget extends AppWidgetProvider {
 		} else {
 			serviceIntent.setAction("1"); // Light is off, switch it on
 		}
-		/** Pending intent to start method when widget is clicked */
+		/* Pending intent to start method when widget is clicked */
 		PendingIntent pendingServiceIntent =
 				PendingIntent.getService(context, 0, serviceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

@@ -27,7 +27,7 @@ import tk.giesecke.myhomecontrol.Utilities;
 import static tk.giesecke.myhomecontrol.MyHomeControl.sharedPrefName;
 import static tk.giesecke.myhomecontrol.devices.MessageListener.BROADCAST_RECEIVED;
 
-/**
+/*
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  */
@@ -44,12 +44,12 @@ public class SolarSyncDataBase extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
-			/** Context of application */
+			/* Context of application */
 			Context intentContext = getApplicationContext();
 
 			if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"Background sync of database started");
 
-			/** Access to shared preferences of app widget */
+			/* Access to shared preferences of app widget */
 			SharedPreferences mPrefs = intentContext.getSharedPreferences(sharedPrefName, 0);
 
 			// Try to sync only if we have connection and are on same WiFi as the spMonitor device
@@ -61,12 +61,12 @@ public class SolarSyncDataBase extends IntentService {
 				// Get today's day for the online database name
 				String[] dbNamesList = Utilities.getDateStrings();
 
-				/** Instance of DataBaseHelper */
+				/* Instance of DataBaseHelper */
 				DataBaseHelper dbHelper;
-				/** Instance of data base */
+				/* Instance of data base */
 				SQLiteDatabase dataBase;
 
-				/** Flag for full sync */
+				/* Flag for full sync */
 				boolean syncAll = false;
 
 				String syncedMonth = mPrefs.getString(MyHomeControl.prefsSolarSynced, "");
@@ -79,15 +79,15 @@ public class SolarSyncDataBase extends IntentService {
 					deleteDatabase(DataBaseHelper.DATABASE_NAME);
 					deleteDatabase(DataBaseHelper.DATABASE_NAME_LAST);
 					mPrefs.edit().putString(MyHomeControl.prefsSolarSynced, dbNamesList[0]).apply();
-					/** Instance of DataBaseHelper */
+					/* Instance of DataBaseHelper */
 					dbHelper = new DataBaseHelper(this, DataBaseHelper.DATABASE_NAME);
-					/** Instance of data base */
+					/* Instance of data base */
 					dataBase = dbHelper.getReadableDatabase();
 					dataBase.close();
 					dbHelper.close();
-					/** Instance of DataBaseHelper */
+					/* Instance of DataBaseHelper */
 					dbHelper = new DataBaseHelper(this, DataBaseHelper.DATABASE_NAME_LAST);
-					/** Instance of data base */
+					/* Instance of data base */
 					dataBase = dbHelper.getReadableDatabase();
 					dataBase.close();
 					dbHelper.close();
@@ -121,7 +121,7 @@ public class SolarSyncDataBase extends IntentService {
 		}
 	}
 
-	/**
+	/*
 	 * Sync local database with the spMonitor database
 	 *
 	 * @param dbName
@@ -132,13 +132,13 @@ public class SolarSyncDataBase extends IntentService {
 	 *        Context of this intent
 	 */
 	private boolean syncDB(String dbName, String syncMonth, Context intentContext, boolean syncAll) {
-		/** URL to be called */
+		/* URL to be called */
 		SharedPreferences mPrefs = getSharedPreferences(sharedPrefName,0);
 		String solarURL = mPrefs.getString(
 				MyHomeControl.deviceNames
 						[MyHomeControl.spMonitorIndex],
 				"NA");
-		String urlString = "https://" + solarURL + "/sd/spMonitor/query2.php"; // URL to call
+		String urlString = "http://" + solarURL + "/sd/spMonitor/query2.php"; // URL to call
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + MyHomeControl.deviceNames
 				[MyHomeControl.spMonitorIndex]);
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + mPrefs.getString(
@@ -147,22 +147,22 @@ public class SolarSyncDataBase extends IntentService {
 				"NA"));
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG,"syncDB: " + urlString);
 
-		/** Instance of DataBaseHelper */
+		/* Instance of DataBaseHelper */
 		DataBaseHelper dbHelper;
-		/** Instance of data base */
+		/* Instance of data base */
 		SQLiteDatabase dataBase;
 
 		// Check if we need to sync all
 		if (syncAll) {
 			urlString += "?date=" + syncMonth;
 		} else {
-			/** Instance of DataBaseHelper */
+			/* Instance of DataBaseHelper */
 			dbHelper = new DataBaseHelper(intentContext, dbName);
 			try {
-				/** Instance of data base */
+				/* Instance of data base */
 				dataBase = dbHelper.getReadableDatabase();// Check for last entry in the local database
 				dataBase.beginTransaction();
-				/** Cursor with data from database */
+				/* Cursor with data from database */
 				Cursor dbCursor = DataBaseHelper.getLastRow(dataBase);
 				if (dbCursor != null) {
 					if (dbCursor.getCount() != 0) { // local database not empty, need to sync only missing
@@ -177,13 +177,13 @@ public class SolarSyncDataBase extends IntentService {
 						urlString += "-" + ("00" +
 								dbCursor.getString(1)).substring(dbCursor.getString(1).length()); // add month
 						urlString += "-" + ("00" +
-								String.valueOf(lastDay))
+								lastDay)
 								.substring(String.valueOf(lastDay).length()); // add day
 						urlString += "-" + ("00" +
-								String.valueOf(lastHour))
+								lastHour)
 								.substring(String.valueOf(lastHour).length()); // add hour
 						urlString += ":" + ("00" +
-								String.valueOf(lastMinute))
+								lastMinute)
 								.substring(String.valueOf(lastMinute).length()); // add minute
 						urlString += "&get=all";
 					} else { // local database is empty, need to sync all data
@@ -208,9 +208,9 @@ public class SolarSyncDataBase extends IntentService {
 			}
 		}
 
-		/** Repeat counter used when full database needs to be synced */
+		/* Repeat counter used when full database needs to be synced */
 		int loopCnt = 0;
-		/** URL used for access */
+		/* URL used for access */
 		String thisURL = urlString;
 		if (syncAll) {
 			loopCnt = 3;
@@ -218,7 +218,7 @@ public class SolarSyncDataBase extends IntentService {
 
 		for (int loop = 0; loop <= loopCnt; loop++) {
 			if (syncAll) {
-				urlString = thisURL + "-" + String.valueOf(loop);
+				urlString = thisURL + "-" + loop;
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "URL = " + urlString);
 			}
 			getSPMData(urlString, intentContext, dbName);
@@ -226,23 +226,23 @@ public class SolarSyncDataBase extends IntentService {
 		return true;
 	}
 
-	/** Call SPM device to get requested data
+	/* Call SPM device to get requested data
 	 */
 	private void getSPMData(String urlString, Context intentContext, String dbName) {
-		/** Request to spMonitor device */
+		/* Request to spMonitor device */
 		Request request = new Request.Builder()
 				.url(urlString)
 				.build();
 
 		if (request != null) {
-			/** String with data received from spMonitor device */
+			/* String with data received from spMonitor device */
 			String resultData = "";
-			/** Instance of DataBaseHelper */
+			/* Instance of DataBaseHelper */
 			DataBaseHelper dbHelper;
-			/** Instance of data base */
+			/* Instance of data base */
 			SQLiteDatabase dataBase;
 
-			/** A HTTP client to access the SPM device */
+			/* A HTTP client to access the SPM device */
 			// Set timeout to 5 minutes in case we have a lot of data to load
 			OkHttpClient client = new OkHttpClient.Builder()
 					.connectTimeout(300, TimeUnit.SECONDS)
@@ -250,7 +250,7 @@ public class SolarSyncDataBase extends IntentService {
 					.readTimeout(300, TimeUnit.SECONDS)
 					.build();
 			try {
-				/** Response from spMonitor device */
+				/* Response from spMonitor device */
 				Response response = client.newCall(request).execute();
 				if (response != null) {
 					resultData = response.body().string();
@@ -259,11 +259,11 @@ public class SolarSyncDataBase extends IntentService {
 					if (!resultData.equalsIgnoreCase("")) {
 						if (resultData.startsWith("[")) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Found valid JSON start");
-							/** JSON array with the data received from spMonitor device */
+							/* JSON array with the data received from spMonitor device */
 							JSONArray jsonFromDevice = new JSONArray(resultData);
-							/** Instance of DataBaseHelper */
+							/* Instance of DataBaseHelper */
 							dbHelper = new DataBaseHelper(intentContext, dbName);
-							/** Instance of data base */
+							/* Instance of data base */
 							dataBase = dbHelper.getWritableDatabase();
 							if (dataBase == null) {
 								dbHelper.close();
@@ -278,7 +278,7 @@ public class SolarSyncDataBase extends IntentService {
 										for (int i=0; i<jsonFromDevice.length(); i++) {
 											// skip first data record from device if we are just updating the database
 											if (i == 0) i++;
-											/** JSONObject with a single record */
+											/* JSONObject with a single record */
 											JSONObject jsonRecord = jsonFromDevice.getJSONObject(i);
 											String record = jsonRecord.getString("d");
 											record = record.replace("-",",");
@@ -310,14 +310,14 @@ public class SolarSyncDataBase extends IntentService {
 		}
 	}
 
-	/**
+	/*
 	 * Send received message to all listing threads
 	 *
 	 * @param dataBase
 	 *            Name of synced database
 	 */
 	private void sendMyBroadcast(String dataBase) {
-		/** Intent for activity internal broadcast message */
+		/* Intent for activity internal broadcast message */
 		Intent broadCastIntent = new Intent();
 		broadCastIntent.setAction(BROADCAST_RECEIVED);
 		broadCastIntent.putExtra("from", "SPSYNC");

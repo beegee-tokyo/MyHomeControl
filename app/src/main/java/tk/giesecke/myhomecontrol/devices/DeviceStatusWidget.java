@@ -19,7 +19,6 @@ public class DeviceStatusWidget extends AppWidgetProvider {
 	/** Tag for debug messages */
 	private static final String DEBUG_LOG_TAG = "MHC-DEVSTAT";
 
-	@SuppressWarnings("deprecation")
 	static public void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
 	                            int appWidgetId, boolean checkAll) {
 
@@ -27,9 +26,9 @@ public class DeviceStatusWidget extends AppWidgetProvider {
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.wi_device_status);
 		if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "updateAppWidget status widget");
 
-		/** Time now to check when last device status message arrived */
+		/* Time now to check when last device status message arrived */
 		long timeNow = System.currentTimeMillis();
-		/** Timeout for device status update (set to 6 minutes) */
+		/* Timeout for device status update (set to 6 minutes) */
 		long timeOut = 360000;
 		if (checkAll) {
 			if (MessageListener.lastSpmMsg == 0) {
@@ -155,9 +154,9 @@ public class DeviceStatusWidget extends AppWidgetProvider {
 					.getColor(android.R.color.holo_red_light));
 		}
 
-		/** Intent to start app if widget is pushed */
+		/* Intent to start app if widget is pushed */
 		Intent appIntent = new Intent(context, DeviceStatusWidgetHelper.class);
-		/** Pending intent to start app if widget is pushed */
+		/* Pending intent to start app if widget is pushed */
 		PendingIntent pendingAppIntent = PendingIntent.getService(context, 0,
 				appIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 		//  Attach an on-click listener to the widget

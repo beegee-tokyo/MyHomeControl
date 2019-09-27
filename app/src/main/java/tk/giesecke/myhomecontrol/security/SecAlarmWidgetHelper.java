@@ -54,7 +54,7 @@ public class SecAlarmWidgetHelper extends IntentService {
 					return;
 				}
 
-				/** Command string */
+				/* Command string */
 				String cmd;
 				if (alarmIsActive) {
 					cmd = "a=0"; // Disable alarm

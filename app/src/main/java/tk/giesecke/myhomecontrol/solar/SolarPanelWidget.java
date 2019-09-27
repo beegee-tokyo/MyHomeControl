@@ -21,7 +21,7 @@ public class SolarPanelWidget extends AppWidgetProvider {
 
 	@Override
 	public void onDisabled(Context context) {
-		/** Instance of the shared preferences */
+		/* Instance of the shared preferences */
 		SharedPreferences mPrefs = context.getSharedPreferences(MyHomeControl.sharedPrefName,0);
 		mPrefs.edit().putInt(MyHomeControl.prefsSolarWidgetNum,0).apply();
 	}
@@ -40,7 +40,6 @@ public class SolarPanelWidget extends AppWidgetProvider {
 	 * @param consPowerMin
 	 *            Power imported/exported by the house
 	 */
-	@SuppressWarnings("deprecation")
 	@SuppressLint({"InlinedApi", "DefaultLocale"})
 	public static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
 	                                   int appWidgetId,
@@ -50,9 +49,9 @@ public class SolarPanelWidget extends AppWidgetProvider {
 		StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 		StrictMode.setThreadPolicy(policy);
 
-		/** RemoteViews object */
+		/* RemoteViews object */
 		RemoteViews views;
-		/** Access to shared preferences of app widget */
+		/* Access to shared preferences of app widget */
 		SharedPreferences mPrefs = context.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 
 		if (mPrefs.getBoolean(MyHomeControl.prefsSolarWidgetSize,true)) {
@@ -61,15 +60,15 @@ public class SolarPanelWidget extends AppWidgetProvider {
 			views = new RemoteViews(context.getPackageName(), R.layout.wi_solar_panel_s);
 		}
 
-		/** Intent to start app if widget is pushed */
+		/* Intent to start app if widget is pushed */
 		Intent intent1 = new Intent(context, SolarPanelWidgetHelper.class);
-		/** Pending intent to start app if widget is pushed */
+		/* Pending intent to start app if widget is pushed */
 		PendingIntent pendingIntent1 = PendingIntent.getService(context, 0,
 				intent1, PendingIntent.FLAG_UPDATE_CURRENT);
 		//  Attach an on-click listener to the battery icon
 		views.setOnClickPendingIntent(R.id.rlSPwidget, pendingIntent1);
 
-		/** Double for the result of solar current and consumption used at 1min updates */
+		/* Double for the result of solar current and consumption used at 1min updates */
 		double resultPowerMin = solarPowerMin + consPowerMin;
 
 		views.setTextViewText(R.id.tv_widgetRow1Value, String.format("%.0f", resultPowerMin) + "W");

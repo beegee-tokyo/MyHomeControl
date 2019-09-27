@@ -40,8 +40,7 @@
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/sec_front"
 		android:id="@+id/tv_status_front"
-		android:layout_alignParentStart="true"
-		android:layout_alignParentLeft="true"/>
+		android:layout_alignParentStart="true"/>
 
 	<TextView
 		android:layout_width="wrap_content"
@@ -50,7 +49,6 @@
 		android:text="@string/sec_back"
 		android:id="@+id/tv_status_back"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		tools:ignore="RelativeOverlap"/>
 
 	<ImageView
@@ -62,9 +60,7 @@
 		android:onClick="onClick"
 		android:clickable="true"
 		android:layout_below="@+id/tv_status_front"
-		android:layout_alignRight="@+id/tv_status_front"
 		android:layout_alignEnd="@+id/tv_status_front"
-		android:layout_alignLeft="@+id/tv_status_front"
 		android:layout_alignStart="@+id/tv_status_front"/>
 
 	<TextView
@@ -88,10 +84,7 @@
 		android:clickable="true"
 		android:layout_below="@+id/tv_status_front"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
-		android:layout_alignLeft="@+id/tv_status_back"
 		android:layout_alignStart="@+id/tv_status_back"
-		android:layout_alignRight="@+id/tv_status_back"
 		android:layout_alignEnd="@+id/tv_status_back"/>
 
 	<ImageView
@@ -103,9 +96,7 @@
 		android:clickable="true"
 		android:onClick="onClick"
 		android:layout_below="@+id/dot_alarm_status"
-		android:layout_alignLeft="@+id/tv_status_front"
 		android:layout_alignStart="@+id/tv_status_front"
-		android:layout_alignRight="@+id/tv_status_front"
 		android:layout_alignEnd="@+id/tv_status_front"/>
 
 	<TextView
@@ -128,10 +119,7 @@
 		android:onClick="onClick"
 		android:layout_below="@+id/dot_alarm_status"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
-		android:layout_alignRight="@+id/tv_status_back"
 		android:layout_alignEnd="@+id/tv_status_back"
-		android:layout_alignLeft="@+id/tv_status_back"
 		android:layout_alignStart="@+id/tv_status_back"/>
 
 	<CheckBox
@@ -152,8 +140,7 @@
 		android:checked="false"
 		android:onClick="onClick"
 		android:layout_below="@+id/dot_light"
-		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"/>
+		android:layout_alignParentEnd="true"/>
 
 	<TextView
 		android:layout_width="match_parent"
@@ -168,8 +155,6 @@
 		android:clickable="true"
 		android:layout_alignTop="@+id/cb_sec_auto_alarm"
 		android:layout_alignBottom="@+id/cb_sec_auto_alarm"
-		android:layout_toRightOf="@+id/cb_sec_auto_alarm"
-		android:layout_toLeftOf="@+id/cb_sec_auto_alarm_2"
 		android:layout_toEndOf="@+id/cb_sec_auto_alarm"
 		android:layout_toStartOf="@+id/cb_sec_auto_alarm_2"
 		android:gravity="center"/>
@@ -192,9 +177,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:src="@android:drawable/ic_menu_camera"
-		android:layout_toRightOf="@+id/tl_alarm_back"
 		android:layout_toEndOf="@+id/tl_alarm_back"
-		android:layout_marginLeft="17dp"
 		android:layout_marginStart="17dp"
 		android:onClick="onClick"
 		android:id="@+id/ib_snapshot_front"
@@ -211,7 +194,6 @@
 		android:src="@android:drawable/ic_menu_gallery"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_toEndOf="@+id/ib_snapshot_front"
-		android:layout_toRightOf="@+id/ib_snapshot_front"
 		android:layout_below="@+id/cb_sec_auto_alarm"
 		android:backgroundTint="@color/colorAccent"
 		tools:targetApi="lollipop"/>
@@ -220,7 +202,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_toEndOf="@+id/ib_snapshot_last"
-		android:layout_toRightOf="@+id/ib_snapshot_last"
 		android:layout_below="@+id/cb_sec_auto_alarm"
 		android:id="@+id/ib_snapshot_gallery"
 		android:onClick="onClick"
@@ -237,7 +218,6 @@
 		android:src="@drawable/ic_cctv"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_toEndOf="@+id/ib_snapshot_gallery"
-		android:layout_toRightOf="@+id/ib_snapshot_gallery"
 		android:layout_below="@+id/cb_sec_auto_alarm"
 		android:backgroundTint="@color/colorAccent"
 		tools:targetApi="lollipop"/>
@@ -251,7 +231,6 @@
 		android:src="@android:drawable/ic_menu_mapmode"
 		android:contentDescription="@string/sec_auto_alarm_off"
 		android:layout_toEndOf="@+id/ib_seccam"
-		android:layout_toRightOf="@+id/ib_seccam"
 		android:backgroundTint="@color/colorAccent"
 		tools:targetApi="lollipop"/>
 

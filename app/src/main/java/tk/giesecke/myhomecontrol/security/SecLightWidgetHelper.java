@@ -41,10 +41,10 @@ public class SecLightWidgetHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
-			/** Bundle received when service is called */
+			/* Bundle received when service is called */
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
-				/** App widget id */
+				/* App widget id */
 				int mAppWidgetId = extras.getInt(
 						AppWidgetManager.EXTRA_APPWIDGET_ID,
 						AppWidgetManager.INVALID_APPWIDGET_ID);
@@ -54,7 +54,7 @@ public class SecLightWidgetHelper extends IntentService {
 					return;
 				}
 
-				/** App widget manager for all widgets of this app */
+				/* App widget manager for all widgets of this app */
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 
 				// If we are not on home WiFi, send command to MQTT broker
@@ -101,7 +101,7 @@ public class SecLightWidgetHelper extends IntentService {
 				}
 
 				SecLightWidget.updateAppWidget(this, appWidgetManager, mAppWidgetId, true);
-				/** Timer to change back widget icon */
+				/* Timer to change back widget icon */
 				Timer timer = new Timer();
 				timer.schedule(new changeBackWidget(this, appWidgetManager, mAppWidgetId), 120000);
 			}

@@ -64,9 +64,9 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 		findViewById(R.id.bt_ok).setOnClickListener(mOnClickListener);
 
 		// Find the widget id from the intent.
-		/** Intent to get bundled data */
+		/* Intent to get bundled data */
 		Intent intent = getIntent();
-		/** Bundle with data */
+		/* Bundle with data */
 		Bundle extras = intent.getExtras();
 		if (extras != null) {
 			mAppWidgetId = extras.getInt(
@@ -80,8 +80,8 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 		}
 
 		confContext = this;
-		/** Radio group with radio buttons for text size selection */
-		RadioGroup rgSize = (RadioGroup) findViewById(R.id.rg_size);
+		/* Radio group with radio buttons for text size selection */
+		RadioGroup rgSize = findViewById(R.id.rg_size);
 		rgSize.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -104,11 +104,11 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 		notifUri.add("android.resource://"
 				+ this.getPackageName() + "/"
 				+ R.raw.alert);
-		/** Index of last user selected alarm tone */
+		/* Index of last user selected alarm tone */
 		int uriIndex = Utilities.getNotifSounds(this, notifNames, notifUri, false) + 2;
 
-		/** Pointer to list view with the alarms */
-		ListView lvAlarmList = (ListView) findViewById(R.id.lv_alarms);
+		/* Pointer to list view with the alarms */
+		ListView lvAlarmList = findViewById(R.id.lv_alarms);
 		final ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(
 				this,
 				android.R.layout.simple_list_item_single_choice,
@@ -118,7 +118,7 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 		lvAlarmList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
 			public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
 										   int pos, long id) {
-				/** Instance of media player */
+				/* Instance of media player */
 				MediaPlayer mMediaPlayer = new MediaPlayer();
 				try {
 					mMediaPlayer.setDataSource(confContext, Uri.parse(notifUri.get(pos)));
@@ -150,10 +150,10 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 					finish();
 					break;
 				case R.id.bt_ok:
-					/** Context for this configuration class */
+					/* Context for this configuration class */
 					final Context context = SolarPanelWidgetConfig.this;
 
-					/** Access to the shared preferences */
+					/* Access to the shared preferences */
 					SharedPreferences mPrefs = getSharedPreferences(MyHomeControl.sharedPrefName,0);
 					mPrefs.edit().putBoolean(MyHomeControl.prefsSolarWidgetSize,isTextLarge).apply();
 
@@ -162,12 +162,12 @@ public class SolarPanelWidgetConfig extends Activity implements AdapterView.OnIt
 					}
 
 					// It is the responsibility of the configuration activity to update the app widget
-					/** App widget manager for this widget */
+					/* App widget manager for this widget */
 					AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 					SolarPanelWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId,0f,0f);
 
 					// Make sure we pass back the original appWidgetId
-					/** Intent to report successful added widget */
+					/* Intent to report successful added widget */
 					Intent resultValue = new Intent();
 					resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
 					setResult(RESULT_OK, resultValue);

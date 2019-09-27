@@ -18,9 +18,9 @@ import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -50,7 +50,7 @@ public class AirconWidgetHelper extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
-			/** Access to shared preferences of app widget */
+			/* Access to shared preferences of app widget */
 			SharedPreferences mPrefs = this.getSharedPreferences(MyHomeControl.sharedPrefName, 0);
 			int timerTime = mPrefs.getInt("acTimerTime", 1);
 			boolean isRunning = mPrefs.getBoolean("acTimerOn", false);
@@ -61,23 +61,23 @@ public class AirconWidgetHelper extends IntentService {
 					case "m":
 						if (timerTime > 1) {
 							timerTime--;
-							espComm("t=" + Integer.toString(timerTime));
+							espComm("t=" + timerTime);
 						}
 						break;
 					case "p":
 						if (timerTime < 9) {
 							timerTime++;
-							espComm("t=" + Integer.toString(timerTime));
+							espComm("t=" + timerTime);
 						}
 						break;
 					case "s":
 						if (!isRunning) {
 							if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "Starting timer");
 							if (BuildConfig.DEBUG)
-								Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + Integer.toString(timerTime));
+								Log.d(DEBUG_LOG_TAG, "First command = " + "t=" + timerTime);
 							if (BuildConfig.DEBUG)
 								Log.d(DEBUG_LOG_TAG, "Second command = " + "c=" + MyHomeControl.CMD_OTHER_TIMER);
-							if (espComm("t=" + Integer.toString(timerTime))) {
+							if (espComm("t=" + timerTime)) {
 								if (espComm("c=" + MyHomeControl.CMD_OTHER_TIMER)) {
 									isRunning = true;
 									mPrefs.edit().putBoolean("acTimerOn", true).apply();
@@ -107,12 +107,12 @@ public class AirconWidgetHelper extends IntentService {
 				String timerEnd = df.format(calendar.getTime());
 				mPrefs.edit().putString("acTimerEnd", timerEnd).apply();
 
-				/** App widget manager for all widgets of this app */
+				/* App widget manager for all widgets of this app */
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-				/** Component name of this widget */
+				/* Component name of this widget */
 				ComponentName thisAppWidget = new ComponentName(this.getPackageName(),
 								AirconWidget.class.getName());
-				/** List of all active widgets */
+				/* List of all active widgets */
 				int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget);
 
 				for (int appWidgetId : appWidgetIds) {
@@ -180,11 +180,11 @@ public class AirconWidgetHelper extends IntentService {
 			options.setPassword(mqttPw.toCharArray());
 			try {
 				byte[] encodedPayload;
-				encodedPayload = payload.getBytes("UTF-8");
+				encodedPayload = payload.getBytes(StandardCharsets.UTF_8);
 				MqttMessage message = new MqttMessage(encodedPayload);
 				token = MessageListener.mqttClient.publish("/CMD", message);
 				token.waitForCompletion(5000);
-			} catch (MqttSecurityException | UnsupportedEncodingException e) {
+			} catch (MqttSecurityException e) {
 				if (BuildConfig.DEBUG) Log.d(DEBUG_LOG_TAG, "MQTT connect exception " +e.getMessage());
 			} catch (MqttException e) {
 				switch (e.getReasonCode()) {

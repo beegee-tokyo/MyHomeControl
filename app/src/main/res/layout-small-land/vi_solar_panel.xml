@@ -21,7 +21,6 @@
 		android:layout_height="wrap_content"
 		android:text="@string/bt_prev_txt"
 		android:id="@+id/bt_prevLog"
-		android:layout_alignParentLeft="true"
 		android:layout_alignParentStart="true"
 		android:onClick="onClick"
 		android:textAppearance="?android:attr/textAppearanceLarge"
@@ -41,7 +40,6 @@
 		android:layout_below="@+id/tv_cons_max"
 		android:background="@color/bg_very_dark_grey"
 		android:textColor="@android:color/holo_red_light"
-		android:layout_toRightOf="@+id/bt_prevLog"
 		android:layout_toEndOf="@+id/bt_prevLog"
 		android:layout_marginLeft="2dp"
 		android:layout_marginRight="2dp"/>
@@ -57,7 +55,6 @@
 		android:textAppearance="?android:attr/textAppearanceSmall"
 		android:layout_alignParentEnd="true"
 		android:layout_below="@+id/tv_solar_max"
-		android:layout_alignParentRight="true"
 		android:layout_marginLeft="2dp"
 		android:layout_marginRight="2dp"/>
 
@@ -85,7 +82,6 @@
 		android:text="@string/tv_sens1_curr_txt"
 		android:id="@+id/tv_solar_txt"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		android:textColor="@android:color/white"/>
 
 	<TextView
@@ -97,7 +93,6 @@
 		android:layout_marginLeft="5dp"
 		android:layout_marginRight="5dp"
 		android:layout_alignParentEnd="true"
-		android:layout_alignParentRight="true"
 		android:textColor="@android:color/holo_orange_light"
 		android:layout_below="@+id/tv_solar_txt"
 		android:textSize="35sp"/>
@@ -116,8 +111,6 @@
 		android:textAppearance="?android:attr/textAppearanceLarge"
 		android:text="@string/tv_sens_value_txt"
 		android:id="@+id/tv_cons_val"
-		android:layout_marginLeft="5dp"
-		android:layout_marginRight="30dp"
 		android:layout_marginStart="5dp"
 		android:layout_marginEnd="30dp"
 		android:layout_below="@+id/tv_cons_txt"
@@ -131,8 +124,6 @@
 		android:text="@string/tv_result_txt_ex"
 		android:id="@+id/tv_result_txt"
 		android:textColor="@android:color/white"
-		android:layout_toRightOf="@+id/tv_cons_txt"
-		android:layout_toLeftOf="@+id/tv_solar_txt"
 		android:layout_toEndOf="@+id/tv_cons_txt"
 		android:layout_toStartOf="@+id/tv_solar_txt"
 		android:layout_centerHorizontal="true"
@@ -147,8 +138,6 @@
 		android:id="@+id/tv_result_val"
 		android:textColor="@android:color/holo_green_light"
 		android:gravity="center_horizontal"
-		android:layout_toRightOf="@+id/tv_cons_txt"
-		android:layout_toLeftOf="@+id/tv_solar_txt"
 		android:layout_toEndOf="@+id/tv_cons_txt"
 		android:layout_toStartOf="@+id/tv_solar_txt"
 		android:layout_below="@+id/tv_result_txt"
@@ -162,7 +151,6 @@
 		android:id="@+id/cb_cons"
 		android:checked="true"
 		android:textColor="@android:color/white"
-		android:layout_toRightOf="@+id/cb_solar"
 		android:layout_toEndOf="@+id/cb_solar"
 		android:layout_alignParentBottom="true"
 		android:onClick="onClick"
@@ -211,8 +199,6 @@
 		android:background="@android:color/transparent"
 		android:layout_below="@+id/tv_solar_val"
 		android:gravity="center_horizontal"
-		android:layout_alignLeft="@+id/tv_solar_val"
-		android:layout_alignRight="@+id/tv_solar_val"
 		android:layout_alignStart="@+id/tv_solar_val"
 		android:layout_alignEnd="@+id/tv_solar_val"/>
 
@@ -225,8 +211,6 @@
 		android:textColor="@android:color/holo_blue_light"
 		android:background="@android:color/transparent"
 		android:layout_below="@+id/tv_cons_val"
-		android:layout_alignLeft="@+id/tv_cons_val"
-		android:layout_alignRight="@+id/tv_cons_val"
 		android:layout_alignStart="@+id/tv_cons_val"
 		android:layout_alignEnd="@+id/tv_cons_val"
 		android:gravity="center_horizontal"/>
@@ -235,9 +219,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:id="@+id/sv_result"
-		android:layout_alignParentStart="true"
-		android:layout_alignParentLeft="true"
-		>
+		android:layout_alignParentStart="true">
 
 		<TextView
 			android:id="@+id/solar_status"
