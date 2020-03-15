@@ -15,6 +15,8 @@ import tk.giesecke.myhomecontrol.BuildConfig;
 import tk.giesecke.myhomecontrol.R;
 import tk.giesecke.myhomecontrol.Utilities;
 
+import static tk.giesecke.myhomecontrol.MyHomeControl.deviceIPs;
+import static tk.giesecke.myhomecontrol.MyHomeControl.ly1Index;
 import static tk.giesecke.myhomecontrol.devices.MessageListener.TCP_CLIENT_PORT;
 
 
@@ -66,7 +68,8 @@ public class BackYardLightWidgetHelper extends IntentService {
 			return;
 		}
 
-		String url = getString(R.string.LIGHTS_BACKYARD);
+//		String url = getString(R.string.LIGHTS_BACKYARD);
+		String url = deviceIPs[ly1Index];
 		try {
 			InetAddress tcpServer = InetAddress.getByName(url);
 			Socket tcpSocket = new Socket(tcpServer, TCP_CLIENT_PORT);

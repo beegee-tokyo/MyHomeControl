@@ -73,6 +73,7 @@ import tk.giesecke.myhomecontrol.lights.BedRoomLightWidget;
 import tk.giesecke.myhomecontrol.security.SecAlarmWidget;
 import tk.giesecke.myhomecontrol.solar.SolarPanelWidget;
 
+import static android.app.Notification.FLAG_AUTO_CANCEL;
 import static tk.giesecke.myhomecontrol.MyHomeControl.aircon1Index;
 import static tk.giesecke.myhomecontrol.MyHomeControl.aircon2Index;
 import static tk.giesecke.myhomecontrol.MyHomeControl.aircon3Index;
@@ -1801,7 +1802,7 @@ public class MessageListener extends Service {
 
 			/* Pointer to notification */
 			Notification alarmNotification = myNotifBuilder.build();
-			alarmNotification.flags |= Notification.FLAG_INSISTENT;
+			alarmNotification.flags |= Notification.FLAG_INSISTENT | FLAG_AUTO_CANCEL;
 			if (notificationManager != null) {
 				notificationManager.notify(3, alarmNotification);
 			}
@@ -1965,7 +1966,7 @@ public class MessageListener extends Service {
 					.build();
 
 			manager.notify(2, notificationBuilder.build());
-			chan1.notify();
+//			chan1.notify();
 		} else {
 
 			/* Pointer to notification builder for export/import arrow */
